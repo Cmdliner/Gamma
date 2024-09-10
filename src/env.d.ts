@@ -5,6 +5,7 @@ declare namespace NodeJS {
         CORS_ORIGIN: string;
         EMAIL_ADDRESS: string;
         EMAIL_SERVICE: string;
-        EMAIL_PASS: stringl
+        EMAIL_PASS: string;
+        ACCESS_TOKEN_SECRET: string;
     }
 }
