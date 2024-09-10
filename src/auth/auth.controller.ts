@@ -9,6 +9,7 @@ import User from "../user/user.model";
 import OTP from "./auth.model";
 import generateOTP from "../lib/otp";
 import jwt from "jsonwebtoken";
+import * as bcrypt from "bcryptjs";
 
 const { ACCESS_TOKEN_SECRET } = Settings;
 class AuthController {
@@ -75,10 +76,10 @@ class AuthController {
             const fullname = `${lastname} ${firstname}`;
             await EmailService.sendVerificationEmail(email, fullname, emailVToken.token!);
 
-            const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET as string, "1h");
+            const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET as string, "7d");
             req.unverified_user = { id: userToken };
 
-            res.setHeader("x-unverified-user", req.unverified_user.id);
+            res.setHeader("x-onboarding-user", req.unverified_user.id);
 
             await emailVToken.save();
             await user.save();
@@ -108,10 +109,10 @@ class AuthController {
             const fullname = `${user.firstname} ${user.lastname}`;
             await EmailService.sendVerificationEmail(email, fullname, emailVToken.token!);
 
-            const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "1h");
+            const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "7d");
             req.unverified_user = { id: userToken };
 
-            res.setHeader("x-unverified-user", req.unverified_user.id);
+            res.setHeader("x-onboarding-user", req.unverified_user.id);
 
             await emailVToken.save();
             await user.save();
@@ -127,7 +128,7 @@ class AuthController {
     static async verifyEmail(req: Request, res: Response) {
         try {
             const { otp } = req.body;
-            const unverifiedUserToken = req.headers["x-unverified-user"]?.toString();
+            const unverifiedUserToken = req.headers["x-onboarding-user"]?.toString();
             if (!unverifiedUserToken) {
                 return res.status(401).json({ error: "Error authenticating user!" })
             }
@@ -136,16 +137,16 @@ class AuthController {
             if (!decodedToken) return res.status(403).json({ error: "Error authenticating user!" });
 
             const user = await User.findById(decodedToken.id);
-            // console.log(decodedToken.id);                                        
-            if(!user) return res.status(403).json({ error: "User not found!" });
+            if (!user) return res.status(403).json({ error: "User not found!" });
 
-            const userVerificationOTP = await OTP.findOneAndDelete({kind: "verification", owner: user._id, token: otp });
-            if(!userVerificationOTP) return res.status(400).json({ error: "Invalid OTP!" });
+            const userVerificationOTP = await OTP.findOneAndDelete({ kind: "verification", owner: user._id, token: otp });
+            if (!userVerificationOTP) return res.status(400).json({ error: "Invalid OTP!" });
+            if (!user.isVerified) {
+                user.isVerified = true;
+                await user.save();
+            }
 
-            user.isVerified = true;
-            await user.save();
-
-            return res.status(200).json({ success: "User verification successful" }); 
+            return res.status(200).json({ success: "User verification successful" });
 
         } catch (error) {
             console.error(error);
@@ -154,13 +155,72 @@ class AuthController {
     }
 
     // Set password
-    static async setPassword(req: Request, res: Response) {}
+    static async setPassword(req: Request, res: Response) {
+        try {
+            const { password } = req.body;
+            const userToken = req.headers?.["x-onboarding-user"]?.toString() || "";
+            if (!userToken) return res.status(401).json({ error: "Error authenticating user!" });
+
+            const decodedToken = jwt.verify(userToken, ACCESS_TOKEN_SECRET) as any;
+            if (!decodedToken) return res.status(403).json({ error: "Error authenticating user!" });
+
+            const user = await User.findById(decodedToken.id);
+            if (!user) {
+                return res.status(404).json({ error: "User not found!" });
+            }
+            const hashedPassword = await bcrypt.hash(password, 10);
+            if (!hashedPassword) {
+                return res.status(400).json({ error: "Error creating password" });
+            }
+            user.password = hashedPassword;
+            await user.save();
+
+            return res.status(200).json({ success: "Password created successfully" });
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Internal server error" });
+        }
+
+    }
 
     // kyc
     static async verifyBVN() { }
 
     // bank account details
     static async addBankDetails() { }
+
+    // Forgot password
+    static async generatePasswordResetToken(req: Request, res: Response) {
+        try {
+            const { email } = req.body;
+            if (!email) {
+                return res.status(400).json({ error: "Email required!" });
+            }
+            const user = await User.findOne({ email });
+            if (!user) {
+                return res.status(404).json({ error: "No user found for that email address" });
+            }
+            const resetPasswordOTP = new OTP({ kind: "password_reset", owner: user._id, token: generateOTP() });
+
+            const fullname = `${user.firstname} ${user.lastname}`
+            await EmailService.sendPasswordResetToken(email, fullname, resetPasswordOTP.token);
+
+            await resetPasswordOTP.save();
+            user.save();
+
+            return res.status(200).json({ success: "A password reset token as been sent to your email" });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "An error occured while trying to reset password" });
+        }
+
+    }
+
+    // Reset password
+    static async resetPassword(req: Request, res: Response) {
+        // const req.user.id
+    }
 }
 
 export default AuthController;

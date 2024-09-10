@@ -45,7 +45,7 @@ const UserSchema = new Schema({
     isVerified: {
         type: Boolean,
         default: false
-    }
+    },
 }, { timestamps: true });
 
 const User = model("user", UserSchema);
