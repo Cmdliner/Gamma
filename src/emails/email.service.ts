@@ -1,10 +1,15 @@
+import { readFileSync } from "fs";
+import { config as envConfig } from "dotenv";
 import nodemailer from "nodemailer";
 import Mail from "nodemailer/lib/mailer";
-import { readFileSync } from "fs";
+import path from "path";
+
+envConfig();
 
 class EmailService {
 
     private static transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
         service: process.env.EMAIL_SERVICE,
         secure: process.env.NODE_ENV === 'PRODUCTION' ? true : false,
         auth: {
@@ -22,11 +27,12 @@ class EmailService {
     }
 
     static async sendVerificationEmail(to: string, fullname: string, vToken: string) {
+        const pathToEmail = path.resolve(__dirname, "../../templates/verification_email.html")
         const mailOptions: Mail.Options = {
             from: process.env.EMAIL_ADDRESS,
             to,
             subject: 'Email Verification',
-            html: EmailService.parseMailFile(readFileSync(`${__dirname}/templates/verification_email.html`).toString(), fullname, vToken)
+            html: EmailService.parseMailFile(readFileSync(pathToEmail).toString(), fullname, vToken)
         }
 
         try {
@@ -40,11 +46,12 @@ class EmailService {
     }
 
     static async sendPasswordResetToken(to: string, username: string, resetPasswordToken: string) {
+        const pathToEmail = path.resolve(__dirname, "../../templates/password_reset.html")
         const mailOptions: Mail.Options = {
             from: process.env.EMAIL_ADDRESS,
             to,
             subject: 'Reset Password',
-            html: EmailService.parseMailFile(readFileSync(`${__dirname}/templates/password_reset.html`).toString(), username, resetPasswordToken)
+            html: EmailService.parseMailFile(readFileSync(pathToEmail).toString(), username, resetPasswordToken)
         }
 
         try {

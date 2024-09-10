@@ -21,7 +21,7 @@ const UserSchema = new Schema({
         type: String,
         required: true
     },
-    phone_number: [{
+    phone_numbers: [{
         type: Schema.Types.ObjectId,
         ref: "PhoneNumber"
     }],
@@ -41,7 +41,6 @@ const UserSchema = new Schema({
     referrals: [{
         type: Schema.Types.ObjectId,
         ref: "User",
-        unique: true
     }],
     isVerified: {
         type: Boolean,

@@ -20,7 +20,6 @@ const OTPSchema = new Schema({
     },
     token: {
         type: String,
-        required: true,
         default: generateOTP()
     },
     expires: {

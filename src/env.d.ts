@@ -3,5 +3,8 @@ declare namespace NodeJS {
         PORT: number;
         MONGO_URI: string;
         CORS_ORIGIN: string;
+        EMAIL_ADDRESS: string;
+        EMAIL_SERVICE: string;
+        EMAIL_PASS: stringl
     }
 }
