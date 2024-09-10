@@ -5,6 +5,7 @@ import EmailService from "../emails/email.service";
 import PhoneNumber from "../user/phone_number.model";
 import User from "../user/user.model";
 import OTP from "./auth.model";
+import generateOTP from "../lib/otp";
 
 
 class AuthController {
@@ -61,8 +62,11 @@ class AuthController {
             user.phone_numbers = phoneNumbers as any;
             const fullname = `${lastname} ${firstname}`;
 
-            const emailVToken = new OTP({ kind: "verification", owner: user.id });
-            await EmailService.sendVerificationEmail(email, fullname, emailVToken.token);
+            const emailVToken = new OTP({ kind: "verification", owner: user.id, token: generateOTP() });
+            if(!emailVToken) {
+                return res.status(400).json({ error: "Error sending verification mail"});
+            }
+            await EmailService.sendVerificationEmail(email, fullname, emailVToken.token!);
             await emailVToken.save();
             await user.save();
 
