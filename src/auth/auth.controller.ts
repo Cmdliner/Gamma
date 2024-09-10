@@ -75,10 +75,10 @@ class AuthController {
             const fullname = `${lastname} ${firstname}`;
             await EmailService.sendVerificationEmail(email, fullname, emailVToken.token!);
 
-            const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "1h");
+            const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET as string, "1h");
             req.unverified_user = { id: userToken };
 
-            res.setHeader("UnverifiedUser", req.unverified_user.id);
+            res.setHeader("x-unverified-user", req.unverified_user.id);
 
             await emailVToken.save();
             await user.save();
@@ -111,7 +111,7 @@ class AuthController {
             const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "1h");
             req.unverified_user = { id: userToken };
 
-            res.setHeader("UnverifiedUser", req.unverified_user.id);
+            res.setHeader("x-unverified-user", req.unverified_user.id);
 
             await emailVToken.save();
             await user.save();
@@ -124,9 +124,37 @@ class AuthController {
     }
 
     // Email verification
-    static async verifyEmail() { }
+    static async verifyEmail(req: Request, res: Response) {
+        try {
+            const { otp } = req.body;
+            const unverifiedUserToken = req.headers["x-unverified-user"]?.toString();
+            if (!unverifiedUserToken) {
+                return res.status(401).json({ error: "Error authenticating user!" })
+            }
+
+            const decodedToken = jwt.verify(unverifiedUserToken, ACCESS_TOKEN_SECRET) as any
+            if (!decodedToken) return res.status(403).json({ error: "Error authenticating user!" });
+
+            const user = await User.findById(decodedToken.id);
+            // console.log(decodedToken.id);                                        
+            if(!user) return res.status(403).json({ error: "User not found!" });
+
+            const userVerificationOTP = await OTP.findOneAndDelete({kind: "verification", owner: user._id, token: otp });
+            if(!userVerificationOTP) return res.status(400).json({ error: "Invalid OTP!" });
+
+            user.isVerified = true;
+            await user.save();
+
+            return res.status(200).json({ success: "User verification successful" }); 
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Error verifying email" });
+        }
+    }
 
     // Set password
+    static async setPassword(req: Request, res: Response) {}
 
     // kyc
     static async verifyBVN() { }
