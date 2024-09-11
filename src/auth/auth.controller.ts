@@ -54,15 +54,14 @@ class AuthController {
             if (referrer) referrer.referrals.push(user._id);
 
             //! TODO => Validate phone no && p
-            let phoneNumbers = await PhoneNumber.insertMany(
-                [{ value: phone_no_1 }, { value: phone_no_2 }]
-            );
+            let phoneNumber1 = new PhoneNumber({ value: phone_no_1 });
+            let phoneNumber2 = new PhoneNumber({ value: phone_no_2 });
+            
 
-            if (!phoneNumbers) {
+            if (!phoneNumber1 || !phoneNumber2) {
                 return res.status(400).json({ error: "Error adding phone numbers" });
             }
-            phoneNumbers = phoneNumbers.flatMap(phoneNo => phoneNo._id) as any;
-            user.phone_numbers = phoneNumbers as any;
+            user.phone_numbers = [phoneNumber1._id, phoneNumber2._id];
 
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
             if (!emailVToken) {
@@ -79,6 +78,8 @@ class AuthController {
             // when all the register operations have successfully completed commit the transactions to the db
             if (referrer) await referrer.save();
             await emailVToken.save();
+            await phoneNumber1.save();
+            await phoneNumber2.save();
             await user.save();
 
             return res.status(201).json({ success: "User created successfully!", user });
