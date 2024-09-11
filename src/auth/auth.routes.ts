@@ -8,6 +8,7 @@ auth.post("/verification-mail", AuthController.resendVerificationMail);
 auth.post("/verify", AuthController.verifyEmail);
 auth.post("/create-password", AuthController.setPassword);
 auth.post("/forgot-password", AuthController.generatePasswordResetToken);
+auth.post("/verify-reset-password", AuthController.verifyResetPwdOTP)
 auth.post("/reset-password", AuthController.resetPassword);
 
 export default auth;

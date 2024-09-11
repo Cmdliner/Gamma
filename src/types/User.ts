@@ -1,6 +1,6 @@
 export interface IRegisterUser {
-    firstname: string;
-    lastname: string;
+    first_name: string;
+    last_name: string;
     email: string;
     dob: Date | string;
     gender: string;

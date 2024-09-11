@@ -1,11 +1,11 @@
 import { model, Schema } from "mongoose";
 
 const UserSchema = new Schema({
-    firstname: {
+    first_name: {
         type: String,
         required: true
     },
-    lastname: {
+    last_name: {
         type: String,
         required: true
     },
@@ -42,10 +42,18 @@ const UserSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "User",
     }],
-    isVerified: {
+    email_verified: {
         type: Boolean,
         default: false
     },
+    bvn_verified: {
+        type: Boolean,
+        default: false
+    },
+    account_verified: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true });
 
 const User = model("user", UserSchema);

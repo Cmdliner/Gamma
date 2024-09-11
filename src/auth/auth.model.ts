@@ -1,5 +1,4 @@
 import { model, Schema } from "mongoose";
-import generateOTP from "../lib/otp";
 
 const nextHour = () => {
     let oneHourInMs = (1000 * 60 * 60 * 24);
