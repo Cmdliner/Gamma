@@ -10,5 +10,6 @@ auth.post("/create-password", AuthController.setPassword);
 auth.post("/forgot-password", AuthController.generatePasswordResetToken);
 auth.post("/verify-reset-password", AuthController.verifyResetPwdOTP)
 auth.post("/reset-password", AuthController.resetPassword);
+auth.post("/login", AuthController.login);
 
 export default auth;

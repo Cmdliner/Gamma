@@ -136,12 +136,12 @@ class AuthController {
             const user = await User.findById(decodedToken.id);
             if (!user) return res.status(403).json({ error: "User not found!" });
 
-            const OTPinDb = await OTP.findOne({ token: otp});
-            if(!OTPinDb) return res.status(401).json({ error: "OTP not found!"});
+            const OTPinDb = await OTP.findOne({ token: otp });
+            if (!OTPinDb) return res.status(401).json({ error: "OTP not found!" });
 
             // ensure otp is not expired
-            if(OTPinDb.expires.valueOf() > Date.now().valueOf()) {
-                return res.status(400).json({ error: "OTP expired!"});
+            if (OTPinDb.expires.valueOf() > Date.now().valueOf()) {
+                return res.status(400).json({ error: "OTP expired!" });
             }
             const userVerificationOTP = await OTP.findOneAndDelete({ kind: "verification", owner: user._id, token: otp });
             if (!userVerificationOTP) return res.status(400).json({ error: "Invalid OTP!" });
@@ -231,8 +231,8 @@ class AuthController {
             const OTPinDb = await OTP.findOne({ owner: user._id, token: otp });
             if (!OTPinDb) return res.status(403).json({ error: "OTP verification failed!" });
 
-            if(OTPinDb.expires.valueOf() > Date.now().valueOf()) {
-                return res.status(400).json({ error: "OTP expired!"});
+            if (OTPinDb.expires.valueOf() > Date.now().valueOf()) {
+                return res.status(400).json({ error: "OTP expired!" });
             }
 
             const authToken = AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
@@ -269,6 +269,30 @@ class AuthController {
             return res.status(500).json({ error: "Error reseting password" });
         }
 
+    }
+
+    // Sign in
+    static async login(req: Request, res: Response) {
+        try {
+            const { email, password } = req.body;
+            if (!email || !password) {
+                return res.status(422).json({ error: `${email ? "password" : "email"} required for sign in` });
+            }
+
+            const user = await User.findOne({ email });
+            if (!user) return res.status(404).json({ error: "Incorrect username or password!" });
+
+            const passwordsMatch = await bcrypt.compare(password, user.password as string);
+            if (!passwordsMatch) return res.status(403).json({ error: "Invalid username or password!" });
+
+            const authToken = AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
+            res.setHeader("Authorization", `Bearer ${authToken}`);
+
+            return res.status(200).json({ sucess: "Login successful" });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Error signing in user" });
+        }
     }
 }
 
