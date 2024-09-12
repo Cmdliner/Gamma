@@ -17,6 +17,7 @@ app.use("/healthz", (_req: Request, res: Response) => {
     res.status(200).json({ active: "The hood is up commandliner" });
 });
 app.use(`/${API_VERSION}/auth`, auth);
+app.use(`/${API_VERSION}/products`, auth);
 
 
 DB.connect()
