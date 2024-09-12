@@ -1,8 +1,8 @@
 import Joi from "joi";
 
 export const registerValidationSchema = Joi.object({
-    firstname: Joi.string().alphanum().required(),
-    lastname: Joi.string().alphanum().required(),
+    first_name: Joi.string().alphanum().required(),
+    last_name: Joi.string().alphanum().required(),
     dob: Joi.date().required(),
     email: Joi.string().email().required(),
     gender: Joi.string().required(),

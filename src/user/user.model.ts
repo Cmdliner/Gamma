@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import IUser from "../types/user.schema";
 
 const UserSchema = new Schema({
     first_name: {
@@ -36,7 +37,8 @@ const UserSchema = new Schema({
         type: String
     },
     referral_code: {
-        type: Number
+        type: Number,
+        unique: true
     },
     referrals: [{
         type: Schema.Types.ObjectId,
@@ -56,6 +58,6 @@ const UserSchema = new Schema({
     }
 }, { timestamps: true });
 
-const User = model("user", UserSchema);
+const User = model<IUser>("user", UserSchema);
 
 export default User;

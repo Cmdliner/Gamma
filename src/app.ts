@@ -22,3 +22,6 @@ app.use(`/${API_VERSION}/auth`, auth);
 DB.connect()
     .then(() => app.listen(PORT, () => console.log("Server is up and running on PORT " + PORT)))
     .catch((error) => console.error({ error: (error as Error).stack }));
+
+
+export default app;

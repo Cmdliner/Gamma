@@ -1,5 +1,5 @@
 import { type Request, type Response } from "express";
-import { IRegisterUser } from "../types/User";
+import { IRegisterUser } from "../types/user.dto";
 import { registerValidationSchema } from "../validations/auth.validation";
 import { Types } from "mongoose";
 import Settings from "../config/settings";
