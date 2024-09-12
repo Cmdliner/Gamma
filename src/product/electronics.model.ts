@@ -20,3 +20,5 @@ const ElectronicsSchema = new Schema({
 
 
 const Electronics = Product.discriminator<IElectronics>("electronics", ElectronicsSchema);
+
+export default Electronics;
