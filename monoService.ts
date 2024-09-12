@@ -6,7 +6,7 @@ require('dotenv').config();
 const MONO_API_URL = 'https://api.mono.co/v1'; // Base URL for Mono API
 const MONO_API_KEY = process.env.MONO_API_KEY;
 
-const verifyBVN = async (bvn) => {
+const verifyBVN = async (bvn: string) => {
     try {
         const response = await axios.get(`${MONO_API_URL}/bvn/${bvn}`, {
             headers: {
@@ -19,7 +19,7 @@ const verifyBVN = async (bvn) => {
     }
 };
 
-const verifyBankAccount = async (accountNumber, bankCode) => {
+const verifyBankAccount = async (accountNumber: string, bankCode: string) => {
     try {
         const response = await axios.get(`${MONO_API_URL}/bank_account/${accountNumber}`, {
             headers: {
@@ -44,7 +44,7 @@ module.exports = { verifyBVN, verifyBankAccount };
 
 // routes.js
 const express = require('express');
-const { verifyBVN, verifyBankAccount } = require('./monoService');
+// const { verifyBVN, verifyBankAccount } = require('./monoService');
 
 const router = express.Router();
 

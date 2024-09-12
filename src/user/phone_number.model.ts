@@ -1,6 +1,6 @@
 import { model, Schema } from "mongoose";
 
-const phoneNumberSchema = new Schema({
+const PhoneNumberSchema = new Schema({
     value: {
         type: String,
         required: true,
@@ -8,6 +8,6 @@ const phoneNumberSchema = new Schema({
     }
 }, { timestamps: true });
 
-const PhoneNumber = model("phone_number", phoneNumberSchema);
+const PhoneNumber = model("phone_number", PhoneNumberSchema);
 
 export default PhoneNumber;
