@@ -70,7 +70,7 @@ class AuthController {
             const full_name = `${last_name} ${first_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
 
-            const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET as string, "7d");
+            const userToken = await AuthController.createToken(user._id , ACCESS_TOKEN_SECRET as string, "7d");
             req.unverified_user = { id: userToken };
 
             res.setHeader("x-onboarding-user", req.unverified_user.id);
@@ -141,7 +141,7 @@ class AuthController {
             if (!OTPinDb) return res.status(401).json({ error: "OTP not found!" });
 
             // ensure otp is not expired
-            if (OTPinDb.expires.valueOf() > Date.now().valueOf()) {
+            if (OTPinDb.expires.valueOf() < Date.now().valueOf()) {
                 return res.status(400).json({ error: "OTP expired!" });
             }
             const userVerificationOTP = await OTP.findOneAndDelete({ kind: "verification", owner: user._id, token: otp });
@@ -229,14 +229,14 @@ class AuthController {
             const user = await User.findOne({ email })
             if (!user) return res.status(422).json({ error: "Error verifying otp!" });
 
-            const OTPinDb = await OTP.findOne({ owner: user._id, token: otp });
+            const OTPinDb = await OTP.findOneAndDelete({ owner: user._id, token: otp });
             if (!OTPinDb) return res.status(403).json({ error: "OTP verification failed!" });
 
-            if (OTPinDb.expires.valueOf() > Date.now().valueOf()) {
+            if (OTPinDb.expires.valueOf() < Date.now().valueOf()) {
                 return res.status(400).json({ error: "OTP expired!" });
             }
 
-            const authToken = AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
+            const authToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
             res.setHeader("Authorization", `Bearer ${authToken}`);
             return res.status(200).json({ success: "OTP verification successful!" });
 
@@ -251,7 +251,7 @@ class AuthController {
     static async resetPassword(req: Request, res: Response) {
         try {
             const { password } = req.body;
-            const authToken = req.headers.authorization;
+            const authToken = req.headers.authorization?.toString().split(" ")[1];
             if (!authToken) return res.status(401).json({ error: "Error authenticating user" });
 
             const decoded = jwt.verify(authToken, ACCESS_TOKEN_SECRET) as any as JwtPayload;
@@ -286,7 +286,7 @@ class AuthController {
             const passwordsMatch = await bcrypt.compare(password, user.password as string);
             if (!passwordsMatch) return res.status(403).json({ error: "Invalid username or password!" });
 
-            const authToken = AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
+            const authToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
             res.setHeader("Authorization", `Bearer ${authToken}`);
 
             return res.status(200).json({ sucess: "Login successful" });

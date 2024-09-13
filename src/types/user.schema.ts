@@ -1,6 +1,7 @@
 import { Document, Types } from "mongoose";
 
 interface IUser extends Document {
+    _id: Types.ObjectId;
     first_name: string;
     last_name: string;
     dob: Date,
@@ -11,6 +12,7 @@ interface IUser extends Document {
     password?: string;
     bvn?: string;
     referral_code?: string;
+    referrals: Types.ObjectId[];
     email_verified?: boolean;
     bvn_verified?: boolean;
     account_verified?: boolean;

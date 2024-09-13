@@ -1,3 +1,5 @@
+import { Request, Response } from "express";
+
 class ProductController {
 
     // Add new electronics
@@ -12,7 +14,7 @@ class ProductController {
     // Add new vehicle
     static async uploadVehicle() {}
 
-    // Add nwe furniture 
+    // Add new furniture 
     static async newFuriture() {}
 
     // Add new machinery
@@ -23,7 +25,12 @@ class ProductController {
 
     // Add other products
     static async uploadOtherProduct() {
-        
+    }
+    // Test products endpoint
+    static async testRoute(req: Request, res: Response) {
+        return res.status(200).json({"a": "test product routes"});
     }
 
 }
+
+export default ProductController;
