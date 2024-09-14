@@ -4,7 +4,7 @@ import auth from "./auth/auth.routes";
 import DB from "./config/db";
 import Settings from "./config/settings";
 import product from "./product/product.routes";
-import AuthMiddleware from "./auth/auth.middlewares";
+import AuthMiddleware from "./middlewares/auth.middlewares";
 
 envConfig();
 const { PORT, API_VERSION } = Settings;

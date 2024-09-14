@@ -1,7 +1,7 @@
 import { Document, Types } from "mongoose";
 
 interface IProduct extends Document {
-    proproduct_images_url: string[];
+    product_images_url: string[];
     name: string;
     description: string;
     owner: Types.ObjectId;
