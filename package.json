@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/app.js",
   "scripts": {
-    "dev": "nodemon",
+    "dev": "bun --watchfire src/app.ts",
     "build": "tsc && node --env-file .env dist/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,6 +22,8 @@
     "multer": "1.4.5-lts.1",
     "nodemailer": "^6.9.15",
     "supertest": "^7.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "winston": "^3.14.2"
   },
   "devDependencies": {
@@ -33,6 +35,8 @@
     "@types/node": "^22.5.4",
     "@types/nodemailer": "^6.4.15",
     "@types/supertest": "^6.0.2",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.6",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2"
   }

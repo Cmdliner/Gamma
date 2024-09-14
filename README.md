@@ -1,11 +1,10 @@
-# OH YEAH
+# Oyeah Escrow!
 The REST API server for the `Oh Yeah!` platform
 
+
+## How To Setup
+- Check uniqueness of phone numbers on registering and handle errors appropriately
+
 ## TODOS
-- Auth
-- CRAFT VERIFICATION EMAIL
-- delete otps on any successfult token verification
-- Use redis for caching of stuf like profile page
 
 ## REMEMBER
-- Hash BVN before storage

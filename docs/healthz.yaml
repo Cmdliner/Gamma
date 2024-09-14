@@ -1,0 +1,14 @@
+/healthz:
+  get:
+    summary: Server health
+    description: Checks if server is healthy, up and running
+    responses:
+      "200":
+        description: Returns json object with an active key
+        content: application/json
+        schema:
+          type: object
+          properties:
+            active:
+              type: string
+              description: The hood is up commandliner⚡

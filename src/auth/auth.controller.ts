@@ -56,10 +56,10 @@ class AuthController {
             //! TODO => Validate phone no && p
             let phoneNumber1 = new PhoneNumber({ value: phone_no_1 });
             let phoneNumber2 = new PhoneNumber({ value: phone_no_2 });
-            
+
 
             if (!phoneNumber1 || !phoneNumber2) {
-                return res.status(400).json({ error: "Error adding phone numbers" });
+                return res.status(422).json({ error: "Error adding phone numbers" });
             }
             user.phone_numbers = [phoneNumber1._id, phoneNumber2._id];
 
@@ -70,7 +70,7 @@ class AuthController {
             const full_name = `${last_name} ${first_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
 
-            const userToken = await AuthController.createToken(user._id , ACCESS_TOKEN_SECRET as string, "7d");
+            const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET as string, "7d");
             req.unverified_user = { id: userToken };
 
             res.setHeader("x-onboarding-user", req.unverified_user.id);
@@ -205,6 +205,8 @@ class AuthController {
             if (!user) {
                 return res.status(404).json({ error: "No user found for that email address" });
             }
+            // Delete any previous reset tokens
+            await OTP.findOneAndDelete({ kind: "password_reset", owner: user._id });
             const resetPasswordOTP = new OTP({ kind: "password_reset", owner: user._id, token: generateOTP() });
 
             const full_name = `${user.first_name} ${user.last_name}`

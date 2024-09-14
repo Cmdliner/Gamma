@@ -29,7 +29,7 @@ const upload = multer({
 export const uploadMiddleware = upload.fields(
     [
         {
-            name: "product_images", maxCount: 2 
+            name: "product_images", maxCount: 10
         }, 
         {
             name: "ownership_documents", maxCount: 5
@@ -40,13 +40,13 @@ export const uploadMiddleware = upload.fields(
 export const validateUploads = (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     
-    if (!files.product_documents || files.product_documents.length === 0 || !files.product_images || files.product_images.length === 0) {
-      return res.status(400).json({ error: 'At least one receipt and one product image are required' });
+    if (!files.ownership_documents || files.ownership_documents.length === 0 || !files.product_images || files.product_images.length === 0) {
+        console.log(files);
+      return res.status(400).json({ error: 'At least one ownership document and one product image are required' });
     }
   
-    if (files.product_documents.length > 10 || files.product_images.length > 10) {
-      return res.status(400).json({ error: 'Maximum of 10 product_documents and 10 product images allowed' });
+    if (files.ownership_documents.length > 10 || files.product_images.length > 10) {
+      return res.status(400).json({ error: 'Maximum of 10 ownership_documents and 10 product images allowed' });
     }
-    console.log("here...done");
     next();
   };

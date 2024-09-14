@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import e, { Request, Response } from "express";
 import { TElectronicsUploadBody } from "../types/product.dto";
 import IElectronics from "../types/electronics.schema";
 import { electronicsValidationSchema } from "../validations/product.validation";
@@ -9,7 +9,7 @@ class ProductController {
     static async addElectronicProduct(req: Request, res: Response) {
         try {
             const uploadFields= req.files;
-            console.log(`Fields: ${uploadFields?.keys}`);
+            console.log(`Fields: ${uploadFields?.length}`);
             const {
                 name,
                 description,
@@ -22,11 +22,13 @@ class ProductController {
                 category
             }: TElectronicsUploadBody = req.body;
             const electronicProductData: Partial<IElectronics> = { name, description, location, price, is_biddable, brand, item_model, category, condition };
+            electronicProductData.product_images_url = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"];
+            electronicProductData.ownership_documents_url = ["a", "b", "c", "d", "e", "f", "g"];
             const { error } = electronicsValidationSchema.validate(electronicProductData);
             if (error) {
                 return res.status(422).json({ error: error.details[0] });
             }
-
+            return res.status(200).json("I work");
 
         } catch (error) {
             console.error(error);
