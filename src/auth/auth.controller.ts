@@ -4,14 +4,13 @@ import { registerValidationSchema } from "../validations/auth.validation";
 import { Types } from "mongoose";
 import Settings from "../config/settings";
 import EmailService from "../emails/email.service";
-import PhoneNumber from "../user/phone_number.model";
 import User from "../user/user.model";
 import OTP from "./auth.model";
 import generateOTP from "../lib/otp";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
 
-const { ACCESS_TOKEN_SECRET } = Settings;
+const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
 
 class AuthController {
@@ -33,8 +32,10 @@ class AuthController {
             }: IRegisterUser = req.body;
 
             const registerInfo: Partial<IRegisterUser> = { first_name, last_name, dob, email, gender, state_of_origin };
+            const phone_numbers = [phone_no_1];
+            if(phone_no_2) phone_numbers.push(phone_no_2);
 
-            const { error } = registerValidationSchema.validate(registerInfo);
+            const { error } = registerValidationSchema.validate({...registerInfo, phone_numbers});
             if (error) {
                 return res.status(422).json({ error: error.details[0].message });
             }
@@ -50,36 +51,27 @@ class AuthController {
             const user = new User(registerInfo);
             if (!user) return res.status(400).json({ error: "Error registering user" });
 
+            // Add use phone numbers
+            user.phone_numbers = phone_numbers;
+
             // Check if there is a valid referrer and add new user to list of referrals if true
             if (referrer) referrer.referrals.push(user._id);
-
-            //! TODO => Validate phone no && p
-            let phoneNumber1 = new PhoneNumber({ value: phone_no_1 });
-            let phoneNumber2 = new PhoneNumber({ value: phone_no_2 });
-
-
-            if (!phoneNumber1 || !phoneNumber2) {
-                return res.status(422).json({ error: "Error adding phone numbers" });
-            }
-            user.phone_numbers = [phoneNumber1._id, phoneNumber2._id];
 
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
             if (!emailVToken) {
                 return res.status(400).json({ error: "Error sending verification mail" });
             }
-            const full_name = `${last_name} ${first_name}`;
+            const full_name = `${first_name} ${last_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
 
-            const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET as string, "7d");
-            req.unverified_user = { id: userToken };
+            const userToken = await AuthController.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
+            req.unverified_user = { id: userToken }; //Why did i do this?
 
             res.setHeader("x-onboarding-user", req.unverified_user.id);
 
             // when all the register operations have successfully completed commit the transactions to the db
             if (referrer) await referrer.save();
             await emailVToken.save();
-            await phoneNumber1.save();
-            await phoneNumber2.save();
             await user.save();
 
             return res.status(201).json({ success: "User created successfully!", user });
@@ -97,7 +89,7 @@ class AuthController {
             const user = await User.findOne({ email });
             if (!user) return res.status(404).json({ error: "Email not found!" });
 
-            // find and delete previous otp
+            // Find and delete previous otp
             await OTP.findOneAndDelete({ kind: "verification", owner: user._id });
 
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
@@ -105,9 +97,9 @@ class AuthController {
                 return res.status(400).json({ error: "Error sending verification mail" });
             }
             const full_name = `${user.first_name} ${user.last_name}`;
-            await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
+            await EmailService.sendVerificationEmail(email, full_name, emailVToken.token);
 
-            const userToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "7d");
+            const userToken = await AuthController.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
             req.unverified_user = { id: userToken };
 
             res.setHeader("x-onboarding-user", req.unverified_user.id);
@@ -126,22 +118,19 @@ class AuthController {
     static async verifyEmail(req: Request, res: Response) {
         try {
             const { otp } = req.body;
-            const unverifiedUserToken = req.headers["x-onboarding-user"]?.toString();
-            if (!unverifiedUserToken) {
-                return res.status(401).json({ error: "Error authenticating user!" })
-            }
+            const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
 
-            const decodedToken = jwt.verify(unverifiedUserToken, ACCESS_TOKEN_SECRET) as any
+            const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: "Error authenticating user!" });
-
+            
             const user = await User.findById(decodedToken.id);
-            if (!user) return res.status(403).json({ error: "User not found!" });
+            if (!user) return res.status(404).json({ error: "User not found!" });
 
             const OTPinDb = await OTP.findOne({ token: otp });
-            if (!OTPinDb) return res.status(401).json({ error: "OTP not found!" });
+            if (!OTPinDb) return res.status(404).json({ error: "OTP not found!" });
 
             // ensure otp is not expired
-            if (OTPinDb.expires.valueOf() < Date.now().valueOf()) {
+            if (OTPinDb.expires.valueOf() < new Date().valueOf()) {
                 return res.status(400).json({ error: "OTP expired!" });
             }
             const userVerificationOTP = await OTP.findOneAndDelete({ kind: "verification", owner: user._id, token: otp });
@@ -150,7 +139,6 @@ class AuthController {
                 user.email_verified = true;
                 await user.save();
             }
-
             return res.status(200).json({ success: "User verification successful" });
 
         } catch (error) {
@@ -163,10 +151,9 @@ class AuthController {
     static async setPassword(req: Request, res: Response) {
         try {
             const { password } = req.body;
-            const userToken = req.headers?.["x-onboarding-user"]?.toString();
-            if (!userToken) return res.status(401).json({ error: "Error authenticating user!" });
+            const userToken = req.headers?.["x-onboarding-user"] as string;
 
-            const decodedToken = jwt.verify(userToken, ACCESS_TOKEN_SECRET) as any;
+            const decodedToken = jwt.verify(userToken, ONBOARDING_TOKEN_SECRET) as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: "Error authenticating user!" });
 
             const user = await User.findById(decodedToken.id);
@@ -291,7 +278,7 @@ class AuthController {
             const authToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
             res.setHeader("Authorization", `Bearer ${authToken}`);
 
-            return res.status(200).json({ sucess: "Login successful" });
+            return res.status(200).json({ success: "Login successful" });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: "Error signing in user" });

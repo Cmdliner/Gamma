@@ -23,8 +23,8 @@ const UserSchema = new Schema({
         required: true
     },
     phone_numbers: [{
-        type: Schema.Types.ObjectId,
-        ref: "PhoneNumber"
+        type: String,
+        unique: true
     }],
     email: {
         type: String,

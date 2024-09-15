@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/app.js",
   "scripts": {
-    "dev": "bun --watchfire src/app.ts",
+    "dev": "bun --watch src/app.ts",
     "build": "tsc && node --env-file .env dist/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

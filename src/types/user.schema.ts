@@ -7,7 +7,7 @@ interface IUser extends Document {
     dob: Date,
     gender: string;
     state_of_origin: string;
-    phone_numbers: Array<Types.ObjectId>;
+    phone_numbers: string[];
     email:  string;
     password?: string;
     bvn?: string;

@@ -7,5 +7,6 @@ declare namespace NodeJS {
         EMAIL_SERVICE: string;
         EMAIL_PASS: string;
         ACCESS_TOKEN_SECRET: string;
+        ONBOARDING_TOKEN_SECRET: string;
     }
 }
