@@ -34,6 +34,8 @@ bun run dev
 - Check uniqueness of phone numbers on registering and handle errors appropriately
 
 ## REMEMBER
+- Image upload bug is caused by improper disk storage configuration
+- change min limit for images in products validation for all from 1 to 10
 
 
 ## Project structure

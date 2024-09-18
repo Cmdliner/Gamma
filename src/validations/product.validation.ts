@@ -4,7 +4,7 @@ export const electronicsValidationSchema = Joi.object({
     product_images: Joi.array().min(1).required(),
     name: Joi.string().required(),
     description: Joi.string(),
-    owner: Joi.string().required(),
+    owner: Joi.object().required(),
     location: Joi.string().required(),
     price: Joi.number().required(),
     is_biddable: Joi.boolean().required(),
@@ -24,4 +24,6 @@ export const electronicsValidationSchema = Joi.object({
         "others").required()
 });
 
-// export const 
+export const landedPropertyValidationSchema = Joi.object({
+    product_images: Joi.array().min(1).required
+})

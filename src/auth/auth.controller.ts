@@ -1,4 +1,4 @@
-import { type Request, type Response } from "express";
+import { Request, Response } from "express";
 import { IRegisterUser } from "../types/user.dto";
 import { registerValidationSchema } from "../validations/auth.validation";
 import { Types } from "mongoose";
