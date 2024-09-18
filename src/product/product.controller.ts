@@ -1,15 +1,24 @@
-import e, { Request, Response } from "express";
+import { Request, Response } from "express";
 import { TElectronicsUploadBody } from "../types/product.dto";
 import IElectronics from "../types/electronics.schema";
 import { electronicsValidationSchema } from "../validations/product.validation";
+import { Electronics } from "./product.model";
 
 class ProductController {
 
     // Add new electronics
     static async addElectronicProduct(req: Request, res: Response) {
         try {
-            const uploadFields= req.files;
-            console.log(`Fields: ${uploadFields?.length}`);
+            const { ownership_documents, product_images } = req.files as { [fieldname: string]: Express.Multer.File[] };
+            
+            console.log(req.files);
+            //!TODO => validate the image paths
+            const ownershipDocumentsURL = ownership_documents.map(doc => doc.path);
+            console.log("OwnershipDosURL", ownershipDocumentsURL);
+            const productImagesURL = product_images.map(prodImg => prodImg.path);
+            console.log("Prod images url", productImagesURL);
+
+
             const {
                 name,
                 description,
@@ -21,18 +30,33 @@ class ProductController {
                 condition,
                 category
             }: TElectronicsUploadBody = req.body;
-            const electronicProductData: Partial<IElectronics> = { name, description, location, price, is_biddable, brand, item_model, category, condition };
-            electronicProductData.product_images_url = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"];
-            electronicProductData.ownership_documents_url = ["a", "b", "c", "d", "e", "f", "g"];
+            const electronicProductData: Partial<IElectronics> = {
+                name,
+                description,
+                location,
+                price,
+                is_biddable,
+                brand,
+                item_model,
+                category,
+                condition,
+            };
+            electronicProductData.owner = req.user?._id;
+            electronicProductData.product_images = productImagesURL;
+            electronicProductData.ownership_documents = ownershipDocumentsURL;
+
             const { error } = electronicsValidationSchema.validate(electronicProductData);
-            if (error) {
-                return res.status(422).json({ error: error.details[0] });
-            }
-            return res.status(200).json("I work");
+            if (error) return res.status(422).json({ error: error.details[0] });
+
+            const newElectronics = new Electronics(electronicProductData);
+            if (!newElectronics) return res.status(400).json({ error: "Error uploading electronics product" });
+
+            await newElectronics.save();
+            return res.status(200).json({ success: "Electronics uploaded successfully", electronics: newElectronics });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "An error occured during electronics product upload" })
+            return res.status(500).json({ error: "An error occured during electronics product upload" });
         }
     }
 

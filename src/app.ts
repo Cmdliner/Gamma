@@ -6,10 +6,17 @@ import SwaggerUI from "swagger-ui-express";
 import product from "./product/product.routes";
 import AuthMiddleware from "./middlewares/auth.middlewares";
 import swaggerSpec from "./config/swagger";
+import cors, { CorsOptions } from "cors";
 
 const { PORT, API_VERSION } = Settings;
 const app = express();
-
+const corsOptions: CorsOptions = {
+    origin: "http://localhost:5500",
+    methods: "POST",
+    allowedHeaders: ["Authorization"],
+    credentials: true
+}
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(`/${API_VERSION}/docs`, SwaggerUI.serve, SwaggerUI.setup(swaggerSpec));

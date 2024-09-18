@@ -1,14 +1,14 @@
 import { Document, Types } from "mongoose";
 
 interface IProduct extends Document {
-    product_images_url: string[];
+    product_images: string[];
     name: string;
     description: string;
     owner: Types.ObjectId;
     location: string;
     price: number;
     is_biddable: boolean;
-    ownership_documents_url: string[];
+    ownership_documents: string[];
     category: ProductCategory;
 }
 

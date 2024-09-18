@@ -1,7 +1,7 @@
-import Joi, { string } from "joi";
+import Joi from "joi";
 
 export const electronicsValidationSchema = Joi.object({
-    product_images_url: Joi.string().required(),
+    product_images: Joi.array().min(1).required(),
     name: Joi.string().required(),
     description: Joi.string(),
     owner: Joi.string().required(),
@@ -9,7 +9,7 @@ export const electronicsValidationSchema = Joi.object({
     price: Joi.number().required(),
     is_biddable: Joi.boolean().required(),
     // ownership_documents_url: Joi.array().items(Joi.string()).min(10).required(),
-    ownership_documents: Joi.required(),
+    ownership_documents: Joi.array().min(1).required(),
     brand: Joi.string().required(),
     item_model: Joi.string().required(),
     condition: Joi.string().allow("new", "used"),

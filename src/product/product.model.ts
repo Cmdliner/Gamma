@@ -7,7 +7,7 @@ import ILandedProperty from "../types/landed_property.schema";
 import IVehicle from "../types/vehicle.schema";
 
 const ProductSchema = new Schema({
-    product_images_url: [
+    product_images: [
         {
             type: String,
             required: true,
@@ -39,11 +39,10 @@ const ProductSchema = new Schema({
         type: Boolean,
         required: true,
     },
-    ownership_documents_url: [
+    ownership_documents: [
         {
             type: String,
-            unique: true,
-            required: true,
+            unique: true
         },
     ],
     category: {

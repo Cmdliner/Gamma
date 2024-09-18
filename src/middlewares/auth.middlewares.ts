@@ -20,6 +20,7 @@ class AuthMiddleware {
             if (!user.account_verified) {
                 return res.status(403).json({ error: "Forbidden!" });
             }
+            req.user = user;
             next();
         } catch (error) {
             console.error(error);
