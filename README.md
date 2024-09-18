@@ -29,17 +29,22 @@ bash scripts/create_env.sh
 bun run dev
 ```
 
+## BUGS
+
+- validation does not catch allowed values errors in products upload
+
 ## TODOS
 
 - Check uniqueness of phone numbers on registering and handle errors appropriately
 
 ## REMEMBER
+
 - Image upload bug is caused by improper disk storage configuration
 - change min limit for images in products validation for all from 1 to 10
 
-
 ## Project structure
-```sh
+
+````sh
 .
 ├── bun.lockb
 ├── docs
@@ -107,3 +112,4 @@ bun run dev
 
 19 directories, 45 files
 ```sh
+````

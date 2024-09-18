@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import IElectronics from "../types/electronics.schema";
-import { electronicsValidationSchema } from "../validations/product.validation";
-import { Electronics } from "./product.model";
+import { electronicsValidationSchema, landedPropertyValidationSchema } from "../validations/product.validation";
+import { Electronics, LandedProperty } from "./product.model";
 import { ReqFile } from "../types/multer_file";
 import ILandedProperty from "../types/landed_property.schema";
 
@@ -34,10 +34,11 @@ class ProductController {
             const { error } = electronicsValidationSchema.validate(electronicProductData);
             if (error) return res.status(422).json({ error: error.details[0] });
 
-            const newElectronics = new Electronics(electronicProductData);
-            if (!newElectronics) return res.status(400).json({ error: "Error uploading product" });
+            const newElectronics = await Electronics.create(electronicProductData);
+            if (!newElectronics) {
+                return res.status(400).json({ error: "Error uploading product" });
+            }
 
-            await newElectronics.save();
             return res.status(200).json({ success: "Electronics uploaded successfully", electronics: newElectronics });
 
         } catch (error) {
@@ -61,7 +62,7 @@ class ProductController {
                 location: req.body.location,
                 price: req.body.price,
                 is_biddable: req.body.is_biddable,
-                category: req.body.categories,
+                category: req.body.category,
                 ownership_documents: ownershipDocumentsURL,
                 product_images: productImagesURL,
                 owner: req.user?._id,
@@ -70,9 +71,21 @@ class ProductController {
                 condition: req.body.condition
             };
 
+            const {error} = landedPropertyValidationSchema.validate(landedPropertyData);
+            if(error) {
+                return res.status(422).json({ error: error.details[0].message });
+            }
+
+            const newLandedProperty = await LandedProperty.create(landedPropertyData);
+            if(!newLandedProperty) {
+                return res.status(400).json({ error: "Error uploading landed property"});
+            }
+
+            return res.status(201).json({ success: "Property uploaded successfully", landed_property: newLandedProperty})
+
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "An error occured while upload proeprty" })
+            return res.status(500).json({ error: "An error occured during property upload" })
         }
     }
 
@@ -93,10 +106,6 @@ class ProductController {
 
     // Add other products
     static async uploadOtherProduct() {
-    }
-    // Test products endpoint
-    static async testRoute(req: Request, res: Response) {
-        return res.status(200).json({ "a": "test product routes" });
     }
 
 }
