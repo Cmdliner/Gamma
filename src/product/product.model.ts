@@ -157,7 +157,7 @@ const VehicleSchema = new Schema({
         type: String,
         required: true
     },
-    registered:  {
+    is_registered:  {
         type: Boolean,
         required: true
     },

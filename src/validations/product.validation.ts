@@ -63,3 +63,22 @@ export const gadgetValidationSchema = Joi.object({
     condition: Joi.allow("new", "used").required(),
     ownership_documents: Joi.array().min(0).max(5)
 });
+
+export const vehiclevalidationSchema = Joi.object({
+    name: Joi.string().required(),
+    description: Joi.string().required(),
+    price: Joi.number().min(10).required(),
+    product_images: Joi.array().min(1).max(10).required(),
+    owner: Joi.object().required(),
+    location: Joi.string().required(),
+    is_biddable: Joi.boolean().required(),
+    category: Joi.allow(...allowedCategories).required(),
+    condition: Joi.allow("new", "used").required(),
+    ownership_documents: Joi.array().min(0).max(5),
+    make: Joi.string().required(),
+    is_registered: Joi.boolean().required(),
+    item_model: Joi.string().required(),
+    year: Joi.number().required(),
+    vin: Joi.string().required(),
+    transmission_type: Joi.string().required()
+})

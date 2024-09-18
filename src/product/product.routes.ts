@@ -4,11 +4,9 @@ import { uploadMiddleware } from "../middlewares/upload.middlewares";
 
 const product = Router();
 
-
-
 product.post("/upload-gadget", uploadMiddleware, ProductController.uploadGadget);
 product.post("/upload-vehicle", uploadMiddleware,  ProductController.uploadVehicle);
-product.post("/upload-furniture", uploadMiddleware,  ProductController.newFuriture);
+product.post("/upload-furniture", uploadMiddleware,  ProductController.newFurniture);
 product.post("/upload-machinery", uploadMiddleware,  ProductController.newMachinery);
 product.post("/upload-electronics", uploadMiddleware, ProductController.addElectronicProduct);
 product.post("/upload-others", uploadMiddleware, ProductController.uploadOtherProduct);
