@@ -42,7 +42,6 @@ const ProductSchema = new Schema({
     ownership_documents: [
         {
             type: String,
-            unique: true
         },
     ],
     category: {

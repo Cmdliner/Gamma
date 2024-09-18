@@ -1,2 +1,2 @@
-export  type ReqFile = { [fieldname: string]: Express.Multer.File[] };
+export  type ReqFiles = { [fieldname: string]: Express.Multer.File[] };
 

@@ -18,7 +18,7 @@ export const electronicsValidationSchema = Joi.object({
     location: Joi.string().required(),
     price: Joi.number().min(10).required(),
     is_biddable: Joi.boolean().required(),
-    ownership_documents: Joi.array().min(1).max(5).required(),
+    ownership_documents: Joi.array().max(5),
     brand: Joi.string().required(),
     item_model: Joi.string().required(),
     condition: Joi.string().allow("new", "used"),
@@ -47,3 +47,19 @@ export const landedPropertyValidationSchema = Joi.object({
     category: Joi.allow(...allowedCategories).required(),
     condition: Joi.allow(...validPropertyconditions).required()
 })
+
+export const gadgetValidationSchema = Joi.object({
+    name: Joi.string().required(),
+    description: Joi.string().required(),
+    price: Joi.number().min(10).required(),
+    product_images: Joi.array().min(1).max(10).required(),
+    owner: Joi.object().required(),
+    location: Joi.string().required(),
+    is_biddable: Joi.boolean().required(),
+    category: Joi.allow(...allowedCategories).required(),
+    brand: Joi.string().required(),
+    item_model: Joi.string().required(),
+    RAM: Joi.string().required(),
+    condition: Joi.allow("new", "used").required(),
+    ownership_documents: Joi.array().min(0).max(5)
+});

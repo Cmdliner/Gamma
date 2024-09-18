@@ -4,7 +4,7 @@ interface IGadget extends IProduct {
     brand: string;
     item_model: string;
     RAM: string;
-    conditon: "new" | "used";
+    condition: "new" | "used";
 }
 
 export default IGadget;

@@ -31,11 +31,15 @@ bun run dev
 
 ## BUGS
 
-- validation does not catch allowed values errors in products upload
+- validation does not catch "allowed values" errors in products upload
 
 ## TODOS
-
+- Write middleware to validate uploads (check that file is a valid image)
+- use express req compressor middleware (gzipped)
 - Check uniqueness of phone numbers on registering and handle errors appropriately
+- index product name for faster search
+- index product description so we can check for duplicate products druing production and reject it
+- implement rate limiting for reset-password and verify-bvn endpoints
 
 ## REMEMBER
 
