@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
 import IUser from "../types/user.schema";
+import { allowedCategories } from "../validations/product.validation";
 
 const UserSchema = new Schema({
     first_name: {
@@ -9,6 +10,10 @@ const UserSchema = new Schema({
     middle_name: {
         type: String,
     },
+    interested_categories: [{
+        type: String,
+        enum: allowedCategories
+    }],
     last_name: {
         type: String,
         required: true

@@ -16,10 +16,12 @@ const ProductSchema = new Schema({
     ],
     name: {
         type: String,
+        index: true,
         required: true,
     },
     description: {
         type: String,
+        index: true, // do this so comparison for product duplication or copy can be easily determined
         required: true,
     },
     owner: {

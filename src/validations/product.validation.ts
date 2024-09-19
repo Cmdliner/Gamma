@@ -1,6 +1,6 @@
 import Joi, { allow } from "joi";
 
-const allowedCategories = [
+export const allowedCategories = [
     "electronics",
     "landed_properties",
     "gadgets",
@@ -74,7 +74,7 @@ export const vehiclevalidationSchema = Joi.object({
     is_biddable: Joi.boolean().required(),
     category: Joi.allow(...allowedCategories).required(),
     condition: Joi.allow("new", "used").required(),
-    ownership_documents: Joi.array().min(0).max(5),
+    ownership_documents: Joi.array().min(2).max(5),
     make: Joi.string().required(),
     is_registered: Joi.boolean().required(),
     item_model: Joi.string().required(),

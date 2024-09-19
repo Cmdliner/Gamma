@@ -31,7 +31,8 @@ class AuthController {
                 phone_no_1, phone_no_2
             }: IRegisterUser = req.body;
 
-            const registerInfo: Partial<IRegisterUser> = { first_name, last_name, dob, email, gender, state_of_origin };
+            if(!req.body.interested_categories) req.body.interested_categories = "others";
+            const registerInfo: Partial<IRegisterUser> = { first_name, last_name, dob, email, gender, state_of_origin, interested_categories: req.body.interested_categories };
             const phone_numbers = [phone_no_1];
             if(phone_no_2) phone_numbers.push(phone_no_2);
 
@@ -176,7 +177,7 @@ class AuthController {
     }
 
     // kyc
-    static async verifyBVN() { }
+    static async verifyBVN(req: Request, res: Response) { }
 
     // bank account details
     static async addBankDetails() { }
