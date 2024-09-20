@@ -19,7 +19,7 @@ import path from "path";
 // })
 const upload = multer({ dest: "uploads/" });
 
-export const uploadMiddleware = upload.fields([
+export const UploadMiddleware = upload.fields([
     { name: "product_images", maxCount: 10 },
     { name: "ownership_documents", maxCount: 5 },
 ]);

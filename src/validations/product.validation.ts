@@ -1,4 +1,4 @@
-import Joi, { allow } from "joi";
+import Joi from "joi";
 
 export const allowedCategories = [
     "electronics",
@@ -46,7 +46,7 @@ export const landedPropertyValidationSchema = Joi.object({
     dimensions: Joi.string().required(),
     category: Joi.allow(...allowedCategories).required(),
     condition: Joi.allow(...validPropertyconditions).required()
-})
+});
 
 export const gadgetValidationSchema = Joi.object({
     name: Joi.string().required(),
@@ -81,4 +81,16 @@ export const vehiclevalidationSchema = Joi.object({
     year: Joi.number().required(),
     vin: Joi.string().required(),
     transmission_type: Joi.string().required()
-})
+});
+
+export const genericValidationSchema = Joi.object({
+    name: Joi.string().required(),
+    description: Joi.string().required(),
+    owner: Joi.object().required(),
+    location: Joi.string().required(),
+    price: Joi.number().min(10).required(),
+    is_biddable: Joi.boolean().required(),
+    category: Joi.allow(...allowedCategories).required(),
+    product_images: Joi.array().min(10).max(10).required(),
+    ownership_documents: Joi.array()
+});

@@ -1,16 +1,18 @@
 import { Router } from "express";
 import ProductController from "./product.controller";
-import { uploadMiddleware } from "../middlewares/upload.middlewares";
+import { UploadMiddleware } from "../middlewares/upload.middlewares";
 
 const product = Router();
 
-product.post("/upload-gadget", uploadMiddleware, ProductController.uploadGadget);
-product.post("/upload-vehicle", uploadMiddleware,  ProductController.uploadVehicle);
-product.post("/upload-furniture", uploadMiddleware,  ProductController.newFurniture);
-product.post("/upload-machinery", uploadMiddleware,  ProductController.newMachinery);
-product.post("/upload-electronics", uploadMiddleware, ProductController.addElectronicProduct);
-product.post("/upload-others", uploadMiddleware, ProductController.uploadOtherProduct);
-product.post("/upload-landed-property", uploadMiddleware, ProductController.addLandedProperty);
-// product.get("/:productID", ProductController.getProduct)
+product.get("/:productID", ProductController.getProductInfo);
+product.get("/categories/:productCategory", ProductController.getAllProductsInCategory);
+product.post("/upload-gadget", UploadMiddleware, ProductController.uploadGadget);
+product.post("/upload-vehicle", UploadMiddleware, ProductController.uploadVehicle);
+product.post("/upload-landed-property", UploadMiddleware, ProductController.addLandedProperty);
+product.post("/upload-electronics", UploadMiddleware, ProductController.addElectronicProduct);
+product.post("/upload-furniture", UploadMiddleware, ProductController.uploadGenericProduct);
+product.post("/upload-machinery", UploadMiddleware, ProductController.uploadGenericProduct);
+product.post("/upload-others", UploadMiddleware, ProductController.uploadGenericProduct);
+product.post("/upload-fashionwares", UploadMiddleware, ProductController.uploadGenericProduct)
 
 export default product;
