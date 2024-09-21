@@ -8,7 +8,7 @@ export const registerValidationSchema = Joi.object({
     phone_numbers: Joi.array().min(1).unique(),
     email: Joi.string().email().required(),
     gender: Joi.string().required(),
-    interested_categories: Joi.array().allow(allowedCategories),
+    interested_categories: Joi.array().allow(...allowedCategories),
     state_of_origin: Joi.string().required(),
     referral_code: Joi.string() //! TODO => pattern of 4 digits code
 })

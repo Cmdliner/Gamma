@@ -8,5 +8,6 @@ declare namespace NodeJS {
         EMAIL_PASS: string;
         ACCESS_TOKEN_SECRET: string;
         ONBOARDING_TOKEN_SECRET: string;
+        CORS_ORIGIN: string;
     }
 }

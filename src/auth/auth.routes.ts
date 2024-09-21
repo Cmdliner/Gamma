@@ -12,4 +12,5 @@ auth.post("/verify-reset-password", AuthController.verifyResetPwdOTP)
 auth.post("/reset-password", AuthController.resetPassword);
 auth.post("/login", AuthController.login);
 
+
 export default auth;

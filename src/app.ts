@@ -1,5 +1,6 @@
 import express, { type Request, type Response } from "express";
 import auth from "./auth/auth.routes";
+import user from "./user/user.routes";
 import DB from "./config/db";
 import Settings from "./config/settings";
 import SwaggerUI from "swagger-ui-express";
@@ -9,17 +10,19 @@ import swaggerSpec from "./config/swagger";
 import cors, { CorsOptions } from "cors";
 
 const { PORT, API_VERSION } = Settings;
-const app = express();
 const corsOptions: CorsOptions = {
-    origin: "http://localhost:5500",
+    origin: process.env.CORS_ORIGIN,
     methods: "POST",
     allowedHeaders: ["Authorization"],
     credentials: true
 }
+const app = express();
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(`/${API_VERSION}/docs`, SwaggerUI.serve, SwaggerUI.setup(swaggerSpec));
+app.use(`/${API_VERSION}/user`, user);
 app.use(`/${API_VERSION}/auth`, auth);
 app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
 
@@ -29,7 +32,7 @@ app.get("/healthz", (_req: Request, res: Response) => {
 
 DB.connect()
     .then(() => app.listen(PORT, () => console.log("Server is up and running on PORT " + PORT)))
-    .catch((error) => console.error({ error: (error as Error).stack }));
+    .catch((error) => console.error({ error: (error as Error).name }));
 
 
 export default app;

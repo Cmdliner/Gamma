@@ -10,6 +10,8 @@ export const allowedCategories = [
     "fashion_wears",
     "others",
 ];
+
+
 export const electronicsValidationSchema = Joi.object({
     product_images: Joi.array().min(1).max(10).required(),
     name: Joi.string().required(),

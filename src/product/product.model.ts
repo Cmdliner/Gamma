@@ -180,7 +180,6 @@ const VehicleSchema = new Schema({
         type: String,
         required: true
     },
-    //! TODO => Check what transmission type is and update accordingly
     transmission_type:  {
         type: String,
         required: true

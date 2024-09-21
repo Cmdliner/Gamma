@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import IElectronics from "../types/electronics.schema";
-import { electronicsValidationSchema, gadgetValidationSchema, genericValidationSchema, landedPropertyValidationSchema, vehiclevalidationSchema } from "../validations/product.validation";
+import { allowedCategories, electronicsValidationSchema, gadgetValidationSchema, genericValidationSchema, landedPropertyValidationSchema, vehiclevalidationSchema } from "../validations/product.validation";
 import Product, { Electronics, FashionProduct, Furniture, Gadget, LandedProperty, Machinery, OtherProduct, Vehicle } from "./product.model";
 import { ReqFiles } from "../types/multer_file";
 import ILandedProperty from "../types/landed_property.schema";
@@ -229,6 +229,7 @@ class ProductController {
 
     }
 
+    // Get product info
     static async getProductInfo(req: Request, res: Response) {
         try {
             const { productID } = req.params;
@@ -242,19 +243,20 @@ class ProductController {
         }
     }
 
+    // Get all products in a single category
     static async getAllProductsInCategory(req: Request, res: Response) {
         try {
             const { productCategory } = req.params;
 
             //!TODO => validate product category
-    
+            const isValidCategory = allowedCategories.includes(productCategory);
+            if (!isValidCategory) return res.status(400).json({ error: "Invalid product category!" });
+
             const products = await Product.find({ category: productCategory });
-            if (!products) throw new Error("Products not found");
-    
-            return res.status(200).json({ success: "Products found!", products })
+            if(products) return res.status(200).json({ success: "Products found!", products });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Error fetching products"})
+            return res.status(500).json({ error: "Error fetching products" })
         }
     }
 
