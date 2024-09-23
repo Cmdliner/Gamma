@@ -35,7 +35,8 @@ const ProductSchema = new Schema({
     },
     price: {
         type: Number,
-        required: Number,
+        required: true,
+        min: 0
     },
     is_biddable: {
         type: Boolean,

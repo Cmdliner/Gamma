@@ -45,8 +45,7 @@ const UserSchema = new Schema({
         type: String
     },
     referral_code: {
-        type: Number,
-        unique: true
+        type: Number
     },
     referrals: [{
         type: Schema.Types.ObjectId,

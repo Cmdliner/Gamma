@@ -8,6 +8,7 @@ import product from "./product/product.routes";
 import AuthMiddleware from "./middlewares/auth.middlewares";
 import swaggerSpec from "./config/swagger";
 import cors, { CorsOptions } from "cors";
+import bid from "./bid/bid.routes";
 
 const { PORT, API_VERSION } = Settings;
 const corsOptions: CorsOptions = {
@@ -21,10 +22,12 @@ const app = express();
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(`/${API_VERSION}/docs`, SwaggerUI.serve, SwaggerUI.setup(swaggerSpec));
-app.use(`/${API_VERSION}/user`, user);
 app.use(`/${API_VERSION}/auth`, auth);
+app.use(`/${API_VERSION}/users`, user);
 app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
+app.use(`/${API_VERSION}/bids`, AuthMiddleware.requireAuth, bid);
+app.use(`/${API_VERSION}/docs`, SwaggerUI.serve, SwaggerUI.setup(swaggerSpec));
+
 
 app.get("/healthz", (_req: Request, res: Response) => {
     res.status(200).json({ active: "The hood is up commandliner⚡" });

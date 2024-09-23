@@ -41,7 +41,7 @@ bun run dev
 - implement product limiting (pagination) that can be consumed by infinite scrolling by the frontend
 - implement compression for endpoints with large data sets
 - implement referrals
-- delete product (if no current operation is on it) [X]
+- delete product (if no current operation is pending) [X]
 - create disputes
 - Create bids
 - Sponsor product
@@ -54,9 +54,10 @@ bun run dev
 - Create notification model
 - Implement push-notifications with appropraitely named lib
 - Add push token to user model
+- Uniqueness of referral token should be implemented in the controller as business logic
 
 ## REMEMBER
-
+- cannot accept multiple bids on same product item
 - Image upload bug is caused by improper disk storage configuration
 - change min limit for images in products validation for all from 1 to 10
 
