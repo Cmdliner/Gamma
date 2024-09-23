@@ -40,6 +40,20 @@ bun run dev
 - implement rate limiting for reset-password and verify-bvn endpoints
 - implement product limiting (pagination) that can be consumed by infinite scrolling by the frontend
 - implement compression for endpoints with large data sets
+- implement referrals
+- delete product (if no current operation is on it) [X]
+- create disputes
+- Create bids
+- Sponsor product
+- user search history (recent searchs for products)
+- Notifications -> bid info, payment, updates (Any product / transaction related event)
+- App pays them through escrow account
+- Users put money in app by bank account or card
+- On bid accecpted 5 mins payment time before expiry
+- On buyer payment create transaction receipts with method of payment and transaction id
+- Create notification model
+- Implement push-notifications with appropraitely named lib
+- Add push token to user model
 
 ## REMEMBER
 

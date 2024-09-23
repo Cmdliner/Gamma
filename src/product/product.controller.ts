@@ -7,6 +7,7 @@ import ILandedProperty from "../types/landed_property.schema";
 import IGadget from "../types/gadget.schema";
 import IVehicle from "../types/vehicle.schema";
 import { IFurniture } from "../types/generic.schema";
+import { compareObjectID } from "../lib/main";
 
 class ProductController {
 
@@ -31,8 +32,8 @@ class ProductController {
                 condition: req.body.condition,
                 owner: req.user?._id,
                 product_images: productImagesURL,
-                ownership_documents: ownershipDocsURL
             };
+            if(ownershipDocsURL.length) electronicProductData.ownership_documents = ownershipDocsURL;
 
             const { error } = electronicsValidationSchema.validate(electronicProductData);
             if (error) return res.status(422).json({ error: error.details[0] });
@@ -99,7 +100,7 @@ class ProductController {
 
             // Get urls of uploaded images
             const productImagesURL = product_images.map(prodImg => prodImg.path);
-            const ownershipDocsURLURL = ownership_documents ? ownership_documents.map(doc => doc.path) : [];
+            const ownershipDocsURL = ownership_documents ? ownership_documents.map(doc => doc.path) : [];
 
             const gadgetData: Partial<IGadget> = {
                 product_images: productImagesURL,
@@ -115,7 +116,7 @@ class ProductController {
                 RAM: req.body.RAM,
                 condition: req.body.condition
             };
-            if (ownershipDocsURLURL.length > 0) gadgetData.ownership_documents = ownershipDocsURLURL;
+            if (ownershipDocsURL.length) gadgetData.ownership_documents = ownershipDocsURL;
 
             // validate data
             const { error } = gadgetValidationSchema.validate(gadgetData);
@@ -183,7 +184,7 @@ class ProductController {
     static async uploadGenericProduct(req: Request, res: Response) {
         try {
             const { ownership_documents, product_images } = req.files as ReqFiles;
-            const ownershipDocsURL = ownership_documents.map(doc => doc.path);
+            const ownershipDocsURL = ownership_documents ? ownership_documents.map(doc => doc.path): [];
             const productImagesURL = product_images.map(prodImg => prodImg.path)
             const genericProductData: Partial<IFurniture> = {
                 name: req.body.name,
@@ -196,7 +197,7 @@ class ProductController {
                 category: req.body.category,
                 product_images: productImagesURL
             }
-            if (ownership_documents.length) genericProductData.ownership_documents = ownershipDocsURL;
+            if (ownershipDocsURL.length) genericProductData.ownership_documents = ownershipDocsURL;
             const { error } = genericValidationSchema.validate(genericProductData);
             if (error) {
                 return res.status(422).json({ error: error.details[0].message });
@@ -253,10 +254,32 @@ class ProductController {
             if (!isValidCategory) return res.status(400).json({ error: "Invalid product category!" });
 
             const products = await Product.find({ category: productCategory });
-            if(products) return res.status(200).json({ success: "Products found!", products });
+            if (products) return res.status(200).json({ success: "Products found!", products });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: "Error fetching products" })
+        }
+    }
+
+    static async deleteProductListing(req: Request, res: Response) {
+        try {
+            const currentUser = req.user?._id;
+            const { productID } = req.params;
+
+            const productListing = await Product.findById(productID);
+            if (!productListing) return res.status(404).json({ error: "Product not found!" });
+            
+            const isAuthorizedToDelete = compareObjectID(currentUser!, productListing.owner);
+            if (!isAuthorizedToDelete) return res.status(403).json({ error: "Unauthorized!" });
+
+            //!TODO => check if there are no pending operations (transactions, bids) on this item
+            const deletedProductListing = await Product.findByIdAndDelete(productID);
+            if (!deletedProductListing) throw new Error("An error occured while attempting to delete product");
+
+            return res.status(200).json({ success: "Product listing has been deleted successfully" });
+
+        } catch (error) {
+
         }
     }
 

@@ -92,7 +92,8 @@ export const genericValidationSchema = Joi.object({
     location: Joi.string().required(),
     price: Joi.number().min(10).required(),
     is_biddable: Joi.boolean().required(),
+    condition: Joi.string().allow("used", "new").required(),
     category: Joi.allow(...allowedCategories).required(),
-    product_images: Joi.array().min(10).max(10).required(),
+    product_images: Joi.array().min(1).max(10).required(),
     ownership_documents: Joi.array()
 });

@@ -13,6 +13,7 @@ product.post("/upload-electronics", UploadMiddleware, ProductController.addElect
 product.post("/upload-furniture", UploadMiddleware, ProductController.uploadGenericProduct);
 product.post("/upload-machinery", UploadMiddleware, ProductController.uploadGenericProduct);
 product.post("/upload-others", UploadMiddleware, ProductController.uploadGenericProduct);
-product.post("/upload-fashionwares", UploadMiddleware, ProductController.uploadGenericProduct)
+product.post("/upload-fashionwares", UploadMiddleware, ProductController.uploadGenericProduct);
+product.delete("/:productID", ProductController.deleteProductListing);
 
 export default product;
