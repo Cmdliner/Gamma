@@ -10,6 +10,8 @@ interface IProduct extends Document {
     is_biddable: boolean;
     ownership_documents: string[];
     category: ProductCategory;
+    status: "available" | "pending" | "sold";
+    sponsored: boolean;
 }
 
 type ProductCategory =

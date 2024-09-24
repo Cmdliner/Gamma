@@ -61,6 +61,15 @@ const ProductSchema = new Schema({
         ],
         required: true,
     },
+    status: {
+        type: String,
+        enum: ["available", "pending", "sold"],
+        default: "available"
+    },
+    sponsored: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true, descriminatorKey: "category" });
 
 const ElectronicsSchema = new Schema({

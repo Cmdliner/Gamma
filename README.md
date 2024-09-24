@@ -44,13 +44,13 @@ bun run dev
 - delete product (if no current operation is pending) [X]
 - create disputes
 - Create bids [X]
-- Create product status ("available", "pending", "sold")
-- Sponsor product: implement this as a flag in product (e.g is_sponsored: true or false)
+- Create product status ("available", "pending", "sold") [X]
+- Sponsor product: implement this as a flag in product (e.g is_sponsored: true or false) [X]
 - user search history (recent searchs for products)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
 - App pays them through escrow account
 - Users put money in app by bank account or card
-- On bid accepted 5 mins payment time before expiry
+- On bid accepted 5 mins payment time before expiry [X]
 - On buyer payment create transaction receipts with method of payment and transaction id
 - Create notification model
 - Implement push-notifications with appropraitely named lib
