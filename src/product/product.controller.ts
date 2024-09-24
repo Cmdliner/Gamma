@@ -33,7 +33,7 @@ class ProductController {
                 owner: req.user?._id,
                 product_images: productImagesURL,
             };
-            if(ownershipDocsURL.length) electronicProductData.ownership_documents = ownershipDocsURL;
+            if (ownershipDocsURL.length) electronicProductData.ownership_documents = ownershipDocsURL;
 
             const { error } = electronicsValidationSchema.validate(electronicProductData);
             if (error) return res.status(422).json({ error: error.details[0] });
@@ -184,7 +184,7 @@ class ProductController {
     static async uploadGenericProduct(req: Request, res: Response) {
         try {
             const { ownership_documents, product_images } = req.files as ReqFiles;
-            const ownershipDocsURL = ownership_documents ? ownership_documents.map(doc => doc.path): [];
+            const ownershipDocsURL = ownership_documents ? ownership_documents.map(doc => doc.path) : [];
             const productImagesURL = product_images.map(prodImg => prodImg.path)
             const genericProductData: Partial<IFurniture> = {
                 name: req.body.name,
@@ -268,7 +268,7 @@ class ProductController {
 
             const productListing = await Product.findById(productID);
             if (!productListing) return res.status(404).json({ error: "Product not found!" });
-            
+
             const isAuthorizedToDelete = compareObjectID(currentUser!, productListing.owner);
             if (!isAuthorizedToDelete) return res.status(403).json({ error: "Unauthorized!" });
 
@@ -280,6 +280,26 @@ class ProductController {
 
         } catch (error) {
 
+        }
+    }
+
+    static async sponsorProduct(req: Request, res: Response) {
+        const { productID } = req.params;
+        //!TODO => Ensure product exists && only owner can sponsor it
+        // use transaction service and db transactions to make payment for sponsorhsip
+        // then set the sponsored flag to true so it can be fetched into the market place sponsored section
+    }
+
+    static async getSponsoredProducts(req: Request, res: Response) {
+        try {
+            const { categoryName } = req.params;
+
+            //!TODO => Filter as per user location
+            const sponsoredProds = await Product.find({ category: categoryName, sponsored: true });
+            return res.status(200).json({ success: "Ads found", products: sponsoredProds });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Error getting sponsored products" });
         }
     }
 

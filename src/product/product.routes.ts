@@ -14,6 +14,8 @@ product.post("/upload-furniture", UploadMiddleware, ProductController.uploadGene
 product.post("/upload-machinery", UploadMiddleware, ProductController.uploadGenericProduct);
 product.post("/upload-others", UploadMiddleware, ProductController.uploadGenericProduct);
 product.post("/upload-fashionwares", UploadMiddleware, ProductController.uploadGenericProduct);
+product.post("/:productID/sponsor", ProductController.sponsorProduct);
+product.get("/:productCategory/sponsored", ProductController.getSponsoredProducts);
 product.delete("/:productID", ProductController.deleteProductListing);
 
 export default product;
