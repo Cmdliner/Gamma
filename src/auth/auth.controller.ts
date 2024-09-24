@@ -276,6 +276,9 @@ class AuthController {
             const passwordsMatch = await bcrypt.compare(password, user.password as string);
             if (!passwordsMatch) return res.status(403).json({ error: "Invalid username or password!" });
 
+            if(!user.bvn_verified || user.account_verified || !user.email_verified) {
+                return res.status(403).json({error: "Cannot skip onboarding process"});
+            }
             const authToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
             res.setHeader("Authorization", `Bearer ${authToken}`);
 
