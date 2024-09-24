@@ -1,11 +1,6 @@
 import { model, Schema } from "mongoose";
-import IBid from "../types/bid.schema";
+import type IBid from "../types/bid.schema";
 
-const Next5Mins = () => {
-    let fiveMinsInMs = (1000 * 60 * 5);
-    let nowInMs = new Date().valueOf()
-    return new Date(nowInMs + fiveMinsInMs);
-}
 
 const BidSchema = new Schema({
     product: {
@@ -35,8 +30,6 @@ const BidSchema = new Schema({
     },
     expires: {
         type: Date,
-        required: true,
-        default: Next5Mins()
     }
 });
 

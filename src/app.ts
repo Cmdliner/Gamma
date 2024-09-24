@@ -7,7 +7,7 @@ import SwaggerUI from "swagger-ui-express";
 import product from "./product/product.routes";
 import AuthMiddleware from "./middlewares/auth.middlewares";
 import swaggerSpec from "./config/swagger";
-import cors, { CorsOptions } from "cors";
+import cors, { type CorsOptions } from "cors";
 import bid from "./bid/bid.routes";
 
 const { PORT, API_VERSION } = Settings;

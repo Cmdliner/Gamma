@@ -1,5 +1,5 @@
 import path from "path";
-import swaggerJSDoc, { SwaggerDefinition } from "swagger-jsdoc";
+import swaggerJSDoc, { type SwaggerDefinition } from "swagger-jsdoc";
 import { SwaggerOptions } from "swagger-ui-express";
 
 const swaggerDefinition: SwaggerDefinition = {

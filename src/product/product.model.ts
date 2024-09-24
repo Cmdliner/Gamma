@@ -1,10 +1,10 @@
 import { model, Schema } from "mongoose";
-import { IFashionProduct, IFurniture, IMachinery } from "../types/generic.schema";
-import IProduct from "../types/product.schema";
-import IElectronics from "../types/electronics.schema";
-import IGadget from "../types/gadget.schema";
-import ILandedProperty from "../types/landed_property.schema";
-import IVehicle from "../types/vehicle.schema";
+import type { IFashionProduct, IFurniture, IMachinery } from "../types/generic.schema";
+import type IProduct from "../types/product.schema";
+import type IElectronics from "../types/electronics.schema";
+import type IGadget from "../types/gadget.schema";
+import type ILandedProperty from "../types/landed_property.schema";
+import type IVehicle from "../types/vehicle.schema";
 
 const ProductSchema = new Schema({
     product_images: [

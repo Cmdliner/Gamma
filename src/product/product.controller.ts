@@ -1,12 +1,12 @@
-import { Request, Response } from "express";
-import IElectronics from "../types/electronics.schema";
+import type { Request, Response } from "express";
+import type IElectronics from "../types/electronics.schema";
 import { allowedCategories, electronicsValidationSchema, gadgetValidationSchema, genericValidationSchema, landedPropertyValidationSchema, vehiclevalidationSchema } from "../validations/product.validation";
 import Product, { Electronics, FashionProduct, Furniture, Gadget, LandedProperty, Machinery, OtherProduct, Vehicle } from "./product.model";
-import { ReqFiles } from "../types/multer_file";
-import ILandedProperty from "../types/landed_property.schema";
-import IGadget from "../types/gadget.schema";
-import IVehicle from "../types/vehicle.schema";
-import { IFurniture } from "../types/generic.schema";
+import type { ReqFiles } from "../types/multer_file";
+import type ILandedProperty from "../types/landed_property.schema";
+import type IGadget from "../types/gadget.schema";
+import type IVehicle from "../types/vehicle.schema";
+import type { IFurniture } from "../types/generic.schema";
 import { compareObjectID } from "../lib/main";
 
 class ProductController {

@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import IUser from "../types/user.schema";
+import type IUser from "../types/user.schema";
 import { allowedCategories } from "../validations/product.validation";
 
 const UserSchema = new Schema({

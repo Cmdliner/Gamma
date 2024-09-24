@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { IRegisterUser } from "../types/user.dto";
+import type { Request, Response } from "express";
+import type { IRegisterUser } from "../types/user.dto";
 import { registerValidationSchema } from "../validations/auth.validation";
 import { Types } from "mongoose";
 import Settings from "../config/settings";
@@ -7,7 +7,7 @@ import EmailService from "../emails/email.service";
 import User from "../user/user.model";
 import OTP from "./auth.model";
 import generateOTP from "../lib/otp";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;

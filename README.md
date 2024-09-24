@@ -43,13 +43,14 @@ bun run dev
 - implement referrals
 - delete product (if no current operation is pending) [X]
 - create disputes
-- Create bids
-- Sponsor product
+- Create bids [X]
+- Create product status ("available", "pending", "sold")
+- Sponsor product: implement this as a flag in product (e.g is_sponsored: true or false)
 - user search history (recent searchs for products)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
 - App pays them through escrow account
 - Users put money in app by bank account or card
-- On bid accecpted 5 mins payment time before expiry
+- On bid accepted 5 mins payment time before expiry
 - On buyer payment create transaction receipts with method of payment and transaction id
 - Create notification model
 - Implement push-notifications with appropraitely named lib
@@ -57,15 +58,19 @@ bun run dev
 - Uniqueness of referral token should be implemented in the controller as business logic
 
 ## REMEMBER
-- cannot accept multiple bids on same product item
+- Create referrals in user model
+- Create referral token by default on user model so it would be unique and will never be null.
+- Cannot accept multiple bids on same product item
 - Image upload bug is caused by improper disk storage configuration
 - change min limit for images in products validation for all from 1 to 10
 
 ## Project structure
 
-````sh
+```sh
 .
+├── admin
 ├── bun.lockb
+├── Dockerfile
 ├── docs
 │   ├── auth
 │   │   └── register.yaml
@@ -82,6 +87,10 @@ bun run dev
 │   │   ├── auth.controller.ts
 │   │   ├── auth.model.ts
 │   │   └── auth.routes.ts
+│   ├── bid
+│   │   ├── bid.controller.ts
+│   │   ├── bid.model.ts
+│   │   └── bid.routes.ts
 │   ├── config
 │   │   ├── db.ts
 │   │   ├── settings.ts
@@ -91,6 +100,7 @@ bun run dev
 │   ├── env.d.ts
 │   ├── express.d.ts
 │   ├── lib
+│   │   ├── main.ts
 │   │   └── otp.ts
 │   ├── middlewares
 │   │   ├── auth.middlewares.ts
@@ -103,10 +113,12 @@ bun run dev
 │   ├── __tests__
 │   │   └── auth.test.ts
 │   ├── types
+│   │   ├── bid.schema.ts
 │   │   ├── electronics.schema.ts
 │   │   ├── gadget.schema.ts
 │   │   ├── generic.schema.ts
 │   │   ├── landed_property.schema.ts
+│   │   ├── multer_file.ts
 │   │   ├── otp.schema.ts
 │   │   ├── phone_number.schema.ts
 │   │   ├── product.dto.ts
@@ -115,20 +127,15 @@ bun run dev
 │   │   ├── user.schema.ts
 │   │   └── vehicle.schema.ts
 │   ├── user
-│   │   └── user.model.ts
+│   │   ├── user.controller.ts
+│   │   ├── user.model.ts
+│   │   └── user.routes.ts
 │   └── validations
 │       ├── auth.validation.ts
 │       └── product.validation.ts
 ├── templates
 │   ├── password_reset.html
 │   └── verification_email.html
-├── tsconfig.json
-└── uploads
-    ├── ownership_documents
-    └── product_images
-        ├── 1726523118378-Screenshot from 2024-09-15 14-05-41.png
-        └── 1726523182961-Screenshot from 2024-09-15 14-05-41.png
+└── tsconfig.json
 
-19 directories, 45 files
-```sh
-````
+18 directories, 52 files

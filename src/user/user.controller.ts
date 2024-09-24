@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {}
