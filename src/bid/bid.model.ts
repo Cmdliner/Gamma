@@ -8,11 +8,6 @@ const BidSchema = new Schema({
         ref: "Product",
         required: true
     },
-    seller: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true
-    },
     buyer: {
         type: Schema.Types.ObjectId,
         ref: "User",

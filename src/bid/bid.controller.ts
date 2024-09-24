@@ -6,8 +6,10 @@ import { Types } from "mongoose";
 import { compareObjectID, Next5Mins } from "../lib/main";
 
 class BidController {
+
     static async getAllBidsForProduct(req: Request, res: Response) {
         try {
+            //!TODO => check if only user can see all prod bids or anyone
             const { productID } = req.params;
             const productBids = await Bid.find({ product: productID }) //.populate("buyer");
             if (!productBids || productBids.length == 0) return res.status(404).json({ error: "No bids found" });
@@ -18,6 +20,7 @@ class BidController {
         }
 
     }
+
     static async createBid(req: Request, res: Response) {
         try {
             const { productID } = req.params;
@@ -36,9 +39,8 @@ class BidController {
             const canBidForItem = !compareObjectID(req.user?._id!, product.owner);
             if (!canBidForItem) return res.status(403).json({ error: "Cannot bid for your own item!" });
 
-            const bidData: Pick<IBid, "buyer" | "seller" | "negotiating_price" | "product"> = {
+            const bidData: Pick<IBid, "buyer" | "negotiating_price" | "product"> = {
                 buyer: req.user?._id!,
-                seller: product.owner,
                 negotiating_price,
                 product: new Types.ObjectId(productID)
             };
@@ -90,9 +92,16 @@ class BidController {
 
     }
 
-    static async deleteBid(req: Request, res: Response) { }
-
-    static async updateBid(req: Request, res: Response) { }
+    static async deleteBid(req: Request, res: Response) {
+        try {
+            const { bidID } = req.params;
+            const bid = await Bid.findOneAndDelete({ id: bidID, buyer: req.user?._id! });
+            if (!bid) throw new Error("Could not delete that bid");
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Error deleting bid" });
+        }
+    }
 }
 
 export default BidController;
