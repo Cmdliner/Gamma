@@ -30,7 +30,8 @@ bun run dev
 ```
 
 ## BUGS
-- Invalid OTP in verification email
+- Invalid OTP in verification email [X]
+- Schema hasn't been registered for that model
 - validation does not catch "allowed values" errors in products upload
 
 ## TODOS
@@ -63,6 +64,7 @@ bun run dev
 - Cannot accept multiple bids on same product item
 - Image upload bug is caused by improper disk storage configuration
 - change min limit for images in products validation for all from 1 to 10
+- change ref to lowercase collection name when trying to ref sub_docs in a new model
 
 ## Project structure
 

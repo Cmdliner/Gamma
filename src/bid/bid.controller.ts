@@ -11,7 +11,7 @@ class BidController {
         try {
             //!TODO => check if only user can see all prod bids or anyone
             const { productID } = req.params;
-            const productBids = await Bid.find({ product: productID }) //.populate("buyer");
+            const productBids = await Bid.find({ product: productID }).populate(["buyer", "product"]);
             if (!productBids || productBids.length == 0) return res.status(404).json({ error: "No bids found" });
             return res.status(200).json({ success: "Bids found", bids: productBids });
         } catch (error) {

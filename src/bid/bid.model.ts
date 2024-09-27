@@ -5,12 +5,12 @@ import type IBid from "../types/bid.schema";
 const BidSchema = new Schema({
     product: {
         type: Schema.Types.ObjectId,
-        ref: "Product",
+        ref: "product",
         required: true
     },
     buyer: {
         type: Schema.Types.ObjectId,
-        ref: "User",
+        ref: "user",
         required: true
     },
     status: {
