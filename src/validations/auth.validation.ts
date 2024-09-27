@@ -10,5 +10,5 @@ export const registerValidationSchema = Joi.object({
     gender: Joi.string().required(),
     interested_categories: Joi.array().allow(...allowedCategories),
     state_of_origin: Joi.string().required(),
-    referral_code: Joi.string() //! TODO => pattern of 4 digits code
+    referral_code: Joi.string()
 })

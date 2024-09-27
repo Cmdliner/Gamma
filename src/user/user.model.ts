@@ -44,8 +44,15 @@ const UserSchema = new Schema({
     bvn: {
         type: String
     },
+    account_details: {
+        account_no: { type: Number },
+        account_name: { type: String },
+        bank_code: { type: Number }
+    },
     referral_code: {
-        type: Number
+        type: String,
+        required: true,
+        unique: true
     },
     referrals: [{
         type: Schema.Types.ObjectId,

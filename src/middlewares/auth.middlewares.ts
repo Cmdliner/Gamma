@@ -1,4 +1,4 @@
-import type { Request,  Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../user/user.model";
 
@@ -24,7 +24,7 @@ class AuthMiddleware {
             next();
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "An error ocuured while verifying authorization" });
+            return res.status(500).json({ error: "An error occured while verifying authorization" });
         }
     }
 }

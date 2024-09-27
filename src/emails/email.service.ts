@@ -39,7 +39,7 @@ class EmailService {
             await EmailService.transporter.sendMail(mailOptions);
             console.log('Verification mail sent successfully');
         } catch (error) {
-            console.log((error as Error).name, 'error_name');
+            console.error((error as Error).name, 'error_name');
             throw error;
         }
 

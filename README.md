@@ -30,7 +30,7 @@ bun run dev
 ```
 
 ## BUGS
-
+- Invalid OTP in verification email
 - validation does not catch "allowed values" errors in products upload
 
 ## TODOS
@@ -40,7 +40,7 @@ bun run dev
 - implement rate limiting for reset-password and verify-bvn endpoints
 - implement product limiting (pagination) that can be consumed by infinite scrolling by the frontend
 - implement compression for endpoints with large data sets
-- implement referrals
+- implement referrals [X]
 - delete product (if no current operation is pending) [X]
 - create disputes
 - Create bids [X]
@@ -55,7 +55,7 @@ bun run dev
 - Create notification model
 - Implement push-notifications with appropraitely named lib
 - Add push token to user model
-- Uniqueness of referral token should be implemented in the controller as business logic
+- Uniqueness of referral token should be implemented in the controller as business logic [X]
 
 ## REMEMBER
 - Create referrals in user model

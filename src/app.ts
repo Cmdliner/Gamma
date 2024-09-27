@@ -23,7 +23,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(`/${API_VERSION}/auth`, auth);
-app.use(`/${API_VERSION}/users`, user);
+app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
 app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
 app.use(`/${API_VERSION}/bids`, AuthMiddleware.requireAuth, bid);
 app.use(`/${API_VERSION}/docs`, SwaggerUI.serve, SwaggerUI.setup(swaggerSpec));

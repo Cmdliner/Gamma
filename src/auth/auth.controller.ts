@@ -9,6 +9,7 @@ import OTP from "./auth.model";
 import generateOTP from "../lib/otp";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
+import AuthService from "./auth.service";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
@@ -31,12 +32,12 @@ class AuthController {
                 phone_no_1, phone_no_2
             }: IRegisterUser = req.body;
 
-            if(!req.body.interested_categories) req.body.interested_categories = "others";
+            if (!req.body.interested_categories) req.body.interested_categories = "others";
             const registerInfo: Partial<IRegisterUser> = { first_name, last_name, dob, email, gender, state_of_origin, interested_categories: req.body.interested_categories };
             const phone_numbers = [phone_no_1];
-            if(phone_no_2) phone_numbers.push(phone_no_2);
+            if (phone_no_2) phone_numbers.push(phone_no_2);
 
-            const { error } = registerValidationSchema.validate({...registerInfo, phone_numbers});
+            const { error } = registerValidationSchema.validate({ ...registerInfo, phone_numbers });
             if (error) {
                 return res.status(422).json({ error: error.details[0].message });
             }
@@ -54,6 +55,10 @@ class AuthController {
 
             // Add use phone numbers
             user.phone_numbers = phone_numbers;
+
+            const referralCode = await AuthService.generateUniqueReferralCode();
+            if(!referralCode) throw new Error("Error creating referral code");
+            user.referral_code = referralCode;
 
             // Check if there is a valid referrer and add new user to list of referrals if true
             if (referrer) referrer.referrals.push(user._id);
@@ -123,7 +128,7 @@ class AuthController {
 
             const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: "Error authenticating user!" });
-            
+
             const user = await User.findById(decodedToken.id);
             if (!user) return res.status(404).json({ error: "User not found!" });
 
@@ -276,8 +281,8 @@ class AuthController {
             const passwordsMatch = await bcrypt.compare(password, user.password as string);
             if (!passwordsMatch) return res.status(403).json({ error: "Invalid username or password!" });
 
-            if(!user.bvn_verified || user.account_verified || !user.email_verified) {
-                return res.status(403).json({error: "Cannot skip onboarding process"});
+            if (!user.bvn_verified || !user.account_verified || !user.email_verified) {
+                return res.status(403).json({ error: "Cannot skip onboarding process" });
             }
             const authToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
             res.setHeader("Authorization", `Bearer ${authToken}`);
