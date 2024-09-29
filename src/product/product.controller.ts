@@ -2,23 +2,19 @@ import type { Request, Response } from "express";
 import type IElectronics from "../types/electronics.schema";
 import { allowedCategories, electronicsValidationSchema, gadgetValidationSchema, genericValidationSchema, landedPropertyValidationSchema, vehiclevalidationSchema } from "../validations/product.validation";
 import Product, { Electronics, FashionProduct, Furniture, Gadget, LandedProperty, Machinery, OtherProduct, Vehicle } from "./product.model";
-import type { ReqFiles } from "../types/multer_file";
 import type ILandedProperty from "../types/landed_property.schema";
 import type IGadget from "../types/gadget.schema";
 import type IVehicle from "../types/vehicle.schema";
 import type { IFurniture } from "../types/generic.schema";
 import { compareObjectID } from "../lib/main";
 
+
 class ProductController {
 
     // Add new electronics
     static async addElectronicProduct(req: Request, res: Response) {
         try {
-            const { ownership_documents, product_images } = req.files as ReqFiles;
-
-            //!TODO => validate the image paths
-            const ownershipDocsURL = ownership_documents ? ownership_documents.map(doc => doc.path) : [];
-            const productImagesURL = product_images.map(prodImg => prodImg.path);
+            const { ownership_documents, product_images } = req.processed_images;
 
             const electronicProductData: Partial<IElectronics> = {
                 name: req.body.name,
@@ -31,9 +27,9 @@ class ProductController {
                 category: req.body.category,
                 condition: req.body.condition,
                 owner: req.user?._id,
-                product_images: productImagesURL,
+                product_images,
             };
-            if (ownershipDocsURL.length) electronicProductData.ownership_documents = ownershipDocsURL;
+            if (ownership_documents.length) electronicProductData.ownership_documents = ownership_documents;
 
             const { error } = electronicsValidationSchema.validate(electronicProductData);
             if (error) return res.status(422).json({ error: error.details[0] });
@@ -43,7 +39,7 @@ class ProductController {
                 return res.status(400).json({ error: "Error uploading product" });
             }
 
-            return res.status(200).json({ success: "Electronics uploaded successfully", electronics: newElectronics });
+            return res.status(201).json({ success: "Electronics uploaded successfully", electronics: newElectronics });
 
         } catch (error) {
             console.error(error);
@@ -54,11 +50,7 @@ class ProductController {
     // Add new landed property
     static async addLandedProperty(req: Request, res: Response) {
         try {
-            const { ownership_documents, product_images } = req.files as ReqFiles;
-
-            //!TODO => validate the image paths
-            const ownershipDocsURL = ownership_documents.map(doc => doc.path);
-            const productImagesURL = product_images.map(prodImg => prodImg.path);
+            const { ownership_documents, product_images } = req.processed_images;
 
             const landedPropertyData: Partial<ILandedProperty> = {
                 name: req.body.name,
@@ -67,8 +59,8 @@ class ProductController {
                 price: req.body.price,
                 is_biddable: req.body.is_biddable,
                 category: req.body.category,
-                ownership_documents: ownershipDocsURL,
-                product_images: productImagesURL,
+                ownership_documents,
+                product_images,
                 owner: req.user?._id,
                 localty: req.body.localty,
                 dimensions: req.body.dimensions,
@@ -96,14 +88,11 @@ class ProductController {
     // Add new gadget
     static async uploadGadget(req: Request, res: Response) {
         try {
-            const { product_images, ownership_documents } = req.files as ReqFiles;
+            const { product_images, ownership_documents } = req.processed_images;
 
-            // Get urls of uploaded images
-            const productImagesURL = product_images.map(prodImg => prodImg.path);
-            const ownershipDocsURL = ownership_documents ? ownership_documents.map(doc => doc.path) : [];
 
             const gadgetData: Partial<IGadget> = {
-                product_images: productImagesURL,
+                product_images: product_images,
                 name: req.body.name,
                 description: req.body.description,
                 owner: req.user?._id,
@@ -116,7 +105,7 @@ class ProductController {
                 RAM: req.body.RAM,
                 condition: req.body.condition
             };
-            if (ownershipDocsURL.length) gadgetData.ownership_documents = ownershipDocsURL;
+            if (ownership_documents.length) gadgetData.ownership_documents = ownership_documents;
 
             // validate data
             const { error } = gadgetValidationSchema.validate(gadgetData);
@@ -139,13 +128,10 @@ class ProductController {
     // Add new vehicle
     static async uploadVehicle(req: Request, res: Response) {
         try {
-            const { product_images, ownership_documents } = req.files as ReqFiles;
-
-            const productImagesURL = product_images.map(prodImg => prodImg.path);
-            const ownershipDocsURL = ownership_documents ? ownership_documents.map(doc => doc.path) : [];
+            const { product_images, ownership_documents } = req.processed_images;
 
             const vehicleData: Partial<IVehicle> = {
-                product_images: productImagesURL,
+                product_images: product_images,
                 name: req.body.name,
                 description: req.body.description,
                 owner: req.user?._id,
@@ -161,7 +147,7 @@ class ProductController {
                 vin: req.body.vin,
                 transmission_type: req.body.transmission_type
             };
-            if (ownershipDocsURL.length) vehicleData.ownership_documents = ownershipDocsURL;
+            if (ownership_documents.length) vehicleData.ownership_documents = ownership_documents;
 
             // Validate users vehicle data
             const { error } = vehiclevalidationSchema.validate(vehicleData);
@@ -183,9 +169,7 @@ class ProductController {
     // Add other products, furnitures, fashion products, machinery
     static async uploadGenericProduct(req: Request, res: Response) {
         try {
-            const { ownership_documents, product_images } = req.files as ReqFiles;
-            const ownershipDocsURL = ownership_documents ? ownership_documents.map(doc => doc.path) : [];
-            const productImagesURL = product_images.map(prodImg => prodImg.path)
+            const { ownership_documents, product_images } = req.processed_images;
             const genericProductData: Partial<IFurniture> = {
                 name: req.body.name,
                 description: req.body.description,
@@ -195,9 +179,9 @@ class ProductController {
                 is_biddable: req.body.is_biddable,
                 condition: req.body.condition,
                 category: req.body.category,
-                product_images: productImagesURL
+                product_images: product_images
             }
-            if (ownershipDocsURL.length) genericProductData.ownership_documents = ownershipDocsURL;
+            if (ownership_documents.length) genericProductData.ownership_documents = ownership_documents;
             const { error } = genericValidationSchema.validate(genericProductData);
             if (error) {
                 return res.status(422).json({ error: error.details[0].message });
