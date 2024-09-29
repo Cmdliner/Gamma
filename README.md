@@ -30,11 +30,11 @@ bun run dev
 ```
 
 ## BUGS
-- Invalid OTP in verification email [X]
-- Schema hasn't been registered for that model [X]
 - validation does not catch "allowed values" errors in products upload
+- Upload bugs resurface; find solution
 
 ## TODOS
+- Use helmet for headers security
 - do not allow anything outside utf-8 text as user input (emojis or valid latin script)
 - Write middleware to validate uploads (check that file is a valid image) [X]
 - use express req compressor middleware (gzipped)
@@ -60,6 +60,7 @@ bun run dev
 - Uniqueness of referral token should be implemented in the controller as business logic [X]
 
 ## REMEMBER
+- Implement https
 - Create referrals in user model
 - Create referral token by default on user model so it would be unique and will never be null.
 - Cannot accept multiple bids on same product item

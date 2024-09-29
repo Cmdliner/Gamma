@@ -1,18 +1,20 @@
 import { NextFunction, Request, Response } from "express";
 import multer from "multer";
 import { ReqFiles } from "../types/multer_file";
+import path from "path";
 
 
 const FiveMB = 1024 * 1024 * 5;
-
-const upload = multer({ dest: "uploads/" });
+const storage = multer.diskStorage({destination: path.join(__dirname, "../../uploads/")})
+const upload = multer({ storage });
 
 export const UploadMiddleware = upload.fields([
     { name: "product_images", maxCount: 10 },
     { name: "ownership_documents", maxCount: 5 },
+
 ]);
 
-export const validateUpload = (req: Request, res: Response, next: NextFunction) => {
+export const ValidateUpload = (req: Request, res: Response, next: NextFunction) => {
     const { product_images, ownership_documents } = req.files as ReqFiles;
 
     const prodImagesAreImages = product_images.every((prodImg) => {

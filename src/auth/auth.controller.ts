@@ -53,7 +53,7 @@ class AuthController {
             const user = new User(registerInfo);
             if (!user) return res.status(400).json({ error: "Error registering user" });
 
-            // Add use phone numbers
+            // Add user phone numbers
             user.phone_numbers = phone_numbers;
 
             const referralCode = await AuthService.generateUniqueReferralCode();

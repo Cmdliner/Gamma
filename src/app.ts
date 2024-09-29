@@ -9,6 +9,7 @@ import AuthMiddleware from "./middlewares/auth.middlewares";
 import swaggerSpec from "./config/swagger";
 import cors, { type CorsOptions } from "cors";
 import bid from "./bid/bid.routes";
+import helmet from "helmet";
 
 const { PORT, API_VERSION } = Settings;
 const corsOptions: CorsOptions = {
@@ -19,6 +20,7 @@ const corsOptions: CorsOptions = {
 }
 const app = express();
 
+app.use(helmet()); //!TODO => Configure helmet headers
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
