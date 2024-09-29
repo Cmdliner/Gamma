@@ -15,7 +15,19 @@ export const UploadMiddleware = upload.fields([
 ]);
 
 export const ValidateUpload = (req: Request, res: Response, next: NextFunction) => {
-    const { product_images, ownership_documents } = req.files as ReqFiles;
+    const files = req.files as ReqFiles;
+  
+    if (!files || !files.product_images) {
+      console.log("product_images is undefined in the controller");
+      return res.status(400).json({ error: "product_images is required" });
+    }
+    const { ownership_documents, product_images } = files;
+
+    const ownershipDocsURL = ownership_documents ? ownership_documents.map(doc => doc.path) : [];
+    const productImagesURL = product_images.map(prodImg => prodImg.path);
+  
+    console.log("ownershipDocsURL:", ownershipDocsURL);
+    console.log("productImagesURL:", productImagesURL);
 
     const prodImagesAreImages = product_images.every((prodImg) => {
         return prodImg.mimetype.startsWith("image/");

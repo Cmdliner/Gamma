@@ -31,7 +31,6 @@ bun run dev
 
 ## BUGS
 - validation does not catch "allowed values" errors in products upload
-- Upload bugs resurface; find solution
 
 ## TODOS
 - Use helmet for headers security
@@ -60,11 +59,11 @@ bun run dev
 - Uniqueness of referral token should be implemented in the controller as business logic [X]
 
 ## REMEMBER
+- Upload can only error due to client-side errors; upload middleware is very stable
 - Implement https
 - Create referrals in user model
 - Create referral token by default on user model so it would be unique and will never be null.
 - Cannot accept multiple bids on same product item
-- Image upload bug is caused by improper disk storage configuration
 - change min limit for images in products validation for all from 1 to 10
 - change ref to uppercase collection name when trying to ref sub_docs in a new model
 
