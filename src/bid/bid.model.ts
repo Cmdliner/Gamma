@@ -5,12 +5,12 @@ import type IBid from "../types/bid.schema";
 const BidSchema = new Schema({
     product: {
         type: Schema.Types.ObjectId,
-        ref: "product",
+        ref: "Product",
         required: true
     },
     buyer: {
         type: Schema.Types.ObjectId,
-        ref: "user",
+        ref: "User",
         required: true
     },
     status: {
@@ -28,6 +28,6 @@ const BidSchema = new Schema({
     }
 });
 
-const Bid = model<IBid>("bid", BidSchema);
+const Bid = model<IBid>("Bid", BidSchema);
 
 export default Bid;

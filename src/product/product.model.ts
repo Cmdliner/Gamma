@@ -197,15 +197,15 @@ const VehicleSchema = new Schema({
 });
 
 
-const Product = model<IProduct>("product", ProductSchema);
+const Product = model<IProduct>("Product", ProductSchema);
 
-export const Vehicle = Product.discriminator<IVehicle>("vehicle", VehicleSchema);
-export const Machinery = Product.discriminator<IMachinery>("machinery", MachinerySchema);
-export const LandedProperty = Product.discriminator<ILandedProperty>("landed_property", LandedPropertySchema);
-export const OtherProduct = Product.discriminator("other_product", OtherProductSchema);
-export const Gadget = Product.discriminator<IGadget>("gadget", GadgetSchema);
-export const Furniture = Product.discriminator<IFurniture>("furniture", FurnitureSchema);
-export const FashionProduct = Product.discriminator<IFashionProduct>("fashion_product", FashionProductSchema);
-export const Electronics = Product.discriminator<IElectronics>("electronics", ElectronicsSchema);
+export const Vehicle = Product.discriminator<IVehicle>("Vehicle", VehicleSchema);
+export const Machinery = Product.discriminator<IMachinery>("Machinery", MachinerySchema);
+export const LandedProperty = Product.discriminator<ILandedProperty>("Landed_Property", LandedPropertySchema);
+export const OtherProduct = Product.discriminator("Other_Product", OtherProductSchema);
+export const Gadget = Product.discriminator<IGadget>("Gadget", GadgetSchema);
+export const Furniture = Product.discriminator<IFurniture>("Furniture", FurnitureSchema);
+export const FashionProduct = Product.discriminator<IFashionProduct>("Fashion_Product", FashionProductSchema);
+export const Electronics = Product.discriminator<IElectronics>("Electronics", ElectronicsSchema);
 
 export default Product;

@@ -31,11 +31,12 @@ bun run dev
 
 ## BUGS
 - Invalid OTP in verification email [X]
-- Schema hasn't been registered for that model
+- Schema hasn't been registered for that model [X]
 - validation does not catch "allowed values" errors in products upload
 
 ## TODOS
-- Write middleware to validate uploads (check that file is a valid image)
+- do not allow anything outside utf-8 text as user input (emojis or valid latin script)
+- Write middleware to validate uploads (check that file is a valid image) [X]
 - use express req compressor middleware (gzipped)
 - Check uniqueness of phone numbers on registering and handle errors appropriately
 - implement rate limiting for reset-password and verify-bvn endpoints
@@ -64,7 +65,7 @@ bun run dev
 - Cannot accept multiple bids on same product item
 - Image upload bug is caused by improper disk storage configuration
 - change min limit for images in products validation for all from 1 to 10
-- change ref to lowercase collection name when trying to ref sub_docs in a new model
+- change ref to uppercase collection name when trying to ref sub_docs in a new model
 
 ## Project structure
 
