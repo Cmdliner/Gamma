@@ -37,7 +37,7 @@ app.get("/healthz", (_req: Request, res: Response) => {
 });
 
 DB.connect()
-    .then(() => app.listen(PORT, () => console.log("Server is up and running on PORT " + PORT)))
+    .then(() => app.listen(PORT || 4000, () => console.log("Server is up and running on PORT " + PORT)))
     .catch((error) => console.error({ error: (error as Error).name }));
 
 
