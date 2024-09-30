@@ -10,6 +10,7 @@ import swaggerSpec from "./config/swagger";
 import cors, { type CorsOptions } from "cors";
 import bid from "./bid/bid.routes";
 import helmet from "helmet";
+import http2, {SecureServerOptions} from "http2";
 
 const { PORT, API_VERSION } = Settings;
 const corsOptions: CorsOptions = {
@@ -39,5 +40,11 @@ DB.connect()
     .then(() => app.listen(PORT, () => console.log("Server is up and running on PORT " + PORT)))
     .catch((error) => console.error({ error: (error as Error).name }));
 
+
+const serverOpts: SecureServerOptions = {
+    cert: process.env.SSL_CERT,
+    key: process.env.SSL_KEY,
+}
+const server = http2.createSecureServer(serverOpts);
 
 export default app;

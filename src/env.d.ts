@@ -9,5 +9,7 @@ declare namespace NodeJS {
         ACCESS_TOKEN_SECRET: string;
         ONBOARDING_TOKEN_SECRET: string;
         CORS_ORIGIN: string;
+        SSL_KEY: string;
+        SSL_CERT: string;
     }
 }

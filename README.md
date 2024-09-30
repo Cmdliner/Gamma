@@ -33,30 +33,21 @@ bun run dev
 - validation does not catch "allowed values" errors in products upload
 
 ## TODOS
-- Use helmet for headers security
-- do not allow anything outside utf-8 text as user input (emojis or valid latin script)
-- Write middleware to validate uploads (check that file is a valid image) [X]
+- Finish the http2 secure server implementation and change to it on prod script
 - use express req compressor middleware (gzipped)
 - Check uniqueness of phone numbers on registering and handle errors appropriately
 - implement rate limiting for reset-password and verify-bvn endpoints
 - implement product limiting (pagination) that can be consumed by infinite scrolling by the frontend
 - implement compression for endpoints with large data sets
-- implement referrals [X]
-- delete product (if no current operation is pending) [X]
 - create disputes
-- Create bids [X]
-- Create product status ("available", "pending", "sold") [X]
-- Sponsor product: implement this as a flag in product (e.g is_sponsored: true or false) [X]
 - user search history (recent searchs for products)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
 - App pays them through escrow account
 - Users put money in app by bank account or card
-- On bid accepted 5 mins payment time before expiry [X]
 - On buyer payment create transaction receipts with method of payment and transaction id
 - Create notification model
 - Implement push-notifications with appropraitely named lib
 - Add push token to user model
-- Uniqueness of referral token should be implemented in the controller as business logic [X]
 
 ## REMEMBER
 - Upload can only error due to client-side errors; upload middleware is very stable
