@@ -45,6 +45,6 @@ const serverOpts: SecureServerOptions = {
     cert: process.env.SSL_CERT,
     key: process.env.SSL_KEY,
 }
-const server = http2.createSecureServer(serverOpts);
+// const server = http2.createSecureServer(serverOpts);
 
 export default app;
