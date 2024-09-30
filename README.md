@@ -33,6 +33,7 @@ bun run dev
 - validation does not catch "allowed values" errors in products upload
 
 ## TODOS
+- Implement App Wide API keys or other form of api authorization mechanism
 - Finish the http2 secure server implementation and change to it on prod script
 - use express req compressor middleware (gzipped)
 - Check uniqueness of phone numbers on registering and handle errors appropriately

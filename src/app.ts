@@ -10,7 +10,7 @@ import swaggerSpec from "./config/swagger";
 import cors, { type CorsOptions } from "cors";
 import bid from "./bid/bid.routes";
 import helmet from "helmet";
-import http2, {SecureServerOptions} from "http2";
+import http2, { SecureServerOptions } from "http2";
 
 const { PORT, API_VERSION } = Settings;
 const corsOptions: CorsOptions = {
