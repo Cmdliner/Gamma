@@ -69,6 +69,10 @@ const UserSchema = new Schema({
     account_verified: {
         type: Boolean,
         default: false
+    },
+    wallet: {
+        type: Schema.Types.ObjectId,
+        ref: "Wallet"
     }
 }, { timestamps: true });
 

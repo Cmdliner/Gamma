@@ -34,7 +34,7 @@ bun run dev
 
 ## TODOS
 - Implement App Wide API keys or other form of api authorization mechanism
-- Finish the http2 secure server implementation and change to it on prod script
+- Finish the http2 secure server implementation (No bun support) [X]
 - use express req compressor middleware (gzipped)
 - Check uniqueness of phone numbers on registering and handle errors appropriately
 - implement rate limiting for reset-password and verify-bvn endpoints

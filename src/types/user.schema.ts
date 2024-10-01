@@ -21,6 +21,7 @@ interface IUser extends Document {
     email_verified?: boolean;
     bvn_verified?: boolean;
     account_verified?: boolean;
+    wallet: Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
 }

@@ -10,6 +10,7 @@ import generateOTP from "../lib/otp";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
+import Wallet from "../wallet/wallet.model";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
@@ -63,6 +64,10 @@ class AuthController {
             // Check if there is a valid referrer and add new user to list of referrals if true
             if (referrer) referrer.referrals.push(user._id);
 
+            // Create user wallet
+            const wallet = new Wallet();
+            user.wallet = wallet._id;
+
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
             if (!emailVToken) {
                 return res.status(400).json({ error: "Error sending verification mail" });
@@ -77,6 +82,7 @@ class AuthController {
 
             // when all the register operations have successfully completed commit the transactions to the db
             if (referrer) await referrer.save();
+            await wallet.save();
             await emailVToken.save();
             await user.save();
 
