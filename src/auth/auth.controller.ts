@@ -4,12 +4,12 @@ import { registerValidationSchema } from "../validations/auth.validation";
 import { Types } from "mongoose";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import Settings from "../config/settings";
-import EmailService from "../emails/email.service";
+import EmailService from "../lib/email.service";
 import User from "../user/user.model";
 import OTP from "./auth.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
-import Wallet from "../wallet/wallet.model";
+import Wallet from "../user/wallet.model";
 import generateOTP from "../lib/main";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
