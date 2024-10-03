@@ -4,7 +4,7 @@ const WalletSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
         ref: "User",
-
+        required: true
     },
     balance: {
         type: Number,

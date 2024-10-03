@@ -232,12 +232,21 @@ class ProductController {
     static async getAllProductsInCategory(req: Request, res: Response) {
         try {
             const { productCategory } = req.params;
+            let page = 1;
+            if(!isNaN(parseInt(req.query.page as string))) {
+                page = parseInt(req.query.pasge as string)
+            }
+            let limit = 10;
+            if(!isNaN(parseInt(req.query.limit as string))) {
+                limit = parseInt(req.query.limit as string)
+            }
+            const skips = (page - 1) * 10;
 
             //!TODO => validate product category
             const isValidCategory = allowedCategories.includes(productCategory);
             if (!isValidCategory) return res.status(400).json({ error: "Invalid product category!" });
 
-            const products = await Product.find({ category: productCategory });
+            const products = await Product.find({ category: productCategory }).limit(limit).skip(skips);
             if (products) return res.status(200).json({ success: "Products found!", products });
         } catch (error) {
             console.error(error);
