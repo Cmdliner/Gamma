@@ -33,9 +33,7 @@ bun run dev
 - validation does not catch "allowed values" errors in products upload
 
 ## TODOS
-- Implement App Wide API keys or other form of api authorization mechanism
-- Finish the http2 secure server implementation (No bun support) [X]
-- use express req compressor middleware (gzipped)
+- Implement App Wide API keys or other form of api authorization mechanis- use express req compressor middleware (gzipped)
 - Check uniqueness of phone numbers on registering and handle errors appropriately
 - implement rate limiting for reset-password and verify-bvn endpoints
 - implement product limiting (pagination) that can be consumed by infinite scrolling by the frontend
@@ -49,6 +47,8 @@ bun run dev
 - Create notification model
 - Implement push-notifications with appropraitely named lib
 - Add push token to user model
+- checkout mutex pkg for wallet modification
+- Send email for successful transaction with receipts
 
 ## REMEMBER
 - Upload can only error due to client-side errors; upload middleware is very stable
