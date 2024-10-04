@@ -233,18 +233,27 @@ class ProductController {
         try {
             const { productCategory } = req.params;
             let page = 1;
-            if(!isNaN(parseInt(req.query.page as string))) {
-                page = parseInt(req.query.pasge as string)
+            if (!isNaN(parseInt(req.query.page as string))) {
+                page = parseInt(req.query.page as string)
             }
             let limit = 10;
-            if(!isNaN(parseInt(req.query.limit as string))) {
+            if (!isNaN(parseInt(req.query.limit as string))) {
                 limit = parseInt(req.query.limit as string)
             }
-            const skips = (page - 1) * 10;
+            const skips = (page - 1) * limit;
 
             //!TODO => validate product category
             const isValidCategory = allowedCategories.includes(productCategory);
             if (!isValidCategory) return res.status(400).json({ error: "Invalid product category!" });
+
+            const productsCount = await Product.find({ category: productCategory }).countDocuments();
+            const isValidPage = page <=  Math.ceil(productsCount / limit);
+
+            if(!isValidPage) {
+                return res.status(404).json({ error: "Oops...Could not find that page"})
+            }
+            
+
 
             const products = await Product.find({ category: productCategory }).limit(limit).skip(skips);
             if (products) return res.status(200).json({ success: "Products found!", products });
