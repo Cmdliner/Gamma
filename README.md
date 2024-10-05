@@ -33,6 +33,7 @@ bun run dev
 - validation does not catch "allowed values" errors in products upload
 
 ## TODOS
+- Create custom error class that extends normal error class and has a static from method that can be used to convert normal errors to custom errors setting other values to default
 - Implement App Wide API keys or other form of api authorization mechanis- use express req compressor middleware (gzipped)
 - Check uniqueness of phone numbers on registering and handle errors appropriately
 - implement rate limiting for reset-password and verify-bvn endpoints

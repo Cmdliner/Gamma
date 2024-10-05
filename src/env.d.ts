@@ -11,5 +11,8 @@ declare namespace NodeJS {
         CORS_ORIGIN: string;
         SSL_KEY: string;
         SSL_CERT: string;
+        FINCRA_PUBLIC_KEY: string;
+        FINCRA_SECRET_KEY: string;
+        FINCRA_WEBHOOK_KEY: string;
     }
 }

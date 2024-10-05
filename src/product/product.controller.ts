@@ -1,7 +1,23 @@
 import type { Request, Response } from "express";
 import type IElectronics from "../types/electronics.schema";
-import { allowedCategories, electronicsValidationSchema, gadgetValidationSchema, genericValidationSchema, landedPropertyValidationSchema, vehiclevalidationSchema } from "../validations/product.validation";
-import Product, { Electronics, FashionProduct, Furniture, Gadget, LandedProperty, Machinery, OtherProduct, Vehicle } from "./product.model";
+import {
+  allowedCategories,
+  electronicsValidationSchema,
+  gadgetValidationSchema,
+  genericValidationSchema,
+  landedPropertyValidationSchema,
+  vehiclevalidationSchema,
+} from "../validations/product.validation";
+import Product, {
+  Electronics,
+  FashionProduct,
+  Furniture,
+  Gadget,
+  LandedProperty,
+  Machinery,
+  OtherProduct,
+  Vehicle,
+} from "./product.model";
 import type ILandedProperty from "../types/landed_property.schema";
 import type IGadget from "../types/gadget.schema";
 import type IVehicle from "../types/vehicle.schema";
