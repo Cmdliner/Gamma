@@ -6,6 +6,11 @@ const WalletSchema = new Schema({
         ref: "User",
         required: true
     },
+    account_no: {
+        type: String,
+        required: true,
+        unique: true
+    },
     balance: {
         type: Number,
         default: 0
