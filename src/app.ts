@@ -10,8 +10,7 @@ import swaggerSpec from "./config/swagger";
 import cors, { type CorsOptions } from "cors";
 import bid from "./bid/bid.routes";
 import helmet from "helmet";
-import router from "./lib/fincra.route";
-// import http2, { SecureServerOptions } from "http2";
+// import * as https from "https";
 
 const { PORT, API_VERSION } = Settings;
 const corsOptions: CorsOptions = {
@@ -20,7 +19,12 @@ const corsOptions: CorsOptions = {
     allowedHeaders: ["Authorization"],
     credentials: true
 }
+// const secureServerOptions = {
+//     key: "",
+//     cert: ""
+// };
 const app = express();
+// const server = https.createServer(secureServerOptions, app);
 
 app.use(helmet()); //!TODO => Configure helmet headers
 app.use(cors(corsOptions));
@@ -31,26 +35,21 @@ app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
 app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
 app.use(`/${API_VERSION}/bids`, AuthMiddleware.requireAuth, bid);
 app.use(`/${API_VERSION}/docs`, SwaggerUI.serve, SwaggerUI.setup(swaggerSpec));
-app.use('/test-fincra', router);
-
 app.get("/healthz", (_req: Request, res: Response) => {
     res.status(200).json({ active: "The hood is up commandliner⚡" });
 });
-
 app.use("*", (err: Error, _req: Request, res: Response) => {
     console.log("A fatal error occured");
-    // console.log(err.message);
-    return res.status(500).json({error: "An  error occured"});
+    return res.status(500).json({ error: "An  error occured" });
 })
+
 DB.connect()
-    .then(() => app.listen(PORT || 4000, () => console.log("Server is up and running on PORT " + PORT)))
+    .then(() => app.listen(PORT, () => console.log("Server is up and running on PORT " + PORT)))
     .catch((error) => console.error({ error: (error as Error).name }));
 
 
-// const serverOpts: SecureServerOptions = {
-//     cert: process.env.SSL_CERT,
-//     key: process.env.SSL_KEY,
-// }
-// const server = http2.createSecureServer(serverOpts);
+// DB.connect()
+//     .then(() => server.listen(PORT, () => console.log("Server is up and runnin gon PORT" + PORT)))
+//     .catch((err) => console.error({ error: err.stack }));
 
 export default app;
