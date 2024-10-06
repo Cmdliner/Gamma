@@ -1,5 +1,4 @@
 import axios, { AxiosRequestConfig } from "axios";
-import type { Request, Response } from "express";
 import { Fincra } from "fincra-node-sdk";
 
 class FincraService {
@@ -10,22 +9,45 @@ class FincraService {
         { sandbox: process.env.NODE_ENV === "production" ? false : true }
     );
 
-    static async getBusinessInfo(req: Request, res: Response) {
+    static async getBusinessInfo() {
         try {
             const business = await FincraService.fincra.business.getBusinessId();
-            return res.status(200).json(business);
+            return business;
 
         } catch (error) {
             console.error((error as Error).stack);
-            return res.status(500).json("An error occured");
+            throw error;
         }
     }
 
     static async createVirtualWallet() {
         try {
-            
+            const opts: AxiosRequestConfig = {
+                url: "https://sandboxapi.fincra.com/profile/virtual-accounts/requests",
+                method: "POST",
+                headers: {
+                    "api-key": process.env.FINCRA_SECRET_KEY,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                data: {
+                    "currency": "NGN",
+                    "accountType": "individual",
+                    "KYCInformation": {
+                        "firstName": "John",
+                        "lastName": "Doe",
+                        "email": "customer@theiremail.com",
+                        "bvn": "12345678901"
+                    },
+                    "channel": "wema"
+                }
+                
+            }
+            const res = await axios.request(opts);
+            return res;
         } catch (error) {
-            
+            console.error(error);
+            throw error;
         }
     }
 
