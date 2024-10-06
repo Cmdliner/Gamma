@@ -44,10 +44,11 @@ const UserSchema = new Schema({
     bvn: {
         type: String
     },
-    account_details: {
-        account_no: { type: Number },
-        account_name: { type: String },
-        bank_code: { type: Number }
+    account_no: {
+        type: Number,
+    },
+    bank_code: {
+        type: Number
     },
     referral_code: {
         type: String,

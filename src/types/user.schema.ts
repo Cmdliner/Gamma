@@ -11,11 +11,8 @@ interface IUser extends Document {
     email:  string;
     password?: string;
     bvn?: string;
-    account_details?: {
-        account_no: number,
-        account_name: string,
-        bank_code: string,
-    }
+    account_no?: number;
+    bank_code?: number;
     referral_code?: string;
     referrals: Types.ObjectId[];
     email_verified?: boolean;
