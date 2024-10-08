@@ -13,7 +13,7 @@ class AuthMiddleware {
             const decoded = jwt.verify(authToken, process.env.ACCESS_TOKEN_SECRET) as JwtPayload;
             if (!decoded) return res.status(403).json({ error: "Unauthorized!" });
 
-            const user = await User.findById(decoded.id);
+            const user = await User.findById(decoded.id).select(["-password"]);
             if (!user) return res.status(404).json({ error: "User not found" });
 
             // ensure user has passed onboarding stage and completed kyc process
