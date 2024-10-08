@@ -74,7 +74,11 @@ const UserSchema = new Schema({
     wallet: {
         type: Schema.Types.ObjectId,
         ref: "Wallet"
-    }
+    },
+    transactions: [{
+        type: Schema.Types.ObjectId,
+        ref: "Transaction"
+    }]
 }, { timestamps: true });
 
 const User = model<IUser>("User", UserSchema);

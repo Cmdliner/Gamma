@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import IWallet from "../types/wallet.schema";
 
 const WalletSchema = new Schema({
     user: {
@@ -6,10 +7,14 @@ const WalletSchema = new Schema({
         ref: "User",
         required: true
     },
-    account_no: {
+    virtual_account_no: {
         type: String,
         required: true,
         unique: true
+    },
+    amount_withdrawable: {
+        type: Number, 
+        default: 0
     },
     balance: {
         type: Number,
@@ -17,7 +22,7 @@ const WalletSchema = new Schema({
     }
 });
 
-const Wallet = model("Wallet", WalletSchema);
+const Wallet = model<IWallet>("Wallet", WalletSchema);
 
 
 export default Wallet;
