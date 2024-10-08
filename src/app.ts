@@ -15,7 +15,7 @@ import helmet from "helmet";
 const { PORT, API_VERSION } = Settings;
 const corsOptions: CorsOptions = {
     origin: process.env.CORS_ORIGIN,
-    methods: "POST",
+    methods: "GET",
     allowedHeaders: ["Authorization"],
     credentials: true
 }
