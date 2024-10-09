@@ -2,11 +2,6 @@ import { model, Schema } from "mongoose";
 import IWallet from "../types/wallet.schema";
 
 const WalletSchema = new Schema({
-    user: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true
-    },
     virtual_account_no: {
         type: String,
         required: true,
