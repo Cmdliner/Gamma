@@ -50,6 +50,11 @@ const UserSchema = new Schema({
     bank_code: {
         type: Number
     },
+    account_status: {
+        type: String,
+        enum: ["active", "dormant"],
+        default: "dormant"
+    },
     referral_code: {
         type: String,
         required: true,
@@ -60,10 +65,6 @@ const UserSchema = new Schema({
         ref: "User",
     }],
     email_verified: {
-        type: Boolean,
-        default: false
-    },
-    bvn_verified: {
         type: Boolean,
         default: false
     },

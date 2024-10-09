@@ -16,7 +16,7 @@ interface IUser extends Document {
     referral_code?: string;
     referrals: Types.ObjectId[];
     email_verified?: boolean;
-    bvn_verified?: boolean;
+    account_status: "dormant" | "active";
     account_verified?: boolean;
     wallet: Types.ObjectId;
     createdAt: Date;
