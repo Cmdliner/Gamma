@@ -1,28 +1,29 @@
 import type { Request, Response } from "express";
 import type IElectronics from "../types/electronics.schema";
 import {
-  allowedCategories,
-  electronicsValidationSchema,
-  gadgetValidationSchema,
-  genericValidationSchema,
-  landedPropertyValidationSchema,
-  vehiclevalidationSchema,
+    allowedCategories,
+    electronicsValidationSchema,
+    gadgetValidationSchema,
+    genericValidationSchema,
+    landedPropertyValidationSchema,
+    vehiclevalidationSchema,
 } from "../validations/product.validation";
 import Product, {
-  Electronics,
-  FashionProduct,
-  Furniture,
-  Gadget,
-  LandedProperty,
-  Machinery,
-  OtherProduct,
-  Vehicle,
+    Electronics,
+    FashionProduct,
+    Furniture,
+    Gadget,
+    LandedProperty,
+    Machinery,
+    OtherProduct,
+    Vehicle,
 } from "./product.model";
 import type ILandedProperty from "../types/landed_property.schema";
 import type IGadget from "../types/gadget.schema";
 import type IVehicle from "../types/vehicle.schema";
 import type { IFurniture } from "../types/generic.schema";
 import { compareObjectID } from "../lib/main";
+import FincraService from "../lib/fincra.service";
 
 
 class ProductController {
@@ -37,7 +38,7 @@ class ProductController {
                 description: req.body.description,
                 location: req.body.location,
                 price: req.body.price,
-                is_biddable: req.body.is_biddable,
+                is_negotiable: req.body.is_negotiable,
                 brand: req.body.brand,
                 item_model: req.body.item_model,
                 category: req.body.category,
@@ -73,7 +74,7 @@ class ProductController {
                 description: req.body.description,
                 location: req.body.location,
                 price: req.body.price,
-                is_biddable: req.body.is_biddable,
+                is_negotiable: req.body.is_negotiable,
                 category: req.body.category,
                 ownership_documents,
                 product_images,
@@ -114,7 +115,7 @@ class ProductController {
                 owner: req.user?._id,
                 location: req.body.location,
                 price: req.body.price,
-                is_biddable: req.body.is_biddable,
+                is_negotiable: req.body.is_negotiable,
                 category: req.body.category,
                 brand: req.body.brand,
                 item_model: req.body.item_model,
@@ -153,7 +154,7 @@ class ProductController {
                 owner: req.user?._id,
                 location: req.body.location,
                 price: req.body.price,
-                is_biddable: req.body.is_biddable,
+                is_negotiable: req.body.is_negotiable,
                 category: req.body.category,
                 make: req.body.make,
                 is_registered: req.body.is_registered,
@@ -192,7 +193,7 @@ class ProductController {
                 owner: req.user?._id,
                 location: req.body.location,
                 price: req.body.price,
-                is_biddable: req.body.is_biddable,
+                is_negotiable: req.body.is_negotiable,
                 condition: req.body.condition,
                 category: req.body.category,
                 product_images: product_images
@@ -227,7 +228,6 @@ class ProductController {
             console.error(error);
             return res.status(500).json({ error: "Error uploading product" });
         }
-
     }
 
     // Get product info
@@ -263,12 +263,12 @@ class ProductController {
             if (!isValidCategory) return res.status(400).json({ error: "Invalid product category!" });
 
             const productsCount = await Product.find({ category: productCategory }).countDocuments();
-            const isValidPage = page <=  Math.ceil(productsCount / limit);
+            const isValidPage = page <= Math.ceil(productsCount / limit);
 
-            if(!isValidPage) {
-                return res.status(404).json({ error: "Oops...Could not find that page"})
+            if (!isValidPage) {
+                return res.status(404).json({ error: "Oops...Could not find that page" })
             }
-            
+
 
 
             const products = await Product.find({ category: productCategory }).limit(limit).skip(skips);

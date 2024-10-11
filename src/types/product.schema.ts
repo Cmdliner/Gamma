@@ -7,10 +7,11 @@ interface IProduct extends Document {
     owner: Types.ObjectId;
     location: string;
     price: number;
-    is_biddable: boolean;
+    is_negotiable: boolean;
+    active_bid: Types.ObjectId;
     ownership_documents: string[];
     category: ProductCategory;
-    status: "available" | "pending" | "sold";
+    status: "available" | "processing_payment" | "pending_bid_approval" | "sold";
     sponsored: boolean;
 }
 

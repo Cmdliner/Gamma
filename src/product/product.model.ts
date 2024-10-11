@@ -38,15 +38,17 @@ const ProductSchema = new Schema({
         required: true,
         min: 0
     },
-    is_biddable: {
+    is_negotiable: {
         type: Boolean,
         required: true,
     },
-    ownership_documents: [
-        {
-            type: String,
-        },
-    ],
+    active_bid: {
+        type: Schema.Types.ObjectId,
+        ref: "Bid"
+    },
+    ownership_documents: [{
+        type: String,
+    }],
     category: {
         type: String,
         enum: [
@@ -63,7 +65,7 @@ const ProductSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["available", "pending", "sold"],
+        enum: ["available", "processing_payment", "sold", "pending_bid_approval"],
         default: "available"
     },
     sponsored: {
@@ -91,7 +93,7 @@ const ElectronicsSchema = new Schema({
 const FashionProductSchema = new Schema({
     condition: {
         type: String,
-        enum: ["used" , "new"],
+        enum: ["used", "new"],
         required: true
     }
 });
@@ -99,7 +101,7 @@ const FashionProductSchema = new Schema({
 const FurnitureSchema = new Schema({
     condition: {
         type: String,
-        enum: ["used" , "new"],
+        enum: ["used", "new"],
         required: true
     }
 });
@@ -128,7 +130,7 @@ const GadgetSchema = new Schema({
 const OtherProductSchema = new Schema({
     condition: {
         type: String,
-        enum: ["used" , "new"],
+        enum: ["used", "new"],
         required: true
     }
 });
@@ -159,7 +161,7 @@ const LandedPropertySchema = new Schema({
 const MachinerySchema = new Schema({
     condition: {
         type: String,
-        enum: ["used" , "new"],
+        enum: ["used", "new"],
         required: true
     }
 });
@@ -169,11 +171,11 @@ const VehicleSchema = new Schema({
         type: String,
         required: true
     },
-    is_registered:  {
+    is_registered: {
         type: Boolean,
         required: true
     },
-    item_model:  {
+    item_model: {
         type: String,
         required: true
     },
@@ -181,16 +183,16 @@ const VehicleSchema = new Schema({
         type: Number,
         required: true
     },
-    condition:  {
+    condition: {
         type: String,
         enum: ["used", "new"],
         required: true
     },
-    vin:  {
+    vin: {
         type: String,
         required: true
     },
-    transmission_type:  {
+    transmission_type: {
         type: String,
         required: true
     }

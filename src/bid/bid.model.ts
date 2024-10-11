@@ -15,7 +15,7 @@ const BidSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["accepted" , "pending" , "rejected"],
+        enum: ["accepted", "pending" , "rejected", "expired"],
         default: "pending"
     },
     negotiating_price: {
