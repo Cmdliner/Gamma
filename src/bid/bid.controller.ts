@@ -33,7 +33,7 @@ class BidController {
 
             const product = await Product.findById(productID);
             if (!product) return res.status(404).json({ error: "Product not found!" });
-            if (!product.is_biddable) return res.status(404).json({ error: "Product not found!" });
+            if (!product.is_negotiable) return res.status(404).json({ error: "Product not found!" });
 
             // Ensure seller does not bid for their own item
             const canBidForItem = !compareObjectID(req.user?._id!, product.owner);

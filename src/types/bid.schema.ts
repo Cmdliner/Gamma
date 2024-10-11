@@ -4,7 +4,7 @@ interface IBid extends Document {
     product: Types.ObjectId;
     buyer: Types.ObjectId;
     negotiating_price: Number,
-    status: "accepted" | "pending" | "rejected";
+    status: "accepted" | "pending" | "rejected" | "expired";
     expires: Date;
 }
 
