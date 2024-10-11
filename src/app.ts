@@ -10,6 +10,7 @@ import swaggerSpec from "./config/swagger";
 import cors, { type CorsOptions } from "cors";
 import bid from "./bid/bid.routes";
 import helmet from "helmet";
+import transaction from "./transaction/transaction.routes";
 // import * as https from "https";
 
 const { PORT, API_VERSION } = Settings;
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(`/${API_VERSION}/auth`, auth);
 app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
 app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
+app.use(`/${API_VERSION}/transactions`, AuthMiddleware.requireAuth, transaction);
 app.use(`/${API_VERSION}/bids`, AuthMiddleware.requireAuth, bid);
 app.use(`/${API_VERSION}/docs`, SwaggerUI.serve, SwaggerUI.setup(swaggerSpec));
 app.get("/healthz", (_req: Request, res: Response) => {
