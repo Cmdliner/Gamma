@@ -71,6 +71,17 @@ const ProductSchema = new Schema({
     sponsored: {
         type: Boolean,
         default: false
+    },
+    purchase_lock: {
+        is_locked: {
+            type: Boolean,
+            default: false
+        },
+        locked_at: Date,
+        locked_by: {
+            type: Schema.Types.ObjectId,
+            ref: "User"
+        }
     }
 }, { timestamps: true, descriminatorKey: "category" });
 

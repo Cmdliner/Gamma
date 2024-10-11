@@ -9,6 +9,11 @@ interface IProduct extends Document {
     price: number;
     is_negotiable: boolean;
     active_bid: Types.ObjectId;
+    purchase_lock: {
+      is_locked: boolean;
+      locked_at: Date;
+      ref: Types.ObjectId;
+    };
     ownership_documents: string[];
     category: ProductCategory;
     status: "available" | "processing_payment" | "pending_bid_approval" | "sold";
