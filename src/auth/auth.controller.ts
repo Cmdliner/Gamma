@@ -11,6 +11,7 @@ import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
 import generateOTP from "../lib/main";
+import FincraService from "../lib/fincra.service";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
@@ -58,15 +59,17 @@ class AuthController {
             user.phone_numbers = phone_numbers;
 
             const referralCode = await AuthService.generateUniqueReferralCode();
-            if(!referralCode) throw new Error("Error creating referral code");
+            if (!referralCode) throw new Error("Error creating referral code");
             user.referral_code = referralCode;
 
             // Check if there is a valid referrer and add new user to list of referrals if true
             if (referrer) referrer.referrals.push(user._id);
 
             // Create user wallet
-            const wallet = new Wallet();
-            user.wallet = wallet._id;
+            const wallet = new Wallet;
+            if(!wallet) throw { custom_error: true, message: "Error creating user" }
+            user.wallet = wallet._id as Types.ObjectId;
+
 
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
             if (!emailVToken) {
@@ -191,7 +194,16 @@ class AuthController {
     static async verifyBVN(req: Request, res: Response) { }
 
     // bank account details
-    static async addBankDetails() { }
+    static async addBankDetails(req: Request, res: Response) {
+        try {
+            //!TODO = Add bank details
+            const virtualWallet = await FincraService.createVirtualWallet(req.user!);
+            return res.status(200).json({ success: "Virtual wallet created successfully", wallet: virtualWallet });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Error adding bank account details"})
+        }
+    }
 
     // Forgot password
     static async generatePasswordResetToken(req: Request, res: Response) {
@@ -287,7 +299,7 @@ class AuthController {
             const passwordsMatch = await bcrypt.compare(password, user.password as string);
             if (!passwordsMatch) return res.status(403).json({ error: "Invalid username or password!" });
 
-            if (!user.bvn_verified || !user.account_verified || !user.email_verified) {
+            if (!user.bvn || !user.account_verified || !user.email_verified) {
                 return res.status(403).json({ error: "Cannot skip onboarding process" });
             }
             const authToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
