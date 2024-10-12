@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import type { IRegisterUser } from "../types/user.dto";
 import { registerValidationSchema } from "../validations/auth.validation";
-import { Types } from "mongoose";
+import { startSession, Types } from "mongoose";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import Settings from "../config/settings";
 import EmailService from "../lib/email.service";
@@ -24,7 +24,9 @@ class AuthController {
 
     // Register 
     static async register(req: Request, res: Response) {
+        const session = await startSession();
         try {
+            session.startTransaction();
             const {
                 first_name,
                 last_name,
@@ -44,12 +46,12 @@ class AuthController {
                 return res.status(422).json({ error: error.details[0].message });
             }
 
-            const emailTaken = await User.exists({ email });
+            const emailTaken = await User.exists({ email }).session(session);
             if (emailTaken) return res.status(422).json({ error: "Email taken!" });
 
             let referrer = null;
             if (referral_code) {
-                referrer = await User.findOne({ referral_code });
+                referrer = await User.findOne({ referral_code }).session(session);
                 if (!referrer) return res.status(404).json({ error: "Invalid referral code!" });
             }
             const user = new User(registerInfo);
@@ -63,12 +65,17 @@ class AuthController {
             user.referral_code = referralCode;
 
             // Check if there is a valid referrer and add new user to list of referrals if true
-            if (referrer) referrer.referrals.push(user._id);
+            if (referrer) {
+                referrer.referrals.push(user._id);
+                await referrer.save();
+            }
 
             // Create user wallet
-            const wallet = new Wallet;
-            if(!wallet) throw { custom_error: true, message: "Error creating user" }
+            const wallet = new Wallet();
+            if (!wallet) throw { custom_error: true, message: "Error creating user" };
             user.wallet = wallet._id as Types.ObjectId;
+            await wallet.save();
+            await user.save();
 
 
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
@@ -77,23 +84,24 @@ class AuthController {
             }
             const full_name = `${first_name} ${last_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
+            await emailVToken.save();
 
             const userToken = await AuthController.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
-            req.unverified_user = { id: userToken }; //Why did i do this?
+            const unverified_user = { id: userToken }; //Why did i do this?
 
-            res.setHeader("x-onboarding-user", req.unverified_user.id);
+            res.setHeader("x-onboarding-user", unverified_user.id);
 
             // when all the register operations have successfully completed commit the transactions to the db
-            if (referrer) await referrer.save();
-            await wallet.save();
-            await emailVToken.save();
-            await user.save();
+            await session.commitTransaction();
 
             return res.status(201).json({ success: "User created successfully!", user });
 
         } catch (error) {
+            await session.abortTransaction();
             console.error(error);
             return res.status(500).json({ error: "Error registering user" });
+        } finally {
+            await session.endSession();
         }
     }
 
@@ -115,9 +123,9 @@ class AuthController {
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token);
 
             const userToken = await AuthController.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
-            req.unverified_user = { id: userToken };
+            const unverified_user = { id: userToken };
 
-            res.setHeader("x-onboarding-user", req.unverified_user.id);
+            res.setHeader("x-onboarding-user", unverified_user.id);
 
             await emailVToken.save();
             await user.save();
@@ -201,7 +209,7 @@ class AuthController {
             return res.status(200).json({ success: "Virtual wallet created successfully", wallet: virtualWallet });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Error adding bank account details"})
+            return res.status(500).json({ error: "Error adding bank account details" })
         }
     }
 
