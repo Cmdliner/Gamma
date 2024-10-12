@@ -1,11 +1,12 @@
 import { model, Schema } from "mongoose";
+import ITransaction from "../types/transaction.schema";
 
 const TransactionSchema = new Schema({
     kind: {
         type: String,
-        enum: ["ad_sponsorhip", "product_payment", ]
+        enum: ["ad_sponsorhip", "product_payment", ""]
     },
-    initiater: {
+    bearer: {
         type: Schema.Types.ObjectId,
         ref: "User",
         required: true
@@ -24,11 +25,15 @@ const TransactionSchema = new Schema({
         ref: ["success", "failed", "pending"],
         default: "pending"
     },
+    payment_method: {
+        type: String,
+        enum: ["card", "transfer"]
+    },
     details: {
         type: String
     }
-});
+}, { timestamps: true });
 
-const Transaction = model("Transaction", TransactionSchema);
+const Transaction = model<ITransaction>("Transaction", TransactionSchema);
 
 export default Transaction;
