@@ -40,10 +40,10 @@ app.use(`/${API_VERSION}/docs`, SwaggerUI.serve, SwaggerUI.setup(swaggerSpec));
 app.get("/healthz", (_req: Request, res: Response) => {
     res.status(200).json({ active: "The hood is up commandliner⚡" });
 });
-app.use("*", (err: Error, _req: Request, res: Response) => {
+/*app.use("*", (err: Error, _req: Request, res: Response) => {
     console.log("A fatal error occured");
     return res.status(500).json({ error: "An  error occured" });
-})
+})*/
 
 DB.connect()
     .then(() => app.listen(PORT, () => console.log("Server is up and running on PORT " + PORT)))
