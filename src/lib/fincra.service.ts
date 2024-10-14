@@ -5,7 +5,7 @@ import IUser from "../types/user.schema";
 import IProduct from "../types/product.schema";
 
 class FincraService {
-    
+
     private static FINCRA_BASE_URL = "https://sandboxapi.fincra.com";
     private static fincra = new Fincra(
         process.env.FINCRA_PUBLIC_KEY,
@@ -45,7 +45,7 @@ class FincraService {
                     },
                     "channel": "wema"
                 }
-                
+
             }
             const res = await axios.request(opts);
             return res.data;
@@ -72,12 +72,18 @@ class FincraService {
                     "customer": {
                         "name": `${customer.first_name} ${customer.last_name}`,
                         "email": customer.email,
+                        "phoneNumber": customer.phone_numbers[0]
                     },
+                    metadata: {
+                        "user_id": customer.id,
+                        "product_id": product.id
+                    },
+                    "successMessage": "You have successfully intiated transfer",
                     "paymentMethods": ["bank_transfer", "card"],
                     "settlementDestination": "wallet",
                     "feeBearer": "customer",
                     // "reference": "",
-                    "redirectUrl": "https://localhost:4001/payments/successful"
+                    // "redirectUrl": "https://localhost:4001/payments/successful"
                 }
             }
             const res = await axios.request(opts);
@@ -103,7 +109,7 @@ class FincraService {
             const res = await axios.request(opts);
             return res.data;
         } catch (error) {
-            
+
         }
     }
     static async withdrawFunds(wallet: IWallet, bank_account: number) {

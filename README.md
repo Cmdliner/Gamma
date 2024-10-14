@@ -33,12 +33,20 @@ bun run dev
 - validation does not catch "allowed values" errors in products upload
 
 ## TODOS
+- Checkout mongoose sesssion implementation
+- Handle webhook for purchases
+- ad sponsorship for 7 days or 1 month
+- after 14 days temporarily remove ads (x delete item)
+- Paystack bvn verification
+- Add transfer indempotency
 - On sucessful first transaction of user check if they have a referrer and reward them if they have
 - Product listing should be unique for a particular category
 - Payment to wallet when buying
 - sort bidding direct purchase order
 - crud operations on products and profile
 - 5 mins bid expiry
+- deals (pending, accepted )
+- google sheets, google analytics
 - withdraw earnings if referred user is active and if referr has at least one transaction that day
 - Create custom error class that extends normal error class and has a static from method that can be used to convert normal errors to custom errors setting other values to default
 - Implement App Wide API keys or other form of api authorization mechanis- use express req compressor middleware (gzipped)
@@ -54,7 +62,6 @@ bun run dev
 - Implement push-notifications with appropraitely named lib
 - Add push token to user model
 - checkout mutex pkg for wallet modification
-- Send email for successful transaction with receipts
 
 ## REMEMBER
 - Upload can only error due to client-side errors; upload middleware is very stable

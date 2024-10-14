@@ -13,7 +13,7 @@ export const allowedCategories = [
 
 
 export const electronicsValidationSchema = Joi.object({
-    product_images: Joi.array().min(10).max(10).required(),
+    product_images: Joi.array().min(1).max(10).required(),
     name: Joi.string().required(),
     description: Joi.string(),
     owner: Joi.object().required(),

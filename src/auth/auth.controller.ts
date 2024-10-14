@@ -11,7 +11,6 @@ import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
 import generateOTP from "../lib/main";
-import FincraService from "../lib/fincra.service";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
@@ -24,9 +23,9 @@ class AuthController {
 
     // Register 
     static async register(req: Request, res: Response) {
-        const session = await startSession();
+        // const session = await startSession();
         try {
-            session.startTransaction();
+            // session.startTransaction();
             const {
                 first_name,
                 last_name,
@@ -46,12 +45,12 @@ class AuthController {
                 return res.status(422).json({ error: error.details[0].message });
             }
 
-            const emailTaken = await User.exists({ email }).session(session);
+            const emailTaken = await User.exists({ email })//.session(session);
             if (emailTaken) return res.status(422).json({ error: "Email taken!" });
 
             let referrer = null;
             if (referral_code) {
-                referrer = await User.findOne({ referral_code }).session(session);
+                referrer = await User.findOne({ referral_code })//.session(session);
                 if (!referrer) return res.status(404).json({ error: "Invalid referral code!" });
             }
             const user = new User(registerInfo);
@@ -92,16 +91,14 @@ class AuthController {
             res.setHeader("x-onboarding-user", unverified_user.id);
 
             // when all the register operations have successfully completed commit the transactions to the db
-            await session.commitTransaction();
+            //await session.commitTransaction();
 
             return res.status(201).json({ success: "User created successfully!", user });
 
         } catch (error) {
-            await session.abortTransaction();
+            //await session.abortTransaction();
             console.error(error);
             return res.status(500).json({ error: "Error registering user" });
-        } finally {
-            await session.endSession();
         }
     }
 
@@ -205,8 +202,6 @@ class AuthController {
     static async addBankDetails(req: Request, res: Response) {
         try {
             //!TODO = Add bank details
-            const virtualWallet = await FincraService.createVirtualWallet(req.user!);
-            return res.status(200).json({ success: "Virtual wallet created successfully", wallet: virtualWallet });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: "Error adding bank account details" })

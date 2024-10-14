@@ -12,7 +12,7 @@ interface IProduct extends Document {
     purchase_lock: {
       is_locked: boolean;
       locked_at: Date;
-      ref: Types.ObjectId;
+      locked_by: Types.ObjectId;
     };
     ownership_documents: string[];
     category: ProductCategory;
