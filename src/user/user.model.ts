@@ -8,11 +8,12 @@ const UserSchema = new Schema({
         required: true
     },
     middle_name: {
-        type: String,
+        type: String
     },
     interested_categories: [{
         type: String,
-        enum: allowedCategories
+        enum: allowedCategories,
+        required: true
     }],
     last_name: {
         type: String,
