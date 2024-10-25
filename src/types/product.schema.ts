@@ -1,4 +1,5 @@
 import { Document, Types } from "mongoose";
+import { ProductCategory } from "./common";
 
 interface IProduct extends Document {
     product_images: string[];
@@ -20,14 +21,5 @@ interface IProduct extends Document {
     sponsored: boolean;
 }
 
-type ProductCategory =
-  | "electronics"
-  | "landed_properties"
-  | "gadgets"
-  | "vehicles"
-  | "furnitures"
-  | "machineries"
-  | "fashion_wears"
-  | "others";
 
 export default IProduct;

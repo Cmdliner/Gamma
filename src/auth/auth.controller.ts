@@ -17,10 +17,6 @@ const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
 class AuthController {
 
-    private static async createToken(payload: Types.ObjectId, secret: string, expiry: string | number) {
-        return jwt.sign({ id: payload }, secret, { expiresIn: expiry });
-    }
-
     // Register 
     static async register(req: Request, res: Response) {
         // const session = await startSession();
@@ -35,23 +31,22 @@ class AuthController {
                 phone_no_1, phone_no_2
             }: IRegisterUser = req.body;
 
-            if (!req.body.interested_categories) req.body.interested_categories = "others";
             const registerInfo: Partial<IRegisterUser> = { first_name, last_name, dob, email, gender, state_of_origin, interested_categories: req.body.interested_categories };
             const phone_numbers = [phone_no_1];
             if (phone_no_2) phone_numbers.push(phone_no_2);
 
             const { error } = registerValidationSchema.validate({ ...registerInfo, phone_numbers });
             if (error) {
-                return res.status(422).json({ error: error.details[0].message });
+                return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
             const emailTaken = await User.exists({ email })//.session(session);
-            if (emailTaken) return res.status(422).json({ error: "Email taken!" });
+            if (emailTaken) return res.status(422).json({ error: true, message: "Email taken!" });
 
             let referrer = null;
             if (referral_code) {
                 referrer = await User.findOne({ referral_code })//.session(session);
-                if (!referrer) return res.status(404).json({ error: "Invalid referral code!" });
+                if (!referrer) return res.status(404).json({ error: true, message: "Invalid referral code!" });
             }
             const user = new User(registerInfo);
             if (!user) return res.status(400).json({ error: "Error registering user" });
@@ -85,7 +80,7 @@ class AuthController {
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
             await emailVToken.save();
 
-            const userToken = await AuthController.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
+            const userToken = await AuthService.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
             const unverified_user = { id: userToken }; //Why did i do this?
 
             res.setHeader("x-onboarding-user", unverified_user.id);
@@ -119,7 +114,7 @@ class AuthController {
             const full_name = `${user.first_name} ${user.last_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token);
 
-            const userToken = await AuthController.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
+            const userToken = await AuthService.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
             const unverified_user = { id: userToken };
 
             res.setHeader("x-onboarding-user", unverified_user.id);
@@ -146,11 +141,11 @@ class AuthController {
             const user = await User.findById(decodedToken.id);
             if (!user) return res.status(404).json({ error: "User not found!" });
 
-            const OTPinDb = await OTP.findOne({ token: otp });
-            if (!OTPinDb) return res.status(404).json({ error: "OTP not found!" });
+            const otpInDb = await OTP.findOne({ token: otp });
+            if (!otpInDb) return res.status(404).json({ error: "OTP not found!" });
 
             // ensure otp is not expired
-            if (OTPinDb.expires.valueOf() < new Date().valueOf()) {
+            if (otpInDb.expires.valueOf() < new Date().valueOf()) {
                 return res.status(400).json({ error: "OTP expired!" });
             }
             const userVerificationOTP = await OTP.findOneAndDelete({ kind: "verification", owner: user._id, token: otp });
@@ -245,14 +240,14 @@ class AuthController {
             const user = await User.findOne({ email })
             if (!user) return res.status(422).json({ error: "Error verifying otp!" });
 
-            const OTPinDb = await OTP.findOneAndDelete({ owner: user._id, token: otp });
-            if (!OTPinDb) return res.status(403).json({ error: "OTP verification failed!" });
+            const otpInDb = await OTP.findOneAndDelete({ owner: user._id, token: otp });
+            if (!otpInDb) return res.status(403).json({ error: "OTP verification failed!" });
 
-            if (OTPinDb.expires.valueOf() < Date.now().valueOf()) {
+            if (otpInDb.expires.valueOf() < Date.now().valueOf()) {
                 return res.status(400).json({ error: "OTP expired!" });
             }
 
-            const authToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
+            const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
             res.setHeader("Authorization", `Bearer ${authToken}`);
             return res.status(200).json({ success: "OTP verification successful!" });
 
@@ -305,13 +300,39 @@ class AuthController {
             if (!user.bvn || !user.account_verified || !user.email_verified) {
                 return res.status(403).json({ error: "Cannot skip onboarding process" });
             }
-            const authToken = await AuthController.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
+            const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
             res.setHeader("Authorization", `Bearer ${authToken}`);
 
             return res.status(200).json({ success: "Login successful" });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: "Error signing in user" });
+        }
+    }
+
+    // Refresh access token
+    static async refresh(req: Request, res: Response) {
+        try {
+            const refreshCookie = req.cookies.refresh as string;
+            const [_, refreshToken] = refreshCookie.split(" ");
+            if (!refreshCookie || !refreshToken) {
+                return res.status(401).json({ error: true, message: "Unauthorized" });
+            }
+            // Validate refresh token
+            const decoded = jwt.verify(refreshToken, "TEMP_REFRESH_SECRET") as JwtPayload;
+            if (!decoded) return res.status(403).json({ error: true, message: "Refresh token expired" });
+
+            const user = await User.exists({ _id: decoded.id });
+            if(!user) return res.status(404).json({ error: true, message: "User not found!"});
+    
+            //Create new access token
+            const accessToken = await AuthService.createToken(user._id, process.env.ACCESS_TOKEN_SECRET, "30d")
+            res.setHeader("Authorization", `Bearer ${accessToken}`);
+    
+            return res.status(200).json({ success: true });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Internal server error" });
         }
     }
 }

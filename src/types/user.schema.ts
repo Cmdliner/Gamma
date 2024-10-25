@@ -1,8 +1,11 @@
 import { Document, Types } from "mongoose";
+import { ProductCategory } from "./common";
+
 
 interface IUser extends Document {
     _id: Types.ObjectId;
     first_name: string;
+    middle_name?: string;
     last_name: string;
     dob: Date,
     gender: string;
@@ -10,6 +13,7 @@ interface IUser extends Document {
     phone_numbers: string[];
     email:  string;
     password?: string;
+    interested_categories: ProductCategory[];
     bvn?: string;
     account_no?: number;
     bank_code?: number;
@@ -19,6 +23,7 @@ interface IUser extends Document {
     account_status: "dormant" | "active";
     account_verified?: boolean;
     wallet: Types.ObjectId;
+    transactions: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
