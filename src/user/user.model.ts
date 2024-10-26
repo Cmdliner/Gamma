@@ -19,6 +19,9 @@ const UserSchema = new Schema({
         type: String,
         required: true
     },
+    location: {
+        type: String
+    },
     dob: {
         type: Date,
         required: true
@@ -45,11 +48,10 @@ const UserSchema = new Schema({
     bvn: {
         type: String
     },
-    account_no: {
-        type: Number,
-    },
-    bank_code: {
-        type: Number
+    account_details: {
+        account_no: { type: Number },
+        bank_code: { type: Number },
+        added_at: { type: Date }
     },
     account_status: {
         type: String,

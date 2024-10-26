@@ -8,6 +8,7 @@ interface IUser extends Document {
     middle_name?: string;
     last_name: string;
     dob: Date,
+    location?: string;
     gender: string;
     state_of_origin: string;
     phone_numbers: string[];
@@ -15,8 +16,11 @@ interface IUser extends Document {
     password?: string;
     interested_categories: ProductCategory[];
     bvn?: string;
-    account_no?: number;
-    bank_code?: number;
+    account_details?: {
+        account_no: number;
+        added_at: Date;
+        bank_code: number;
+    };
     referral_code?: string;
     referrals: Types.ObjectId[];
     email_verified?: boolean;
