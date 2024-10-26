@@ -19,7 +19,7 @@ class AuthService {
         return null;
     }
 
-    static async createToken(payload: Types.ObjectId, secret: string, expiry: string | number) {
+    static async createToken(payload: Types.ObjectId, secret: string, expiry: string | number): Promise<string> {
         return jwt.sign({ id: payload }, secret, { expiresIn: expiry });
     }
 }

@@ -1,8 +1,10 @@
 export interface IRegisterUser {
     first_name: string;
     last_name: string;
+    middle_name?: string;
     email: string;
     dob: Date | string;
+    location: string;
     gender: string;
     referral_code?: string;
     interested_categories: string[];
