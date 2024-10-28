@@ -33,7 +33,8 @@ bun run dev
 - validation does not catch "allowed values" errors in products upload
 
 ## TODOS
-- Checkout mongoose sesssion implementation
+- Implement cloudinary storage
+- Checkout mongoose session implementation
 - Handle webhook for purchases
 - ad sponsorship for 7 days or 1 month
 - after 14 days temporarily remove ads (x delete item)
@@ -49,7 +50,8 @@ bun run dev
 - google sheets, google analytics
 - withdraw earnings if referred user is active and if referr has at least one transaction that day
 - Create custom error class that extends normal error class and has a static from method that can be used to convert normal errors to custom errors setting other values to default
-- Implement App Wide API keys or other form of api authorization mechanis- use express req compressor middleware (gzipped)
+- Implement App Wide API keys or other form of api authorization mechanism
+- use express req compressor middleware (gzipped)
 - Check uniqueness of phone numbers on registering and handle errors appropriately
 - implement rate limiting for reset-password and verify-bvn endpoints
 - implement compression for endpoints with large data sets

@@ -4,7 +4,7 @@ import AuthController from "./auth.controller";
 const auth = Router();
 
 auth.post("/register", AuthController.register);
-auth.post("/verification-mail", AuthController.resendVerificationMail);
+auth.post("/resend-verification-mail", AuthController.resendVerificationMail);
 auth.post("/verify", AuthController.verifyEmail);
 auth.post("/create-password", AuthController.setPassword);
 auth.post("/forgot-password", AuthController.generatePasswordResetToken);
