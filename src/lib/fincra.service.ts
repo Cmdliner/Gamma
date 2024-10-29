@@ -55,7 +55,7 @@ class FincraService {
         }
     }
 
-    static async collectPayment(product: IProduct, customer: IUser) {
+    static async collectPayment(product: IProduct, customer: IUser, ref: string) {
         try {
             const opts: AxiosRequestConfig = {
                 url: `${FincraService.FINCRA_BASE_URL}/checkout/payments`,
@@ -82,7 +82,7 @@ class FincraService {
                     "paymentMethods": ["bank_transfer", "card"],
                     "settlementDestination": "wallet",
                     "feeBearer": "customer",
-                    // "reference": "",
+                    "reference": ref,
                     // "redirectUrl": "https://localhost:4001/payments/successful"
                 }
             }

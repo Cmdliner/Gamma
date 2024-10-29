@@ -11,6 +11,7 @@ import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
 import generateOTP from "../lib/main";
+import PaystackService from "../lib/paystack.service";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
@@ -80,7 +81,7 @@ class AuthController {
 
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
             if (!emailVToken) {
-                return res.status(400).json({ error: "Error sending verification mail" });
+                return res.status(400).json({ error: true, message: "Error sending verification mail" });
             }
             const full_name = `${first_name} ${last_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
@@ -108,7 +109,7 @@ class AuthController {
         try {
             const { email } = req.body;
             const user = await User.findOne({ email });
-            if (!user) return res.status(404).json({ error: "Email not found!" });
+            if (!user) return res.status(404).json({ error: true, message: "Email not found!" });
 
             // Find and delete previous otp
             await OTP.findOneAndDelete({ kind: "verification", owner: user._id });
@@ -142,29 +143,29 @@ class AuthController {
             const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
 
             const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
-            if (!decodedToken) return res.status(403).json({ error: "Error authenticating user!" });
+            if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
             const user = await User.findById(decodedToken.id);
-            if (!user) return res.status(404).json({ error: "User not found!" });
+            if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
             const otpInDb = await OTP.findOne({ token: otp });
-            if (!otpInDb) return res.status(404).json({ error: "OTP not found!" });
+            if (!otpInDb) return res.status(404).json({ error: true, message: "OTP not found!" });
 
             // ensure otp is not expired
             if (otpInDb.expires.valueOf() < new Date().valueOf()) {
-                return res.status(400).json({ error: "OTP expired!" });
+                return res.status(400).json({ error: true, message: "OTP expired!" });
             }
             const userVerificationOTP = await OTP.findOneAndDelete({ kind: "verification", owner: user._id, token: otp });
-            if (!userVerificationOTP) return res.status(400).json({ error: "Invalid OTP!" });
+            if (!userVerificationOTP) return res.status(400).json({ error: true, message: "Invalid OTP!" });
             if (!user.email_verified) {
                 user.email_verified = true;
                 await user.save();
             }
-            return res.status(200).json({ success: "User verification successful" });
+            return res.status(200).json({ success: true, message: "User verification successful" });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Error verifying email" });
+            return res.status(500).json({ error: true, message: "Error verifying email" });
         }
     }
 
@@ -200,7 +201,7 @@ class AuthController {
     static async verifyBVN(req: Request, res: Response) { }
 
     // bank account details
-    static async addBankDetails(req: Request, res: Response) {
+    static async validateAccountDetails(req: Request, res: Response) {
         try {
             //!TODO = Add bank details
             const { account_no, bank_code } = req.body;
@@ -209,6 +210,11 @@ class AuthController {
                 return res
                     .status(422)
                     .json({ error: true, message: `${account_no ? "Bank code" : "Account no"} is required` });
+            }
+
+            const isValidBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
+            if (!isValidBankAcc) {
+                return res.status(400).json({ error: true, message: "Invalid bank details " })
             }
 
             const user = await User.findById(req.user?._id!);
@@ -221,7 +227,7 @@ class AuthController {
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Error adding bank account details" })
+            return res.status(500).json({ error: true, message: "Error adding bank account details" })
         }
     }
 
@@ -230,7 +236,7 @@ class AuthController {
         try {
             const { email } = req.body;
             if (!email) {
-                return res.status(422).json({ error: "Email required!" });
+                return res.status(422).json({ error: true, message: "Email required!" });
             }
             const user = await User.findOne({ email });
             if (!user) {
