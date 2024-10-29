@@ -14,5 +14,8 @@ declare namespace NodeJS {
         FINCRA_PUBLIC_KEY: string;
         FINCRA_SECRET_KEY: string;
         FINCRA_WEBHOOK_KEY: string;
+        PAYSTACK_URI: string;
+        PAYSTACK_PUBLIC_KEY: string;
+        PAYSTACK_SECRET_KEY: string;
     }
 }
