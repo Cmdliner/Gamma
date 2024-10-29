@@ -11,7 +11,8 @@ import cors, { type CorsOptions } from "cors";
 import bid from "./bid/bid.routes";
 import helmet from "helmet";
 import transaction from "./transaction/transaction.routes";
-// import * as https from "https";
+import compression from "compression";
+
 
 const { PORT, API_VERSION } = Settings;
 const corsOptions: CorsOptions = {
@@ -20,14 +21,11 @@ const corsOptions: CorsOptions = {
     allowedHeaders: ["Authorization"],
     credentials: true
 }
-// const secureServerOptions = {
-//     key: "",
-//     cert: ""
-// };
-const app = express();
-// const server = https.createServer(secureServerOptions, app);
 
-app.use(helmet()); //!TODO => Configure helmet headers
+const app = express();
+
+app.use(compression());
+app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -49,9 +47,5 @@ DB.connect()
     .then(() => app.listen(PORT, () => console.log("Server is up and running on PORT " + PORT)))
     .catch((error) => console.error({ error: (error as Error).name }));
 
-
-// DB.connect()
-//     .then(() => server.listen(PORT, () => console.log("Server is up and runnin gon PORT" + PORT)))
-//     .catch((err) => console.error({ error: err.stack }));
 
 export default app;
