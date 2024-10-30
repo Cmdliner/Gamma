@@ -11,6 +11,9 @@ export const Next5Mins = () => {
     return new Date(nowInMs + fiveMinsInMs);
 }
 
-export default function generateOTP() {
+export const validateBvn = () => {}
+
+export function generateOTP() {
     return `${randomInt(9)}${randomInt(6)}${randomInt(9)}${randomInt(8)}`;
 }
+

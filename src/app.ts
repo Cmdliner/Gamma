@@ -40,7 +40,7 @@ const app = express();
  });
 app.use((_req: Request, res: Response, next: NextFunction) => {
     console.log("A fatal error occured" );
-    return res.status(500).json({ error: "An  error occured" });
+    return res.status(500).json({ error: true, message: "An  error occured" });
 })
 
 DB.connect()
