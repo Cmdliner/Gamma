@@ -10,7 +10,7 @@ class TransactionController {
     static async withdrawFromWallet(req: Request, res: Response) {
         try {
             const user = req.user?._id as Types.ObjectId;
-            const bankAccount = req.user?.account_no as number;
+            const bankAccount = req.user?.account_details?.account_no as number;
 
 
             // Get user wallet
@@ -18,6 +18,8 @@ class TransactionController {
             if (!wallet) throw { custom_error: true, mssg: "Error finding wallet" };
 
             const withdrawal = await FincraService.withdrawFunds(wallet, bankAccount);
+
+            return res.status(200).json({ success: true, message: "Withdrawal has been initiated"})
 
 
         } catch (error) {
@@ -45,14 +47,14 @@ class TransactionController {
             const userId = req.user?._id;
             const { productID } = req.params;
             const { payment_method } = req.body;
-            if(!payment_method) {
-                return res.status(422).json({ error: true, message: "Payment method required!"})
+            if (!payment_method) {
+                return res.status(422).json({ error: true, message: "Payment method required!" })
             }
-            
+
             // session.startTransaction();
             const product = await Product.findById(productID)//.session(session);
             if (!product || product.status !== "available") {
-                return res.status(400).json({ error: "Product not available!" });
+                return res.status(400).json({ error: true, message: "Product not available!" });
             }
             const updatedProduct = await Product.findOneAndUpdate({
                 _id: productID,
@@ -65,25 +67,27 @@ class TransactionController {
                     locked_at: Date.now(),
                     locked_by: userId,
                 }
-            }, { new: true, /*session */});
+            }, { new: true, /*session */ });
             if (!updatedProduct) {
-                return res.status(400).json({ error: "Product is currently unavaliable for purchase" });
+                return res.status(400).json({ error: true, message: "Product is currently unavaliable for purchase" });
             }
-            const itemPurchaseTransaction = await Transaction.create([{
+            const itemPurchaseTransaction = new Transaction({
                 bearer: userId,
                 kind: "product_payment",
                 amount: product.price,
                 product: productID,
                 payment_method
-            }], { /* session */ });
+            }, /* { session } */);
+            await itemPurchaseTransaction.save();
+            const transactionRef = itemPurchaseTransaction.id;
 
 
             // Initiate payment with fincra then commit transaction to db
-            const fincraResponse = await FincraService.collectPayment(product, req.user!);
+            const fincraResponse = await FincraService.collectPayment(product, req.user!, transactionRef);
             console.log(fincraResponse);
             // await session.commitTransaction();
 
-            return res.status(200).json({ success: true, transaction_id: itemPurchaseTransaction[0]._id, fincra: fincraResponse });
+            return res.status(200).json({ success: true, transaction_id: itemPurchaseTransaction._id, fincra: fincraResponse });
 
 
         } catch (error) {

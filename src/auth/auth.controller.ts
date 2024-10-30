@@ -10,7 +10,7 @@ import OTP from "./auth.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
-import generateOTP from "../lib/main";
+import { generateOTP } from "../lib/main";
 import PaystackService from "../lib/paystack.service";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
@@ -140,6 +140,9 @@ class AuthController {
     static async verifyEmail(req: Request, res: Response) {
         try {
             const { otp } = req.body;
+            if (!otp) {
+                return res.status(422).json({ error: true, message: "OTP required!" });
+            }
             const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
 
             const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
@@ -198,10 +201,28 @@ class AuthController {
     }
 
     // kyc
-    static async verifyBVN(req: Request, res: Response) { }
+    static async verifyBVN(req: Request, res: Response) {
+        try {
+            const { bvn } = req.body;
+            if (!bvn) {
+                return res.status(422).json({ error: true, message: "BVN required!" });
+            }
+            // Sanitize the bvn make sure it is required no of digits and all numerical
+
+            // try using that algo you found to validate if it is even a real bvn
+
+            // return invalid bvn
+
+            await PaystackService.resolveBvn(bvn);
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "An error occured during bvn verification" })
+        }
+
+    }
 
     // bank account details
-    static async validateAccountDetails(req: Request, res: Response) {
+    static async validateBankDetails(req: Request, res: Response) {
         try {
             //!TODO = Add bank details
             const { account_no, bank_code } = req.body;
@@ -265,6 +286,10 @@ class AuthController {
         try {
             const { otp, email } = req.body;
 
+            if (!otp || !email) {
+                return res.status(422).json({ error: true, message: "Email and otp token required!" });
+            }
+
             const user = await User.findOne({ email });
             if (!user) return res.status(422).json({ error: true, message: "Error verifying otp!" });
 
@@ -290,6 +315,9 @@ class AuthController {
     static async resetPassword(req: Request, res: Response) {
         try {
             const { password } = req.body;
+            if (!password) {
+                return res.status(422).json({ error: true, message: "Password required!" });
+            }
             const authToken = req.headers.authorization?.toString().split(" ")[1];
             if (!authToken) return res.status(401).json({ error: true, message: "Error authenticating user" });
 
@@ -324,7 +352,7 @@ class AuthController {
             const passwordsMatch = await bcrypt.compare(password, user.password as string);
             if (!passwordsMatch) return res.status(403).json({ error: true, message: "Invalid username or password!" });
 
-            if (!user.bvn || !user.account_verified || !user.email_verified) {
+            if (!user.bvn || !user.account_details || !user.email_verified) {
                 return res.status(403).json({ error: true, message: "Cannot skip onboarding process" });
             }
             const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
