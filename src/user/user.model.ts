@@ -71,10 +71,6 @@ const UserSchema = new Schema({
         type: Boolean,
         default: false
     },
-    account_verified: {
-        type: Boolean,
-        default: false
-    },
     wallet: {
         type: Schema.Types.ObjectId,
         ref: "Wallet"
