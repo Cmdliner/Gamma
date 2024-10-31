@@ -15,7 +15,10 @@ interface IUser extends Document {
     email:  string;
     password?: string;
     interested_categories: ProductCategory[];
-    bvn?: string;
+    bvn?: {
+        verified_at: Date;
+        verification_status: "verified" | "unverified"
+    };
     account_details?: {
         account_no: number;
         added_at: Date;

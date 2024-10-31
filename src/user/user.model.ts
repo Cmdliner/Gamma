@@ -46,7 +46,8 @@ const UserSchema = new Schema({
         type: String,
     },
     bvn: {
-        type: String
+        verified_at: { type: Date },
+        verification_status: { type: String, enum: ["verified", "unverified"], default: "unverified" }
     },
     account_details: {
         account_no: { type: Number },
