@@ -10,8 +10,9 @@ import OTP from "./auth.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
-import { generateOTP } from "../lib/main";
+import { generateOTP, validateBvnUsingLuhnsAlgo } from "../lib/main";
 import PaystackService from "../lib/paystack.service";
+import { BankCodes, IBankInfo } from "../lib/bank_codes";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
@@ -207,22 +208,58 @@ class AuthController {
     // kyc
     static async verifyBVN(req: Request, res: Response) {
         try {
-            const { bvn } = req.body;
+            const { bvn }: { bvn: string } = req.body;
             if (!bvn) {
                 return res.status(422).json({ error: true, message: "BVN required!" });
             }
+
             // Sanitize the bvn make sure it is required no of digits and all numerical
+            const isBvnDigit = /^\d$/.test(bvn);
+            if (bvn.length !== 11 || isBvnDigit) {
+                return res.status(422).json({ error: true, message: "Imvalid bvn" });
+            }
 
-            // try using that algo you found to validate if it is even a real bvn
+            // Verify onboarding token and check if valid user
+            const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
 
-            // return invalid bvn
+            const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
+            if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
-            await PaystackService.resolveBvn(bvn);
+            const user = await User.findById(decodedToken.id);
+            if (!user) return res.status(404).json({ error: true, message: "User not found!" });
+
+            // Check if bvn is valid using Luhn's algo
+            const isValidBvn = validateBvnUsingLuhnsAlgo(bvn);
+            if (!isValidBvn) {
+                return res.status(400).json({ error: true, message: "Invalid BVN" });
+            }
+
+            // use paystack bvn api to resolve bvn details and error if invalid details
+            await PaystackService.resolveBvn(parseInt(bvn));
+
+
+            user.bvn = { verification_status: "verified", verified_at: new Date() };
+            await user.save();
+
+            return res.status(200).json({ success: true, message: "Bvn verification successful" });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "An error occured during bvn verification" })
         }
 
+    }
+
+    // Get bank codes
+    static async getBankCodes(req: Request, res: Response) {
+        const { q } = req.query;
+        const searchPattern = new RegExp(`${q}`, "i");
+
+        const matchedBanks = BankCodes.filter((bankCode: IBankInfo) => bankCode.name.match(searchPattern));
+        if (matchedBanks) {
+            console.log("MAtched");
+            return res.status(200).json({ success: true, banks: matchedBanks });
+        }
+        return res.status(200).json({ success: true, banks: BankCodes });
     }
 
     // bank account details
@@ -356,7 +393,7 @@ class AuthController {
             const passwordsMatch = await bcrypt.compare(password, user.password as string);
             if (!passwordsMatch) return res.status(403).json({ error: true, message: "Invalid username or password!" });
 
-            if (!user.bvn || !user.account_details || !user.email_verified) {
+            if (user.bvn?.verification_status !== "verified" || !user.account_details || !user.email_verified) {
                 return res.status(403).json({ error: true, message: "Cannot skip onboarding process" });
             }
             const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");

@@ -3,6 +3,7 @@ import AuthController from "./auth.controller";
 
 const auth = Router();
 
+auth.get("/bank-codes", AuthController.getBankCodes);
 auth.post("/register", AuthController.register);
 auth.post("/resend-verification-mail", AuthController.resendVerificationMail);
 auth.post("/verify", AuthController.verifyEmail);

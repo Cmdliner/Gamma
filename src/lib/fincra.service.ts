@@ -3,6 +3,7 @@ import { Fincra } from "fincra-node-sdk";
 import IWallet from "../types/wallet.schema";
 import IUser from "../types/user.schema";
 import IProduct from "../types/product.schema";
+import crypto from "crypto";
 
 class FincraService {
 
@@ -109,8 +110,24 @@ class FincraService {
             const res = await axios.request(opts);
             return res.data;
         } catch (error) {
-
+            throw error;
         }
+    }
+
+    static async validateWebhook(webhookSignature: string) {
+        const encryptedData = crypto
+            .createHmac("SHA512", "merchantWebhookSecretKey")
+            .update(JSON.stringify("payload"))
+            .digest("hex");
+        const signatureFromWebhook = webhookSignature;
+
+        if (encryptedData === signatureFromWebhook) {
+            console.log("process");
+        }
+        else {
+            console.log("discard");
+        }
+
     }
     static async withdrawFunds(wallet: IWallet, bank_account: number) {
         // find the wallet account no and withdraw balance
