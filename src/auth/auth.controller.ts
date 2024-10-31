@@ -35,6 +35,10 @@ class AuthController {
 
             const registerInfo: Partial<IRegisterUser> = { first_name, last_name, dob, email, gender, state_of_origin, interested_categories };
 
+            // Add error that checks that at least we have a phone number 1 field
+            if (!phone_no_1) {
+                return res.status(422).json({ error: "At least one phone number is required" });
+            }
             // Add middle name and location if present
             if (middle_name) registerInfo.middle_name = middle_name;
             if (location) registerInfo.location = location;
