@@ -219,7 +219,7 @@ class AuthController {
                 return res.status(422).json({ error: true, message: "Imvalid bvn" });
             }
 
-            // Verify onboarding token and check if valid user
+            // Verify onboarding token and check if user is valid
             const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
 
             const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
@@ -265,7 +265,6 @@ class AuthController {
     // bank account details
     static async validateBankDetails(req: Request, res: Response) {
         try {
-            //!TODO = Add bank details
             const { account_no, bank_code } = req.body;
 
             if (!account_no || !bank_code) {
@@ -274,13 +273,21 @@ class AuthController {
                     .json({ error: true, message: `${account_no ? "Bank code" : "Account no"} is required` });
             }
 
+            // Verify onboarding token and check if user is valid
+            const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
+
+            const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
+            if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
+
+            const user = await User.findById(decodedToken.id);
+            if (!user) return res.status(404).json({ error: true, message: "User not found!" });
+
+
+            // Validate bank account with paystack
             const isValidBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
             if (!isValidBankAcc) {
                 return res.status(400).json({ error: true, message: "Invalid bank details " })
             }
-
-            const user = await User.findById(req.user?._id!);
-            if (!user) return res.status(404).json({ error: true, message: "User not found" });
 
             user.account_details = { account_no, bank_code, added_at: new Date() };
             await user.save();
