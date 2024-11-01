@@ -17,5 +17,6 @@ declare namespace NodeJS {
         PAYSTACK_URI: string;
         PAYSTACK_PUBLIC_KEY: string;
         PAYSTACK_SECRET_KEY: string;
+        BVN_ENCRYPTION_KEY: string;
     }
 }
