@@ -4,6 +4,7 @@ import IWallet from "../types/wallet.schema";
 import IUser from "../types/user.schema";
 import IProduct from "../types/product.schema";
 import crypto from "crypto";
+import { decryptBvn } from "./main";
 
 class FincraService {
 
@@ -42,7 +43,7 @@ class FincraService {
                         "firstName": user.first_name,
                         "lastName": user.last_name,
                         "email": user.email,
-                        "bvn": user.bvn as string
+                        "bvn": decryptBvn(user.bvn?.encrypted_data as string),
                     },
                     "channel": "wema"
                 }

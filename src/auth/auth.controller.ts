@@ -10,7 +10,7 @@ import OTP from "./auth.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
-import { generateOTP, validateBvnUsingLuhnsAlgo } from "../lib/main";
+import { encryptBvn, generateOTP } from "../lib/main";
 import PaystackService from "../lib/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
 
@@ -216,7 +216,7 @@ class AuthController {
             // Sanitize the bvn make sure it is required no of digits and all numerical
             const isBvnDigit = /^\d$/.test(bvn);
             if (bvn.length !== 11 || isBvnDigit) {
-                return res.status(422).json({ error: true, message: "Imvalid bvn" });
+                return res.status(422).json({ error: true, message: "Invalid bvn" });
             }
 
             // Verify onboarding token and check if user is valid
@@ -228,18 +228,15 @@ class AuthController {
             const user = await User.findById(decodedToken.id);
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
-            // Check if bvn is valid using Luhn's algo
-            const isValidBvn = validateBvnUsingLuhnsAlgo(bvn);
-            if (!isValidBvn) {
-                return res.status(400).json({ error: true, message: "Invalid BVN" });
-            }
 
             // use paystack bvn api to resolve bvn details and error if invalid details
             await PaystackService.resolveBvn(parseInt(bvn));
 
+            const encryptedData = encryptBvn(bvn);
 
-            user.bvn = { verification_status: "verified", verified_at: new Date() };
-            await user.save();
+
+            // user.bvn = { verification_status: "verified", verified_at: new Date(), encrypted_data: encryptedData };
+            // await user.save();
 
             return res.status(200).json({ success: true, message: "Bvn verification successful" });
         } catch (error) {

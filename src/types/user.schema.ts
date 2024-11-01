@@ -17,7 +17,8 @@ interface IUser extends Document {
     interested_categories: ProductCategory[];
     bvn?: {
         verified_at: Date;
-        verification_status: "verified" | "unverified"
+        verification_status: "verified" | "unverified",
+        encrypted_data: string;
     };
     account_details?: {
         account_no: number;
