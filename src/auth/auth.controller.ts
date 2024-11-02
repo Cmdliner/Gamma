@@ -235,8 +235,8 @@ class AuthController {
             const encryptedData = encryptBvn(bvn);
 
 
-            // user.bvn = { verification_status: "verified", verified_at: new Date(), encrypted_data: encryptedData };
-            // await user.save();
+             user.bvn = { verification_status: "verified", verified_at: new Date(), encrypted_data: encryptedData };
+             await user.save();
 
             return res.status(200).json({ success: true, message: "Bvn verification successful" });
         } catch (error) {
