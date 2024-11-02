@@ -18,7 +18,7 @@ interface IProduct extends Document {
     ownership_documents: string[];
     category: ProductCategory;
     status: "available" | "processing_payment" | "pending_bid_approval" | "sold";
-    sponsored: boolean;
+    sponsored_at: Date;
 }
 
 

@@ -44,10 +44,8 @@ bun run dev
 - Product listing should be unique for a particular category
 - Payment to wallet when buying
 - sort bidding direct purchase order
-- crud operations on products and profile
 - 5 mins bid expiry
 - deals (pending, accepted )
-- google sheets, google analytics
 - withdraw earnings if referred user is active and if referr has at least one transaction that day
 - Check uniqueness of phone numbers on registering and handle errors appropriately
 - implement rate limiting for reset-password and verify-bvn endpoints
@@ -60,7 +58,6 @@ bun run dev
 - Create notification model
 - Implement push-notifications with appropraitely named lib
 - Add push token to user model
-- checkout mutex pkg for wallet modification
 
 ## REMEMBER
 - Upload can only error due to client-side errors; upload middleware is very stable

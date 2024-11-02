@@ -303,9 +303,22 @@ class ProductController {
 
     static async sponsorProduct(req: Request, res: Response) {
         const { productID } = req.params;
-        //!TODO => Ensure product exists && only owner can sponsor it
-        // use transaction service and db transactions to make payment for sponsorhsip
-        // then set the sponsored flag to true so it can be fetched into the market place sponsored section
+        try {
+            // Ensure product exists && only owner can sponsor it
+            const product = await Product.findOne({ _id: productID, owner: req.user?._id });
+            if (!product) {
+                return res.status(404).json({ error: true, message: "Product not found!" });
+            }
+            //!TODO => use transaction service and db transactions to make payment for sponsorhsip
+
+            // set sponsored_at timestamp on success
+            product.sponsored_at = new Date();
+
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Error attempting to sponsor product" })
+        }
     }
 
     static async getSponsoredProducts(req: Request, res: Response) {
@@ -313,7 +326,8 @@ class ProductController {
             const { categoryName } = req.params;
 
             //!TODO => Filter as per user location
-            const sponsoredProds = await Product.find({ category: categoryName, sponsored: true });
+            const now = Date.now();
+            const sponsoredProds = await Product.find({ category: categoryName, sponsored_at: { $lte: { now } } });
             return res.status(200).json({ success: "Ads found", products: sponsoredProds });
         } catch (error) {
             console.error(error);

@@ -68,9 +68,8 @@ const ProductSchema = new Schema({
         enum: ["available", "processing_payment", "sold", "pending_bid_approval"],
         default: "available"
     },
-    sponsored: {
-        type: Boolean,
-        default: false
+    sponsored_at: {
+        type: Date
     },
     purchase_lock: {
         is_locked: {
