@@ -2,7 +2,7 @@ node_modules/
 .env
 dist/
 uploads
-server.key
+*.key
 server.cert
 *.js
 .*.sh

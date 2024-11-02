@@ -48,7 +48,10 @@ export function generateOTP() {
 export const encryptBvn = (bvn: string) => {
     try {
         const IV_LENGTH = 16;
-        const ENCRYPTION_KEY = process.env.BVN_ENCRYPTION_KEY;
+
+        // Base 64 encoded key gen using openssl
+        const ENCRYPTION_KEY = Buffer.from(process.env.BVN_ENCRYPTION_KEY, "base64");
+
 
         // Create a 16 bit init vector (think of this like a unique salt)
         const iv = crypto.randomBytes(IV_LENGTH);
@@ -69,7 +72,7 @@ export const encryptBvn = (bvn: string) => {
 
 export const decryptBvn = (encryptedData: string) => {
     try {
-        const ENCRYPTION_KEY = process.env.BVN_ENCRYPTION_KEY;
+        const ENCRYPTION_KEY = Buffer.from(process.env.BVN_ENCRYPTION_KEY, "base64");
 
         const [ivString, encryptedBvnString] = encryptedData.split(":");
 
