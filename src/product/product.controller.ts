@@ -328,7 +328,7 @@ class ProductController {
 
             //!TODO => Filter as per user location
             const now = Date.now();
-            const sponsoredProds = await Product.find({ category: categoryName, "sponsorhip.sponsored_at": { $lte: { now } } });
+            const sponsoredProds = await Product.find({ category: categoryName, "sponsorhip.expires": { $lte: { now } } });
             return res.status(200).json({ success: "Ads found", products: sponsoredProds });
         } catch (error) {
             console.error(error);
