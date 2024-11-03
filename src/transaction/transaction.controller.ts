@@ -42,7 +42,7 @@ class TransactionController {
     }
 
     static async purchaseItem(req: Request, res: Response) {
-        // const session = await startSession();
+        const session = await startSession();
         try {
             const userId = req.user?._id;
             const { productID } = req.params;
@@ -51,8 +51,8 @@ class TransactionController {
                 return res.status(422).json({ error: true, message: "Payment method required!" })
             }
 
-            // session.startTransaction();
-            const product = await Product.findById(productID)//.session(session);
+            session.startTransaction();
+            const product = await Product.findById(productID).session(session);
             if (!product || product.status !== "available") {
                 return res.status(400).json({ error: true, message: "Product not available!" });
             }
@@ -67,7 +67,7 @@ class TransactionController {
                     locked_at: Date.now(),
                     locked_by: userId,
                 }
-            }, { new: true, /*session */ });
+            }, { new: true, session });
             if (!updatedProduct) {
                 return res.status(400).json({ error: true, message: "Product is currently unavaliable for purchase" });
             }
@@ -77,26 +77,26 @@ class TransactionController {
                 amount: product.price,
                 product: productID,
                 payment_method
-            }, /* { session } */);
-            await itemPurchaseTransaction.save();
+            });
+            await itemPurchaseTransaction.save({ session });
             const transactionRef = itemPurchaseTransaction.id;
 
 
             // Initiate payment with fincra then commit transaction to db
             const fincraResponse = await FincraService.collectPayment(product, req.user!, transactionRef);
             console.log(fincraResponse);
-            // await session.commitTransaction();
+            await session.commitTransaction();
 
             return res.status(200).json({ success: true, transaction_id: itemPurchaseTransaction._id, fincra: fincraResponse });
 
 
         } catch (error) {
-            // await session.abortTransaction();
+            await session.abortTransaction();
             console.error(error);
             return res.status(500).json({ error: "Error purchasing item" });
-        } /* finally {
-            // await session.endSession();
-        } */
+        } finally {
+            await session.endSession();
+        }
     }
 
 }
