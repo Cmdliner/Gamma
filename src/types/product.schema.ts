@@ -11,14 +11,17 @@ interface IProduct extends Document {
     is_negotiable: boolean;
     active_bid: Types.ObjectId;
     purchase_lock: {
-      is_locked: boolean;
-      locked_at: Date;
-      locked_by: Types.ObjectId;
+        is_locked: boolean;
+        locked_at: Date;
+        locked_by: Types.ObjectId;
     };
     ownership_documents: string[];
     category: ProductCategory;
     status: "available" | "processing_payment" | "pending_bid_approval" | "sold";
-    sponsored_at: Date;
+    sponsorship: {
+        sponsored_at: Date;
+        expires: Date;
+    };
 }
 
 

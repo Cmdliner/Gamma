@@ -312,7 +312,8 @@ class ProductController {
             //!TODO => use transaction service and db transactions to make payment for sponsorhsip
 
             // set sponsored_at timestamp on success
-            product.sponsored_at = new Date();
+            // !TODO => Set expires based on sponsorhip duration [7d || 1month]
+            product.sponsorship = {sponsored_at: new Date(), expires: new Date()}
 
 
         } catch (error) {
@@ -327,7 +328,7 @@ class ProductController {
 
             //!TODO => Filter as per user location
             const now = Date.now();
-            const sponsoredProds = await Product.find({ category: categoryName, sponsored_at: { $lte: { now } } });
+            const sponsoredProds = await Product.find({ category: categoryName, "sponsorhip.sponsored_at": { $lte: { now } } });
             return res.status(200).json({ success: "Ads found", products: sponsoredProds });
         } catch (error) {
             console.error(error);
