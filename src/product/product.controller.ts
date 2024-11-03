@@ -49,18 +49,18 @@ class ProductController {
             if (ownership_documents.length) electronicProductData.ownership_documents = ownership_documents;
 
             const { error } = electronicsValidationSchema.validate(electronicProductData);
-            if (error) return res.status(422).json({ error: error.details[0] });
+            if (error) return res.status(422).json({ error: true, message: error.details[0] });
 
             const newElectronics = await Electronics.create(electronicProductData);
             if (!newElectronics) {
-                return res.status(400).json({ error: "Error uploading product" });
+                return res.status(400).json({ error: true, message: "Error uploading product" });
             }
 
-            return res.status(201).json({ success: "Electronics uploaded successfully", electronics: newElectronics });
+            return res.status(201).json({ success: true, message: "Electronics uploaded successfully", electronics: newElectronics });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "An error occured during electronics product upload" });
+            return res.status(500).json({ error: true, message: "An error occured during electronics product upload" });
         }
     }
 
@@ -86,19 +86,19 @@ class ProductController {
 
             const { error } = landedPropertyValidationSchema.validate(landedPropertyData);
             if (error) {
-                return res.status(422).json({ error: error.details[0].message });
+                return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
             const newLandedProperty = await LandedProperty.create(landedPropertyData);
             if (!newLandedProperty) {
-                return res.status(400).json({ error: "Error uploading landed property" });
+                return res.status(400).json({ error: true, message: "Error uploading landed property" });
             }
 
-            return res.status(201).json({ success: "Property uploaded successfully", landed_property: newLandedProperty })
+            return res.status(201).json({ success: true, message: "Property uploaded successfully", landed_property: newLandedProperty })
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "An error occured during property upload" })
+            return res.status(500).json({ error: true, message: "An error occured during property upload" })
         }
     }
 
@@ -127,18 +127,18 @@ class ProductController {
             // validate data
             const { error } = gadgetValidationSchema.validate(gadgetData);
             if (error) {
-                return res.status(422).json({ error: error.details[0].message });
+                return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
             const newGadget = await Gadget.create(gadgetData);
             if (!newGadget) {
-                return res.status(400).json({ error: "Error uploading gadget" });
+                return res.status(400).json({ error: true, message: "Error uploading gadget" });
             }
 
-            return res.status(201).json({ success: "Gadget was uploaded successfully", gadget: newGadget });
+            return res.status(201).json({ success: true, message: "Gadget was uploaded successfully", gadget: newGadget });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Error uploading gadget" });
+            return res.status(500).json({ error: true, message: "Error uploading gadget" });
         }
     }
 
@@ -169,17 +169,17 @@ class ProductController {
             // Validate users vehicle data
             const { error } = vehiclevalidationSchema.validate(vehicleData);
             if (error) {
-                return res.status(422).json({ error: error.details[0].message });
+                return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
             const newVehicle = await Vehicle.create(vehicleData);
             if (!newVehicle) {
-                return res.status(400).json({ error: "Error uploading vehicle" });
+                return res.status(400).json({ error: true, message: "Error uploading vehicle" });
             }
-            return res.status(201).json({ success: "Vehicle uploaded successfully", vehicle: newVehicle });
+            return res.status(201).json({ success: true, message: "Vehicle uploaded successfully", vehicle: newVehicle });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Error uploading vehicle" })
+            return res.status(500).json({ error: true, message: "Error uploading vehicle" })
         }
     }
 
@@ -201,32 +201,32 @@ class ProductController {
             if (ownership_documents.length) genericProductData.ownership_documents = ownership_documents;
             const { error } = genericValidationSchema.validate(genericProductData);
             if (error) {
-                return res.status(422).json({ error: error.details[0].message });
+                return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
             switch (genericProductData.category) {
                 case "furnitures":
                     const newFurniture = await Furniture.create(genericProductData);
                     if (!newFurniture) throw new Error("Could not create product");
-                    return res.status(201).json({ success: "Product uploaded succesfully", furniture: newFurniture });
+                    return res.status(201).json({ success: true, message: "Product uploaded succesfully", furniture: newFurniture });
                 case "machineries":
                     const newMachinery = await Machinery.create(genericProductData);
                     if (!newMachinery) throw new Error("Could not create product");
-                    return res.status(201).json({ success: "Product uploaded succesfully", machinery: newMachinery });
+                    return res.status(201).json({ success: true, message: "Product uploaded succesfully", machinery: newMachinery });
                 case "fashion_wears":
                     const newFashionWear = await FashionProduct.create(genericProductData);
                     if (!newFashionWear) throw new Error("Error creating product");
-                    return res.status(201).json({ success: "Product created successfully", fashion_wears: newFashionWear });
+                    return res.status(201).json({ success: true, message: "Product created successfully", fashion_wears: newFashionWear });
                 case "others":
                     const otherProduct = await OtherProduct.create(genericProductData);
                     if (!otherProduct) throw new Error("Error creating product");
-                    return res.status(201).json({ success: "Product created successfully", other_product: otherProduct });
+                    return res.status(201).json({ success: true, message: "Product created successfully", other_product: otherProduct });
                 default:
                     throw new Error("Invalid product category, how did you get here?")
             }
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Error uploading product" });
+            return res.status(500).json({ error: true, message: "Error uploading product" });
         }
     }
 
@@ -237,10 +237,10 @@ class ProductController {
 
             const product = await Product.findById(productID);
             if (!product) throw new Error("Error getting that product");
-            return res.status(200).json({ success: "Product found", product });
+            return res.status(200).json({ success: true, message: "Product found", product });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "An error occured while trying to fetch taht product!" });
+            return res.status(500).json({ error: true, message: "An error occured while trying to fetch taht product!" });
         }
     }
 
@@ -260,22 +260,22 @@ class ProductController {
 
             //!TODO => validate product category
             const isValidCategory = allowedCategories.includes(productCategory);
-            if (!isValidCategory) return res.status(400).json({ error: "Invalid product category!" });
+            if (!isValidCategory) return res.status(400).json({ error: true, message: "Invalid product category!" });
 
             const productsCount = await Product.find({ category: productCategory }).countDocuments();
             const isValidPage = page <= Math.ceil(productsCount / limit);
 
             if (!isValidPage) {
-                return res.status(404).json({ error: "Oops...Could not find that page" })
+                return res.status(404).json({ error: true, message: "Oops...Could not find that page" })
             }
 
 
 
             const products = await Product.find({ category: productCategory }).limit(limit).skip(skips);
-            if (products) return res.status(200).json({ success: "Products found!", products });
+            if (products) return res.status(200).json({ success: true, message: "Products found!", products });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Error fetching products" })
+            return res.status(500).json({ error: true, message: "Error fetching products" })
         }
     }
 
@@ -285,19 +285,24 @@ class ProductController {
             const { productID } = req.params;
 
             const productListing = await Product.findById(productID);
-            if (!productListing) return res.status(404).json({ error: "Product not found!" });
+            if (!productListing) return res.status(404).json({ error: true, message: "Product not found!" });
 
             const isAuthorizedToDelete = compareObjectID(currentUser!, productListing.owner);
-            if (!isAuthorizedToDelete) return res.status(403).json({ error: "Unauthorized!" });
+            if (!isAuthorizedToDelete) return res.status(403).json({ error: true, message: "Unauthorized!" });
 
-            //!TODO => check if there are no pending operations (transactions, bids) on this item
+            // check if there are no pending operations (transactions, bids) on this item
+            if (productListing.purchase_lock.is_locked) {
+                return res.status(403)
+                    .json({ error: true, message: "Product still has pending operations cannot delete at the moment" });
+            }
             const deletedProductListing = await Product.findByIdAndDelete(productID);
             if (!deletedProductListing) throw new Error("An error occured while attempting to delete product");
 
-            return res.status(200).json({ success: "Product listing has been deleted successfully" });
+            return res.status(200).json({ success: true, message: "Product listing has been deleted successfully" });
 
         } catch (error) {
-
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error deleting product listing" });
         }
     }
 
@@ -313,12 +318,12 @@ class ProductController {
 
             // set sponsored_at timestamp on success
             // !TODO => Set expires based on sponsorhip duration [7d || 1month]
-            product.sponsorship = {sponsored_at: new Date(), expires: new Date()}
+            product.sponsorship = { sponsored_at: new Date(), expires: new Date() }
 
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Error attempting to sponsor product" })
+            return res.status(500).json({ error: true, message: "Error attempting to sponsor product" })
         }
     }
 
@@ -329,10 +334,10 @@ class ProductController {
             //!TODO => Filter as per user location
             const now = Date.now();
             const sponsoredProds = await Product.find({ category: categoryName, "sponsorhip.expires": { $lte: { now } } });
-            return res.status(200).json({ success: "Ads found", products: sponsoredProds });
+            return res.status(200).json({ success: true, message: "Ads found", products: sponsoredProds });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: "Error getting sponsored products" });
+            return res.status(500).json({ error: true, message: "Error getting sponsored products" });
         }
     }
 
