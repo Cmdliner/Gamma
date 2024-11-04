@@ -46,7 +46,7 @@ export const ValidateAndProcessUpload = async (req: Request, res: Response, next
     const files = req.files as ReqFiles;
     if (!files || !files.product_images) {
         console.log("product_images is undefined in the controller");
-        return res.status(400).json({ error: "product_images is required" });
+        return res.status(400).json({ error: true, message: "product_images is required" });
     }
     const { ownership_documents, product_images } = files;
     try {
@@ -60,6 +60,6 @@ export const ValidateAndProcessUpload = async (req: Request, res: Response, next
         next();
     } catch (error) {
         console.error("Error processing images:", error);
-        return res.status(500).json({ error: "Error processing uploaded images" });
+        return res.status(500).json({ error: true, message: "Error processing uploaded images" });
     }
 }

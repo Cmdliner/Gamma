@@ -18,5 +18,8 @@ declare namespace NodeJS {
         PAYSTACK_PUBLIC_KEY: string;
         PAYSTACK_SECRET_KEY: string;
         BVN_ENCRYPTION_KEY: string;
+        CLOUDINARY_CLOUD_NAME: string;
+        CLOUDINARY_SECRET: string;
+        CLOUDINARY_API_KEY: string;
     }
 }
