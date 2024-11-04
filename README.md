@@ -35,7 +35,6 @@ bun run dev
 ## TODOS
 - implement transaction through descriminator keys (product_purchase, ad_sponsorship)
 - Implement cloudinary storage
-- Checkout mongoose session implementation
 - Handle webhook for purchases
 - ad sponsorship for 7 days or 1 month
 - after 14 days temporarily remove ads (x delete item)
