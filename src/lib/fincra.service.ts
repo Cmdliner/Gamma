@@ -17,11 +17,40 @@ class FincraService {
 
     static async getBusinessInfo() {
         try {
-            const business = await FincraService.fincra.business.getBusinessId();
-            return business;
+            const url = `${this.FINCRA_BASE_URL}/profile/business/me`;
+            const headers = {
+                "api-key": process.env.FINCRA_SECRET_KEY,
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+
+            }
+            // get request; ._id is business id
+            const res = await axios.get(url, { headers });
+            console.log({ business: res.data });
+
+            return res.data;
 
         } catch (error) {
             console.error((error as Error).stack);
+            throw error;
+        }
+    }
+
+    static async resolveBvn(bvn: string, business: string) {
+        try {
+            const url = `${this.FINCRA_BASE_URL}/core/bvn-verification`;
+            const headers = {
+                "Content-Type": "application/json",
+                "Accepts": "application/json",
+                "api-key": process.env.FINCRA_SECRET_KEY
+            }
+            const res = await axios.post(url, {
+                bvn,
+                business
+            }, { headers });
+            return res.data
+        } catch (error) {
+            console.error(error);
             throw error;
         }
     }
@@ -126,8 +155,8 @@ class FincraService {
             console.log("process");
         }
         else {
-            console.log("discard");
         }
+        console.log("discard");
 
     }
     static async withdrawFunds(wallet: IWallet, bank_account: number) {

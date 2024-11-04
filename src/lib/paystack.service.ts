@@ -9,7 +9,7 @@ class PaystackService {
 		await axios.get("", { headers })
 	}
 
-	static async resolveBvn(bvn: number) { }
+	
 
 
 	static async validateAccountDetails(accountNo: string, bankCode: string): Promise<object | null> {

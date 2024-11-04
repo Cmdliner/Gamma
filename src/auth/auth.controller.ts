@@ -13,6 +13,7 @@ import Wallet from "../user/wallet.model";
 import { encryptBvn, generateOTP } from "../lib/main";
 import PaystackService from "../lib/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
+import FincraService from "../lib/fincra.service";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
@@ -241,8 +242,18 @@ class AuthController {
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
 
-            // use paystack bvn api to resolve bvn details and error if invalid details
-            await PaystackService.resolveBvn(parseInt(bvn));
+
+            const bvnValidationRes = await FincraService.resolveBvn(bvn, process.env.FINCRA_BUSINESS_ID);
+        
+            if (!bvnValidationRes || bvnValidationRes.success !== true) {
+                return res.status(400).json({ error: true, message: "Error validating bvn" });
+            }
+            const firstName = bvnValidationRes.data.response.firstName.toLowerCase();
+            const lastName = bvnValidationRes.data.response.lastName.toLowerCase();
+            if (user.first_name.toLowerCase() !== firstName || lastName !== user.last_name.toLowerCase()) {
+                // return res.status(400).json({ error: true, message: "Bvn data mismatch" });
+            }
+
 
             const encryptedData = encryptBvn(bvn);
 
