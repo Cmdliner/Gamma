@@ -23,7 +23,7 @@ class AuthController {
     static async register(req: Request, res: Response) {
 
         const session = await startSession();
-        
+
         try {
             session.startTransaction();
             const {
@@ -48,6 +48,12 @@ class AuthController {
 
             const phone_numbers = [phone_no_1];
             if (phone_no_2) phone_numbers.push(phone_no_2);
+
+            // Verify that no user has any of the phone numbers before
+            const phoneNumberInUse = await User.findOne({ phone_numbers: { $in: phone_numbers } });
+            if (phoneNumberInUse) {
+                return res.status(400).json({ error: true, message: "A user with that phone number exists" });
+            }
 
             const { error } = registerValidationSchema.validate({ ...registerInfo, phone_numbers });
             if (error) {
@@ -82,7 +88,7 @@ class AuthController {
             const wallet = new Wallet();
             if (!wallet) throw { custom_error: true, message: "Error creating user" };
             user.wallet = wallet._id as Types.ObjectId;
-            
+
             await wallet.save({ session });
             await user.save({ session });
 

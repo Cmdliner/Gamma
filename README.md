@@ -34,7 +34,6 @@ bun run dev
 
 ## TODOS
 - implement transaction through descriminator keys (product_purchase, ad_sponsorship)
-- Implement cloudinary storage
 - Handle webhook for purchases
 - ad sponsorship for 7 days or 1 month
 - after 14 days temporarily remove ads (x delete item)
@@ -46,7 +45,6 @@ bun run dev
 - 5 mins bid expiry
 - deals (pending, accepted )
 - withdraw earnings if referred user is active and if referr has at least one transaction that day
-- Check uniqueness of phone numbers on registering and handle errors appropriately
 - implement rate limiting for reset-password and verify-bvn endpoints
 - implement compression for endpoints with large data sets
 - create disputes
