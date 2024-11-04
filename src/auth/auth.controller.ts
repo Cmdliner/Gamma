@@ -21,9 +21,11 @@ class AuthController {
 
     // Register 
     static async register(req: Request, res: Response) {
-        // const session = await startSession();
+
+        const session = await startSession();
+        
         try {
-            // session.startTransaction();
+            session.startTransaction();
             const {
                 first_name,
                 last_name, middle_name,
@@ -52,12 +54,12 @@ class AuthController {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
-            const emailTaken = await User.exists({ email })//.session(session);
+            const emailTaken = await User.exists({ email }).session(session);
             if (emailTaken) return res.status(422).json({ error: true, message: "Email taken!" });
 
             let referrer = null;
             if (referral_code) {
-                referrer = await User.findOne({ referral_code })//.session(session);
+                referrer = await User.findOne({ referral_code }).session(session);
                 if (!referrer) return res.status(404).json({ error: true, message: "Invalid referral code!" });
             }
             const user = new User(registerInfo);
@@ -73,39 +75,43 @@ class AuthController {
             // Check if there is a valid referrer and add new user to list of referrals if true
             if (referrer) {
                 referrer.referrals.push(user._id);
-                await referrer.save();
+                await referrer.save({ session });
             }
 
             // Create user wallet
             const wallet = new Wallet();
             if (!wallet) throw { custom_error: true, message: "Error creating user" };
             user.wallet = wallet._id as Types.ObjectId;
-            await wallet.save();
-            await user.save();
+            
+            await wallet.save({ session });
+            await user.save({ session });
 
 
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
             if (!emailVToken) {
                 return res.status(400).json({ error: true, message: "Error sending verification mail" });
             }
+            await emailVToken.save({ session });
+
             const full_name = `${first_name} ${last_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
-            await emailVToken.save();
 
             const userToken = await AuthService.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
-            const unverified_user = { id: userToken }; //Why did i do this?
+            const unverified_user = { id: userToken };
 
             res.setHeader("x-onboarding-user", unverified_user.id);
 
             // when all the register operations have successfully completed commit the transactions to the db
-            //await session.commitTransaction();
+            await session.commitTransaction();
 
             return res.status(201).json({ success: true, message: "User created successfully!", user });
 
         } catch (error) {
-            // await session.abortTransaction();
             console.error(error);
+            await session.abortTransaction();
             return res.status(500).json({ error: true, message: "Error registering user" });
+        } finally {
+            session.endSession();
         }
     }
 
@@ -235,8 +241,8 @@ class AuthController {
             const encryptedData = encryptBvn(bvn);
 
 
-             user.bvn = { verification_status: "verified", verified_at: new Date(), encrypted_data: encryptedData };
-             await user.save();
+            user.bvn = { verification_status: "verified", verified_at: new Date(), encrypted_data: encryptedData };
+            await user.save();
 
             return res.status(200).json({ success: true, message: "Bvn verification successful" });
         } catch (error) {
