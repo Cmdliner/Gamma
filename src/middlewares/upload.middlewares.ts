@@ -89,7 +89,7 @@ export const ValidateAndProcessUpload = async (req: Request, res: Response, next
         const processImage = isProd ? processCloudinaryImage : processLocalImage;
 
         const processedProductImages = await Promise.all(product_images.map(processImage));
-        const processedOwnershipDocs = await Promise.all(ownership_documents.map(processImage));
+        const processedOwnershipDocs = ownership_documents ? await Promise.all(ownership_documents.map(processImage)) : [];
 
         req.processed_images = {
             product_images: processedProductImages,
