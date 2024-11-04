@@ -23,8 +23,8 @@ export const electronicsValidationSchema = Joi.object({
     ownership_documents: Joi.array().max(5),
     brand: Joi.string().required(),
     item_model: Joi.string().required(),
-    condition: Joi.string().allow("new", "used"),
-    category: Joi.allow(...allowedCategories).required()
+    condition: Joi.string().valid("new", "used"),
+    category: Joi.valid(...allowedCategories).required()
 });
 
 const validPropertyconditions = [
@@ -46,8 +46,8 @@ export const landedPropertyValidationSchema = Joi.object({
     ownership_documents: Joi.array().min(1).max(5).required(),
     localty: Joi.string().required(),
     dimensions: Joi.string().required(),
-    category: Joi.allow(...allowedCategories).required(),
-    condition: Joi.allow(...validPropertyconditions).required()
+    category: Joi.valid(...allowedCategories).required(),
+    condition: Joi.valid(...validPropertyconditions).required()
 });
 
 export const gadgetValidationSchema = Joi.object({
@@ -58,11 +58,11 @@ export const gadgetValidationSchema = Joi.object({
     owner: Joi.object().required(),
     location: Joi.string().required(),
     is_negotiable: Joi.boolean().required(),
-    category: Joi.allow(...allowedCategories).required(),
+    category: Joi.valid(...allowedCategories).required(),
     brand: Joi.string().required(),
     item_model: Joi.string().required(),
     RAM: Joi.string().required(),
-    condition: Joi.allow("new", "used").required(),
+    condition: Joi.valid("new", "used").required(),
     ownership_documents: Joi.array().min(0).max(5)
 });
 
@@ -74,8 +74,8 @@ export const vehiclevalidationSchema = Joi.object({
     owner: Joi.object().required(),
     location: Joi.string().required(),
     is_negotiable: Joi.boolean().required(),
-    category: Joi.allow(...allowedCategories).required(),
-    condition: Joi.allow("new", "used").required(),
+    category: Joi.valid(...allowedCategories).required(),
+    condition: Joi.valid("new", "used").required(),
     ownership_documents: Joi.array().min(2).max(5),
     make: Joi.string().required(),
     is_registered: Joi.boolean().required(),
@@ -92,8 +92,8 @@ export const genericValidationSchema = Joi.object({
     location: Joi.string().required(),
     price: Joi.number().min(10).required(),
     is_negotiable: Joi.boolean().required(),
-    condition: Joi.string().allow("used", "new").required(),
-    category: Joi.allow(...allowedCategories).required(),
+    condition: Joi.string().valid("used", "new").required(),
+    category: Joi.valid(...allowedCategories).required(),
     product_images: Joi.array().min(10).max(10).required(),
     ownership_documents: Joi.array()
 });
