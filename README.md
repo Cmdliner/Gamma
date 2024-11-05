@@ -33,11 +33,9 @@ bun run dev
 - validation does not catch "allowed values" errors in products upload
 
 ## TODOS
-- implement transaction through descriminator keys (product_purchase, ad_sponsorship)
 - Handle webhook for purchases
 - ad sponsorship for 7 days or 1 month
 - after 14 days temporarily remove ads (x delete item)
-- Paystack bvn verification
 - On sucessful first transaction of user check if they have a referrer and reward them if they have
 - Product listing should be unique for a particular category
 - Payment to wallet when buying
@@ -45,8 +43,6 @@ bun run dev
 - 5 mins bid expiry
 - deals (pending, accepted )
 - withdraw earnings if referred user is active and if referr has at least one transaction that day
-- implement rate limiting for reset-password and verify-bvn endpoints
-- implement compression for endpoints with large data sets
 - create disputes
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
 - App pays them through escrow account

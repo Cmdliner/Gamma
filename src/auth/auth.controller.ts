@@ -241,8 +241,6 @@ class AuthController {
             const user = await User.findById(decodedToken.id);
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
-
-
             const bvnValidationRes = await FincraService.resolveBvn(bvn, process.env.FINCRA_BUSINESS_ID);
         
             if (!bvnValidationRes || bvnValidationRes.success !== true) {
@@ -254,10 +252,8 @@ class AuthController {
                 // return res.status(400).json({ error: true, message: "Bvn data mismatch" });
             }
 
-
             const encryptedData = encryptBvn(bvn);
-
-
+            
             user.bvn = { verification_status: "verified", verified_at: new Date(), encrypted_data: encryptedData };
             await user.save();
 
