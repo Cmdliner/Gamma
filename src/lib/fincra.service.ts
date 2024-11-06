@@ -68,6 +68,7 @@ class FincraService {
                 data: {
                     "currency": "NGN",
                     "accountType": "individual",
+                    merchantReference: user.id,
                     "KYCInformation": {
                         "firstName": user.first_name,
                         "lastName": user.last_name,

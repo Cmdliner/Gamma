@@ -308,14 +308,15 @@ class AuthController {
             if (!createWalletRes.success) {
                 return res.status(400).json({ error: true, message: "Error validating bank details" });
             }
-            const { accountNumber, accountName, bankCode } = createWalletRes.data.accountInformation;
+            console.log(createWalletRes.data)
+            const { accountNumber, accountName, reference } = createWalletRes.data.accountInformation;
 
             // Store virtual wallet info in oyeah db wallet
             const wallet = new Wallet({
               account_number: accountNumber,
               account_name: accountName,
-              bank_code: bankCode,
-              fincra_id: createWalletRes.data._id,
+              bank_code,
+              fincra_id: createWalletRes.reference, //changed to reference
             });
             await wallet.save({ session });
 
