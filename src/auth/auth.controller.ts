@@ -78,21 +78,13 @@ class AuthController {
             const referralCode = await AuthService.generateUniqueReferralCode();
             if (!referralCode) throw new Error("Error creating referral code");
             user.referral_code = referralCode;
+            await user.save({ session });
 
             // Check if there is a valid referrer and add new user to list of referrals if true
             if (referrer) {
                 referrer.referrals.push(user._id);
                 await referrer.save({ session });
             }
-
-            // Create user wallet
-            const wallet = new Wallet();
-            if (!wallet) throw { custom_error: true, message: "Error creating user" };
-            user.wallet = wallet._id as Types.ObjectId;
-
-            await wallet.save({ session });
-            await user.save({ session });
-
 
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
             if (!emailVToken) {
@@ -242,7 +234,7 @@ class AuthController {
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
             const bvnValidationRes = await FincraService.resolveBvn(bvn, process.env.FINCRA_BUSINESS_ID);
-        
+
             if (!bvnValidationRes || bvnValidationRes.success !== true) {
                 return res.status(400).json({ error: true, message: "Error validating bvn" });
             }
@@ -253,7 +245,7 @@ class AuthController {
             }
 
             const encryptedData = encryptBvn(bvn);
-            
+
             user.bvn = { verification_status: "verified", verified_at: new Date(), encrypted_data: encryptedData };
             await user.save();
 
@@ -280,6 +272,7 @@ class AuthController {
 
     // bank account details
     static async validateBankDetails(req: Request, res: Response) {
+        const session = await startSession();
         try {
             const { account_no, bank_code } = req.body;
 
@@ -295,7 +288,10 @@ class AuthController {
             const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
-            const user = await User.findById(decodedToken.id);
+            // Intiate db transaction
+            session.startTransaction();
+
+            const user = await User.findById(decodedToken.id).session(session);
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
 
@@ -305,14 +301,33 @@ class AuthController {
                 return res.status(400).json({ error: true, message: "Invalid bank details " })
             }
 
-            user.account_details = { account_no, bank_code, added_at: new Date() };
-            await user.save();
+            user.bank_details = { account_no, bank_code, added_at: new Date() };
 
+            // Create fincra virtual wallet
+            const createWalletRes = await FincraService.createVirtualWallet(user);
+            if (!createWalletRes.success) {
+                return res.status(400).json({ error: true, message: "Error validating bank details" });
+            }
+            const { accountInformation } = createWalletRes;
+            const { accountNumber, accountName, bankCode } = accountInformation;
+
+            // Store virtual wallet info in db wallet
+            const wallet = new Wallet({ account_number: accountNumber, account_name: accountName, bank_code: bankCode });
+            await wallet.save({ session });
+
+            user.wallet = wallet._id as Types.ObjectId;
+            await user.save({ session });
+
+            // Commit  transactions to the db
+            session.commitTransaction();
             return res.status(200).json({ success: true, message: "Bank details added successfully" });
 
         } catch (error) {
             console.error(error);
+            session.abortTransaction();
             return res.status(500).json({ error: true, message: "Error adding bank account details" })
+        } finally {
+            session.endSession();
         }
     }
 
@@ -416,7 +431,7 @@ class AuthController {
             const passwordsMatch = await bcrypt.compare(password, user.password as string);
             if (!passwordsMatch) return res.status(403).json({ error: true, message: "Invalid username or password!" });
 
-            if (user.bvn?.verification_status !== "verified" || !user.account_details || !user.email_verified) {
+            if (user.bvn?.verification_status !== "verified" || !user.bank_details || !user.email_verified) {
                 return res.status(403).json({ error: true, message: "Cannot skip onboarding process" });
             }
             const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");

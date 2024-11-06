@@ -64,9 +64,9 @@ class UserController {
         try {
             const { account_no } = req.body;
             //!TODO => Dont forget the 3 months from date added comparison required for acc update
-            const userBankAccDetails = req.user?.account_details;
+            const userBankAccDetails = req.user?.bank_details;
             // if(userBankAccDetails?.added_at.valueOf() < new Date().valueOf()) {}
-            await User.findByIdAndUpdate(req.user?._id!, { "account_details.account_no": account_no });
+            await User.findByIdAndUpdate(req.user?._id!, { "bank_details.account_no": account_no });
 
         } catch (error) {
             console.error(error);

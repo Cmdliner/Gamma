@@ -50,7 +50,7 @@ const UserSchema = new Schema({
         encrypted_data: { type: String },
         verification_status: { type: String, enum: ["verified", "unverified"], default: "unverified" }
     },
-    account_details: {
+    bank_details: {
         account_no: { type: Number },
         bank_code: { type: Number },
         added_at: { type: Date }

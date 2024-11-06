@@ -6,6 +6,14 @@ const WalletSchema = new Schema({
         type: Number, 
         default: 0
     },
+    account_number: {
+        type: Number,
+        required: true,
+    },
+    bank_code: {
+        type: String,
+        required: true
+    },
     balance: {
         type: Number,
         default: 0

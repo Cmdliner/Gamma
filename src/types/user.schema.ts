@@ -20,7 +20,7 @@ interface IUser extends Document {
         verification_status: "verified" | "unverified",
         encrypted_data: string;
     };
-    account_details?: {
+    bank_details?: {
         account_no: number;
         added_at: Date;
         bank_code: number;

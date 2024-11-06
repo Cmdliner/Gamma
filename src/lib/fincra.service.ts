@@ -194,3 +194,62 @@ class FincraService {
 }
 
 export default FincraService;
+
+
+/* 
+Fincra response
+{
+    "success": true,
+    "message": "We use this to communicate information to you.",
+    "data": {
+        "status": "approved",
+        "isActive": true,
+        "accountNumber": "3992219528",
+        "merchantReference": null,
+        "KYCInformation": {
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "customer@theiremail.com"
+        },
+        "accountInformation": {
+            "accountNumber": "3992219528",
+            "accountName": "Customer's full name",
+            "bankName": "GLOBUS BANK",
+            "bankCode": "103"
+        },
+        "verifiedKYCData": null,
+        "note": null,
+        "accountOpeningFee": 0,
+        "pendingAdditionalInfoCount": 0,
+        "isPermanent": true,
+        "expiresAt": null,
+        "isCheckoutVa": false,
+        "isBankTransferVa": false,
+        "isSuspended": false,
+        "reason": null,
+        "monthlyVolume": null,
+        "entityName": null,
+        "paymentFlowDescription": null,
+        "attachments": [],
+        "meansOfId": [],
+        "bankStatement": [],
+        "utilityBill": [],
+        "virtualAccountType": "additional",
+        "riskRating": null,
+        "checklist": null,
+        "riskScreening": null,
+        "channelKycUpdateStatus": null,
+        "channelKycUpdateResponse": null,
+        "_id": "************************",
+        "business": "*******************",
+        "currency": "NGN",
+        "accountType": "individual",
+        "entityType": "main_account",
+        "currencyType": "fiat",
+        "createdAt": "@timestamp",
+        "updatedAt": "@timestamp"
+    }
+}
+
+    
+*/

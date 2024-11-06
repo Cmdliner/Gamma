@@ -10,7 +10,7 @@ class TransactionController {
     static async withdrawFromWallet(req: Request, res: Response) {
         try {
             const user = req.user?._id as Types.ObjectId;
-            const bankAccount = req.user?.account_details?.account_no as number;
+            const bankAccount = req.user?.bank_details?.account_no as number;
 
 
             // Get user wallet

@@ -17,7 +17,7 @@ class AuthMiddleware {
             if (!user) return res.status(404).json({ error: true, message: "User not found" });
 
             // ensure user has passed onboarding stage and completed kyc process
-            if (!user.email_verified || user.bvn?.verification_status !== "verified" || !user.account_details) {
+            if (!user.email_verified || user.bvn?.verification_status !== "verified" || !user.bank_details) {
                 return res.status(403).json({ error: true, message: "Forbidden!" });
             }
             req.user = user;
