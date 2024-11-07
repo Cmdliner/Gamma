@@ -10,9 +10,9 @@ import swaggerSpec from "./config/swagger";
 import cors, { type CorsOptions } from "cors";
 import bid from "./bid/bid.routes";
 import helmet from "helmet";
-import transaction from "./transaction/transaction.routes";
+import transaction from "./payment/payment.routes";
 import compression from "compression";
-import WebhookController from "./transaction/webhook.controller";
+import WebhookController from "./payment/webhook.controller";
 
 
 const { PORT, API_VERSION } = Settings;
