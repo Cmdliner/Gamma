@@ -78,6 +78,12 @@ class AuthController {
             const referralCode = await AuthService.generateUniqueReferralCode();
             if (!referralCode) throw new Error("Error creating referral code");
             user.referral_code = referralCode;
+
+            // Add wallet 
+            const wallet = new Wallet();
+            await wallet.save({ session });
+            
+            user.wallet = wallet._id as Types.ObjectId;
             await user.save({ session });
 
             // Check if there is a valid referrer and add new user to list of referrals if true
@@ -296,31 +302,13 @@ class AuthController {
 
 
             // Validate bank account with paystack
-            const isValidBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
-            if (!isValidBankAcc) {
-                return res.status(400).json({ error: true, message: "Invalid bank details " })
-            }
+            /*  const isValidBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
+             if (!isValidBankAcc) {
+                 return res.status(400).json({ error: true, message: "Invalid bank details " })
+             } */
 
             user.bank_details = { account_no, bank_code, added_at: new Date() };
 
-            // Create fincra virtual wallet
-            const createWalletRes = await FincraService.createVirtualWallet(user);
-            if (!createWalletRes.success) {
-                return res.status(400).json({ error: true, message: "Error validating bank details" });
-            }
-            console.log(createWalletRes.data)
-            const { accountNumber, accountName, reference } = createWalletRes.data.accountInformation;
-
-            // Store virtual wallet info in oyeah db wallet
-            const wallet = new Wallet({
-              account_number: accountNumber,
-              account_name: accountName,
-              bank_code,
-              fincra_id: createWalletRes.reference, //changed to reference
-            });
-            await wallet.save({ session });
-
-            user.wallet = wallet._id as Types.ObjectId;
             await user.save({ session });
 
             // Commit  transactions to the db

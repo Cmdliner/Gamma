@@ -14,12 +14,12 @@ class TransactionController {
 
 
             // Get user wallet
-            const wallet = await Wallet.findOne({ user });
-            if (!wallet) throw { custom_error: true, mssg: "Error finding wallet" };
+            // const wallet = await Wallet.findOne({ user });
+            // if (!wallet) throw { custom_error: true, mssg: "Error finding wallet" };
 
-            const withdrawal = await FincraService.withdrawFunds(wallet, bankAccount);
+            // const withdrawal = await FincraService.withdrawFunds(wallet, bankAccount);
 
-            return res.status(200).json({ success: true, message: "Withdrawal has been initiated"})
+            return res.status(200).json({ success: true, message: "Withdrawal has been initiated" })
 
 
         } catch (error) {
@@ -76,6 +76,7 @@ class TransactionController {
                 kind: "product_payment",
                 amount: product.price,
                 product: productID,
+                details: `For purchase of ${product.description}`,
                 payment_method
             });
             await itemPurchaseTransaction.save({ session });
@@ -84,7 +85,7 @@ class TransactionController {
 
             // Initiate payment with fincra then commit transaction to db
             const fincraResponse = await FincraService.collectPayment(product, req.user!, transactionRef);
-            console.log(fincraResponse);
+            await Transaction.findByIdAndUpdate(transactionRef, { pay_code: fincraResponse.data.pay_code }, { new: true, session });
             await session.commitTransaction();
 
             return res.status(200).json({ success: true, transaction_id: itemPurchaseTransaction._id, fincra: fincraResponse });

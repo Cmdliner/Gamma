@@ -60,6 +60,16 @@ const UserSchema = new Schema({
         enum: ["active", "dormant"],
         default: "dormant"
     },
+    rewards: {
+        balance: {
+            type: Number,
+            min: 0,
+        }
+    },
+    referred_by: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    },
     referral_code: {
         type: String,
         required: true,

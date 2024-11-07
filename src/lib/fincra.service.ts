@@ -87,6 +87,8 @@ class FincraService {
         }
     }
 
+    static async initiatePaymentToWallet() {}
+
     static async collectPayment(product: IProduct, customer: IUser, ref: string) {
         try {
             const opts: AxiosRequestConfig = {
@@ -107,15 +109,14 @@ class FincraService {
                         "phoneNumber": customer.phone_numbers[0]
                     },
                     metadata: {
-                        "user_id": customer.id,
+                        "customer_id": customer.id,
                         "product_id": product.id
                     },
                     "successMessage": "You have successfully intiated transfer",
                     "paymentMethods": ["bank_transfer", "card"],
                     "settlementDestination": "wallet",
                     "feeBearer": "customer",
-                    "reference": ref,
-                    // "redirectUrl": "https://localhost:4001/payments/successful"
+                    "reference": ref
                 }
             }
             const res = await axios.request(opts);
@@ -130,12 +131,12 @@ class FincraService {
         try {
             const opts: AxiosRequestConfig = {
                 method: "GET",
-                url: `https://sandboxapi.fincra.com/checkout/payments/merchant-reference/${ref}`,
+                url: `${FincraService.FINCRA_BASE_URL}/checkout/payments/merchant-reference/${ref}`,
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
                     "api-key": process.env.FINCRA_SECRET_KEY,
-                    // "x-business-id": process.env.FINCRA_PUBLIC_KEY,
+                    "x-business-id": process.env.FINCRA_BUSINESS_ID,
                 }
             }
             const res = await axios.request(opts);
@@ -145,19 +146,14 @@ class FincraService {
         }
     }
 
-    static async validateWebhook(webhookSignature: string) {
+    static async validateWebhook(webhookSignature: string, payload: any) {
         const encryptedData = crypto
-            .createHmac("SHA512", "merchantWebhookSecretKey")
-            .update(JSON.stringify("payload"))
+            .createHmac("SHA512", process.env.FINCRA_WEBHOOK_KEY)
+            .update(JSON.stringify(payload))
             .digest("hex");
         const signatureFromWebhook = webhookSignature;
 
-        if (encryptedData === signatureFromWebhook) {
-            console.log("process");
-        }
-        else {
-        }
-        console.log("discard");
+        return encryptedData === signatureFromWebhook;
 
     }
     static async withdrawFunds(wallet: IWallet, bank_account: number) {

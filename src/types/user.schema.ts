@@ -25,6 +25,10 @@ interface IUser extends Document {
         added_at: Date;
         bank_code: number;
     };
+    rewards: {
+        balance: number;
+    }
+    referred_by: Types.ObjectId;
     referral_code?: string;
     referrals: Types.ObjectId[];
     email_verified?: boolean;

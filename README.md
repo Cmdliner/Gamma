@@ -30,10 +30,12 @@ bun run dev
 ```
 
 ## BUGS
-- validation does not catch "allowed values" errors in products upload
 
 ## TODOS
 - Handle webhook for purchases
+- Handle error handling in webhook
+- Handle ACID compliance by using db transactions
+- rename transaction to payments
 - ad sponsorship for 7 days or 1 month
 - after 14 days temporarily remove ads (x delete item)
 - On sucessful first transaction of user check if they have a referrer and reward them if they have

@@ -2,20 +2,9 @@ import { model, Schema } from "mongoose";
 import IWallet from "../types/wallet.schema";
 
 const WalletSchema = new Schema({
-    fincra_id: {
-        type: String
-    },
     amount_withdrawable: {
         type: Number, 
         default: 0
-    },
-    account_number: {
-        type: Number,
-        required: true,
-    },
-    bank_code: {
-        type: String,
-        required: true
     },
     balance: {
         type: Number,
