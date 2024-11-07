@@ -302,25 +302,25 @@ class AuthController {
 
 
             // Validate bank account with paystack
-            /*  const isValidBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
+             const isValidBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
              if (!isValidBankAcc) {
                  return res.status(400).json({ error: true, message: "Invalid bank details " })
-             } */
+             }
 
             user.bank_details = { account_no, bank_code, added_at: new Date() };
 
             await user.save({ session });
 
             // Commit  transactions to the db
-            session.commitTransaction();
+            await session.commitTransaction();
             return res.status(200).json({ success: true, message: "Bank details added successfully" });
 
         } catch (error) {
             console.error(error);
-            session.abortTransaction();
+            await sessionession.abortTransaction();
             return res.status(500).json({ error: true, message: "Error adding bank account details" })
         } finally {
-            session.endSession();
+            await session.endSession();
         }
     }
 
