@@ -317,7 +317,7 @@ class AuthController {
 
         } catch (error) {
             console.error(error);
-            await sessionession.abortTransaction();
+            await session.abortTransaction();
             return res.status(500).json({ error: true, message: "Error adding bank account details" })
         } finally {
             await session.endSession();
