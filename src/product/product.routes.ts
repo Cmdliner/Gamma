@@ -14,8 +14,8 @@ product.post("/upload-furniture", UploadMiddleware, ValidateAndProcessUpload, Pr
 product.post("/upload-machinery", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadGenericProduct);
 product.post("/upload-others", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadGenericProduct);
 product.post("/upload-fashionwares", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadGenericProduct);
-product.post("/:productID/sponsor",ProductController.sponsorProduct);
-product.get("/:productCategory/sponsored",ProductController.getSponsoredProducts);
+product.put("/:productID", ProductController.editProduct);
+product.get("/:productCategory/sponsored",ProductController.getSponsoredProducts);  
 product.delete("/:productID",ProductController.deleteProductListing);
 
 export default product;

@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import FincraService from "../lib/fincra.service";
 import WebhookService from "./webhook.service";
 
 class WebhookController {
@@ -26,7 +25,11 @@ class WebhookController {
                 break;
             case "charge.successful":
                 try {
-                    await WebhookService.handleSuccessfulProductPurchase(payload);
+                    if(payload.data.metadata.payment_for === "product_payment") {
+                        await WebhookService.handleSuccessfulProductPurchase(payload);
+                    } else if (payload.data.metadata.payment_for === "ad_sponsorship") {
+                        await WebhookService.handleProductSponsorPayment(payload)
+                    }
                     return res.status(200).json({ success: true, message: "Payment successful" })
                 } catch (error) {
                     return res.status(500).json({ error: true, message: "Error purchasing product" });

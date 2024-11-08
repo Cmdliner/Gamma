@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { Fincra } from "fincra-node-sdk";
 import IWallet from "../types/wallet.schema";
 import IUser from "../types/user.schema";
-import IProduct from "../types/product.schema";
+import IProduct, { SponsorshipDuration } from "../types/product.schema";
 import { decryptBvn } from "./main";
 
 class FincraService {
@@ -87,7 +87,7 @@ class FincraService {
     }
 
 
-    static async collectPayment(product: IProduct, customer: IUser, ref: string) {
+    static async collectPayment(product: IProduct, customer: IUser, ref: string, paymentMethod: string) {
         try {
             const opts: AxiosRequestConfig = {
                 url: `${FincraService.FINCRA_BASE_URL}/checkout/payments`,
@@ -109,10 +109,10 @@ class FincraService {
                     metadata: {
                         "customer_id": customer.id,
                         "product_id": product.id,
-                        "payment_kind": "product_payment"
+                        "payment_for": "product_payment"
                     },
                     "successMessage": "You have successfully intiated transfer",
-                    "paymentMethods": ["bank_transfer", "card"],
+                    "paymentMethods": [paymentMethod],
                     "settlementDestination": "wallet",
                     "feeBearer": "customer",
                     "reference": ref
@@ -150,7 +150,7 @@ class FincraService {
         // parse the blance to an int
     }
 
-    static async sponsorProduct(product: IProduct, owner: IUser, sponsorshipDuration: "1Month" | "1Week", ref: string) {
+    static async sponsorProduct(product: IProduct, owner: IUser, sponsorshipDuration: SponsorshipDuration, ref: string,  paymentMethod: string) {
         try {
             const opts: AxiosRequestConfig = {
                 url: `${FincraService.FINCRA_BASE_URL}/checkout/payments`,
@@ -162,7 +162,7 @@ class FincraService {
                     "x-pub-key": process.env.FINCRA_PUBLIC_KEY,
                 },
                 data: {
-                    "amount": sponsorshipDuration == "1Week" ? 7000: 7000,
+                    "amount": sponsorshipDuration == "1Week" ? 7_000: 22_000,
                     "currency": "NGN",
                     "customer": {
                         "name": `${owner.first_name} ${owner.last_name}`,
@@ -172,10 +172,10 @@ class FincraService {
                     metadata: {
                         "customer_id": owner.id,
                         "product_id": product.id,
-                        "payment_kind": "ad_sponsorhip"
+                        "payment_for": "ad_sponsorhip"
                     },
                     "successMessage": "You have successfully intiated transfer",
-                    "paymentMethods": ["bank_transfer", "card"],
+                    "paymentMethods": [paymentMethod],
                     "settlementDestination": "wallet",
                     "feeBearer": "customer",
                     "reference": ref

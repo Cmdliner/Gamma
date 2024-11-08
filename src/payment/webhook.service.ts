@@ -71,7 +71,36 @@ class WebhookService {
         }
     }
 
-    static async handleProductSponsorPayment(payload: any) {
+    static async handleProductSponsorPayment(payload: ChargeSuccessPayload) {
+
+        const SevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const OneMonthFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);;
+        const session = await startSession();
+
+        try {
+            session.startTransaction();
+            const amountPaid = payload.data.amountToSettle;
+            let expiry = new Date();
+
+            if(amountPaid === 7_000) expiry = SevenDaysFromNow;
+            else if(amountPaid === 22_000) expiry = OneMonthFromNow;
+            else {/*handle underpayments here */}
+
+            // Update product expiry
+            const product = await Product.findByIdAndUpdate(payload.data.metadata.product_id, {
+                "sponsorship.sponsored_at": new Date(),
+                "sponsorship.expires":  expiry
+            }, { new: true, session });
+            if (!product) throw new Error();
+
+            // Update transaction status
+            await Transaction.findByIdAndUpdate(payload.data.reference, {
+                charge_ref: payload.data.chargeReference,
+                status: "success"
+            })
+        } catch (error) {
+
+        }
     }
 }
 

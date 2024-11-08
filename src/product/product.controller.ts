@@ -24,6 +24,7 @@ import type IVehicle from "../types/vehicle.schema";
 import type { IFurniture } from "../types/generic.schema";
 import { compareObjectID } from "../lib/main";
 import FincraService from "../lib/fincra.service";
+import Bid from "../bid/bid.model";
 
 
 class ProductController {
@@ -306,27 +307,6 @@ class ProductController {
         }
     }
 
-    static async sponsorProduct(req: Request, res: Response) {
-        const { productID } = req.params;
-        try {
-            // Ensure product exists && only owner can sponsor it
-            const product = await Product.findOne({ _id: productID, owner: req.user?._id });
-            if (!product) {
-                return res.status(404).json({ error: true, message: "Product not found!" });
-            }
-            //!TODO => use transaction service and db transactions to make payment for sponsorhsip
-
-            // set sponsored_at timestamp on success
-            // !TODO => Set expires based on sponsorhip duration [7d || 1month]
-            product.sponsorship = { sponsored_at: new Date(), expires: new Date() }
-
-
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: true, message: "Error attempting to sponsor product" })
-        }
-    }
-
     static async getSponsoredProducts(req: Request, res: Response) {
         try {
             const { categoryName } = req.params;
@@ -339,6 +319,36 @@ class ProductController {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error getting sponsored products" });
         }
+    }
+
+    static async editProduct(req: Request, res: Response) {
+        const { productID } = req.params;
+        const { price } = req.body;
+
+        try {
+            // FIND PRODUCT AND MAKE SURE THERE ARE NO PENDING OPERATIONS LIKE
+            // TRANSACTION, BIDS ON IT TO AVOID FRAUDULENT ACTIVITY
+
+            const product = await Product.findOne({ _id: productID });
+            if (!product) {
+                return res.status(404).json({ error: true, message: "Product not found" });
+            }
+            if (product.status !== "available") {
+                return res.status(400).json({ error: true, message: "Cannot delete product!" });
+            }
+
+            // Find all pending bids and reject them
+            const pendingBids = await Bid.find({ product: product._id, status: "pending" });
+            if (pendingBids) pendingBids.forEach((bid) => bid.status = "rejected");
+
+            // !TODO => UPDATE PRODUCT LISTING
+            return res.status(200).json({ success: true, message: "Product updated successfully" });
+            
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error editing product" })
+        }
+
     }
 
 }
