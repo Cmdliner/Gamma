@@ -5,6 +5,7 @@ import FincraService from "../lib/fincra.service";
 import Transaction from "./transaction.model";
 import IUser from "../types/user.schema";
 import Product from "../product/product.model";
+import { compareObjectID } from "../lib/main";
 
 class TransactionController {
     static async withdrawFromWallet(req: Request, res: Response) {
@@ -95,6 +96,26 @@ class TransactionController {
             await session.abortTransaction();
             console.error(error);
             return res.status(500).json({ error: "Error purchasing item" });
+        } finally {
+            await session.endSession();
+        }
+    }
+
+    static async sponsorAd(req: Request, res: Response) {
+        const session = await startSession();
+        try {
+            const { productID } = req.params;
+            const product = await Product.findById(productID).session(session);
+            if (!product) {
+                return res.status(404).json({ error: true, message: "Product not found!" });
+            }
+            const isProductOwner = compareObjectID(product.owner, req.user?._id!);
+            if (!isProductOwner) {
+                return res.status(403).json({ error: true, message: "Forbidden!!!" });
+            }
+            await FincraService.sponsorProduct(product, req.user!);
+        } catch (error) {
+            await session.abortTransaction();
         } finally {
             await session.endSession();
         }

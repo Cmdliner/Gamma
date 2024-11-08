@@ -3,7 +3,6 @@ import { Fincra } from "fincra-node-sdk";
 import IWallet from "../types/wallet.schema";
 import IUser from "../types/user.schema";
 import IProduct from "../types/product.schema";
-import crypto from "crypto";
 import { decryptBvn } from "./main";
 
 class FincraService {
@@ -87,7 +86,6 @@ class FincraService {
         }
     }
 
-    static async initiatePaymentToWallet() {}
 
     static async collectPayment(product: IProduct, customer: IUser, ref: string) {
         try {
@@ -146,32 +144,17 @@ class FincraService {
         }
     }
 
-    static async validateWebhook(webhookSignature: string, payload: any) {
-        const encryptedData = crypto
-            .createHmac("SHA512", process.env.FINCRA_WEBHOOK_KEY)
-            .update(JSON.stringify(payload))
-            .digest("hex");
-        const signatureFromWebhook = webhookSignature;
-
-        return encryptedData === signatureFromWebhook;
-
-    }
     static async withdrawFunds(wallet: IWallet, bank_account: number) {
         // find the wallet account no and withdraw balance
         // parse the blance to an int
     }
 
-    static async sponsorProduct() {
+    static async sponsorProduct(product: IProduct, owner: IUser) {
         try {
             const opts: AxiosRequestConfig = {};
             const res = await axios.request(opts);
         } catch (error) {
-            //!TODO => Implement custom error calss that handles internally thrown errors
-            throw {
-                message: "An error occured",
-                kind: "external_payment_error",
-                ex_code: "EP001",
-            };
+            
         }
     }
 
