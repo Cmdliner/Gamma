@@ -86,7 +86,6 @@ class TransactionController {
 
             // Initiate payment with fincra then commit transaction to db
             const fincraResponse = await FincraService.collectPayment(product, req.user!, transactionRef);
-            if (!fincraResponse) { throw new Error("Payment error") }
             await session.commitTransaction();
 
             return res.status(200).json({ success: true, transaction_id: itemPurchaseTransaction._id, fincra: fincraResponse });
@@ -105,6 +104,11 @@ class TransactionController {
         const session = await startSession();
         try {
             const { productID } = req.params;
+            const { sponsorship_duration, payment_method } = req.body;
+            if (!sponsorship_duration || !payment_method) {
+                return res.status(422).json({ error: true, message: "sponsorship_duration and payment_method required!" });
+            }
+            //!TODO => VALIDATE SPONSORSHIP DURATION AND PAYMENT METHOD
             const product = await Product.findById(productID).session(session);
             if (!product) {
                 return res.status(404).json({ error: true, message: "Product not found!" });
@@ -113,7 +117,23 @@ class TransactionController {
             if (!isProductOwner) {
                 return res.status(403).json({ error: true, message: "Forbidden!!!" });
             }
-            await FincraService.sponsorProduct(product, req.user!);
+            // Create Transaction for ad sponsorhsip
+            const transaction = new Transaction({
+                kind: "ad_sponsorhip",
+                bearer: req.user?._id,
+                product: product._id,
+                status: pending,
+                payment_method: payment_method,
+                details: `For sponsorship of product: "${product.description}"`,
+                amount: sponsorship_duration === "7d" ? 7000 : 7000 //!TODO => FIX THIS
+            })
+            await transaction.save({ session });
+
+            const fincraRes = await FincraService.sponsorProduct(product, req.user!, sponsorship_duration, transaction.id);
+
+            await session.commitTransaction();
+
+            return res.status(200).json({success: true, transaction_id: transaction.id, fincra: fincraRes })
         } catch (error) {
             await session.abortTransaction();
         } finally {
@@ -122,5 +142,4 @@ class TransactionController {
     }
 
 }
-
 export default TransactionController;

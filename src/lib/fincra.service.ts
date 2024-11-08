@@ -108,7 +108,8 @@ class FincraService {
                     },
                     metadata: {
                         "customer_id": customer.id,
-                        "product_id": product.id
+                        "product_id": product.id,
+                        "payment_kind": "product_payment"
                     },
                     "successMessage": "You have successfully intiated transfer",
                     "paymentMethods": ["bank_transfer", "card"],
@@ -149,12 +150,42 @@ class FincraService {
         // parse the blance to an int
     }
 
-    static async sponsorProduct(product: IProduct, owner: IUser) {
+    static async sponsorProduct(product: IProduct, owner: IUser, sponsorshipDuration: "1Month" | "1Week", ref: string) {
         try {
-            const opts: AxiosRequestConfig = {};
+            const opts: AxiosRequestConfig = {
+                url: `${FincraService.FINCRA_BASE_URL}/checkout/payments`,
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "api-key": process.env.FINCRA_SECRET_KEY,
+                    "x-pub-key": process.env.FINCRA_PUBLIC_KEY,
+                },
+                data: {
+                    "amount": sponsorshipDuration == "1Week" ? 7000: 7000,
+                    "currency": "NGN",
+                    "customer": {
+                        "name": `${owner.first_name} ${owner.last_name}`,
+                        "email": owner.email,
+                        "phoneNumber": owner.phone_numbers[0]
+                    },
+                    metadata: {
+                        "customer_id": owner.id,
+                        "product_id": product.id,
+                        "payment_kind": "ad_sponsorhip"
+                    },
+                    "successMessage": "You have successfully intiated transfer",
+                    "paymentMethods": ["bank_transfer", "card"],
+                    "settlementDestination": "wallet",
+                    "feeBearer": "customer",
+                    "reference": ref
+                }
+            }
             const res = await axios.request(opts);
+            return res.data;
         } catch (error) {
-            
+            console.error(error);
+            throw error;
         }
     }
 
