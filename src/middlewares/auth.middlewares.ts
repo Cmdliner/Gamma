@@ -24,7 +24,7 @@ class AuthMiddleware {
             next();
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "An error occured while verifying authorization" });
+            return res.status(403).json({ error: true, message: "An error occured while verifying authorization" });
         }
     }
 }
