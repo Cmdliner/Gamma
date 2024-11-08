@@ -6,7 +6,7 @@ interface ITransaction {
     amount: number;
     product: Types.ObjectId;
     status: "success" | "failed" | "pending";
-    pay_code: string;
+    charge_ref: string;
     payment_method: "card" | "bank_transfer";
     details: string;
 }

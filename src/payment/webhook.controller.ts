@@ -27,6 +27,7 @@ class WebhookController {
             case "charge.successful":
                 try {
                     await WebhookService.handleSuccessfulProductPurchase(payload);
+                    return res.status(200).json({ success: true, message: "Payment successful" })
                 } catch (error) {
                     return res.status(500).json({ error: true, message: "Error purchasing product" });
                 }

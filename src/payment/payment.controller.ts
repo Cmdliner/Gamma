@@ -86,7 +86,7 @@ class TransactionController {
 
             // Initiate payment with fincra then commit transaction to db
             const fincraResponse = await FincraService.collectPayment(product, req.user!, transactionRef);
-            await Transaction.findByIdAndUpdate(transactionRef, { pay_code: fincraResponse.data.pay_code }, { new: true, session });
+            if (!fincraResponse) { throw new Error("Payment error") }
             await session.commitTransaction();
 
             return res.status(200).json({ success: true, transaction_id: itemPurchaseTransaction._id, fincra: fincraResponse });

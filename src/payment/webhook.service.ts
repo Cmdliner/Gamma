@@ -59,9 +59,8 @@ class WebhookService {
                 const transaction = await Transaction.findById(payload.data.reference).session(session);
                 if (!transaction) throw new Error("Transaction not found");
                 transaction.status = "success";
+                transaction.charge_ref = payload.data.chargeReference
                 await transaction.save({ session });
-
-                console.log(payload.data);
             }
         } catch (error) {
             console.error(error);
