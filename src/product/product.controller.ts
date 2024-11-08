@@ -309,11 +309,14 @@ class ProductController {
 
     static async getSponsoredProducts(req: Request, res: Response) {
         try {
-            const { categoryName } = req.params;
+            const { productCategory } = req.params;
 
-            //!TODO => Filter as per user location
-            const now = Date.now();
-            const sponsoredProds = await Product.find({ category: categoryName, sponsorship: { $exists: true }, "sponsorhip.expires": { $lte: { now } } });
+            //!TODO => Filter as per user location and check category
+            const now = new Date();
+            const sponsoredProds = await Product.find({ category: productCategory, sponsorship: { $exists: true }, "sponsorship.expires": { $gte: now } });
+            if (!sponsoredProds || !sponsoredProds.length) {
+                return res.status(404).json({ error: true, message: "No sponsored products found" })
+            }
             return res.status(200).json({ success: true, message: "Ads found", products: sponsoredProds });
         } catch (error) {
             console.error(error);
@@ -343,7 +346,7 @@ class ProductController {
 
             // !TODO => UPDATE PRODUCT LISTING
             return res.status(200).json({ success: true, message: "Product updated successfully" });
-            
+
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error editing product" })
