@@ -50,7 +50,7 @@ const UserSchema = new Schema({
         encrypted_data: { type: String },
         verification_status: { type: String, enum: ["verified", "unverified"], default: "unverified" }
     },
-    account_details: {
+    bank_details: {
         account_no: { type: Number },
         bank_code: { type: Number },
         added_at: { type: Date }
@@ -59,6 +59,16 @@ const UserSchema = new Schema({
         type: String,
         enum: ["active", "dormant"],
         default: "dormant"
+    },
+    rewards: {
+        balance: {
+            type: Number,
+            min: 0,
+        }
+    },
+    referred_by: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
     },
     referral_code: {
         type: String,

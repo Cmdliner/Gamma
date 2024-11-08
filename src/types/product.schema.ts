@@ -1,6 +1,8 @@
 import { Document, Types } from "mongoose";
 import { ProductCategory } from "./common";
 
+export type SponsorshipDuration = "1Month" | "1Week";
+
 interface IProduct extends Document {
     product_images: string[];
     name: string;

@@ -29,6 +29,9 @@ const TransactionSchema = new Schema({
         type: String,
         enum: ["card", "bank_transfer"]
     },
+    charge_ref: {
+        type: String
+    },
     details: {
         type: String
     }

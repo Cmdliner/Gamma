@@ -9,9 +9,9 @@ class BidController {
 
     static async getAllBidsForProduct(req: Request, res: Response) {
         try {
-            //!TODO => check if only user can see all prod bids or anyone
             const { productID } = req.params;
 
+            // CHECK IF USER IS PRODUCT OWNER
             const isProductOwner = await Product.findOne({ _id: productID, owner: req.user?._id });
             if (!isProductOwner) {
                 return res.status(403).json({ error: true, message: "Forbidden" });

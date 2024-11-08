@@ -10,8 +10,9 @@ import swaggerSpec from "./config/swagger";
 import cors, { type CorsOptions } from "cors";
 import bid from "./bid/bid.routes";
 import helmet from "helmet";
-import transaction from "./transaction/transaction.routes";
+import transaction from "./payment/payment.routes";
 import compression from "compression";
+import WebhookController from "./payment/webhook.controller";
 
 
 const { PORT, API_VERSION } = Settings;
@@ -32,9 +33,10 @@ const app = express();
  app.use(`/${API_VERSION}/auth`, auth);
  app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
  app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
- app.use(`/${API_VERSION}/transactions`, AuthMiddleware.requireAuth, transaction);
+ app.use(`/${API_VERSION}/payments`, AuthMiddleware.requireAuth, transaction);
  app.use(`/${API_VERSION}/bids`, AuthMiddleware.requireAuth, bid);
  app.use(`/${API_VERSION}/docs`, SwaggerUI.serve, SwaggerUI.setup(swaggerSpec));
+ app.post('/webhooks', WebhookController.confirm);
  app.get("/healthz", (_req: Request, res: Response) => {
      res.status(200).json({ active: "The hood is up commandliner⚡" });
  });
