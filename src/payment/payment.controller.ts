@@ -54,7 +54,7 @@ class TransactionController {
             }
 
             // VALIDATION LOGIC
-            const { error } = ItemPurchaseValidation.validate(payment_method);
+            const { error } = ItemPurchaseValidation.validate({ payment_method });
             if (error) {
                 return res.status(500).json({ error: true, message: error.details[0].message });
             }
@@ -111,20 +111,25 @@ class TransactionController {
     }
 
     static async sponsorAd(req: Request, res: Response) {
+
+        const { productID } = req.params;
+        const { sponsorship_duration, payment_method } = req.body;
+
         const session = await startSession();
 
         try {
-            const { productID } = req.params;
-            const { sponsorship_duration, payment_method } = req.body;
             if (!sponsorship_duration || !payment_method) {
                 return res.status(422).json({ error: true, message: "sponsorship_duration and payment_method required!" });
             }
 
             // VALIDATE SPONSORSHIP DURATION AND PAYMENT METHOD
-            const { error } = AdSponsorshipValidation.validate(sponsorship_duration, payment_method);
+            const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
             if (error) {
                 return res.status(422).json({ error: true, messaage: error.details[0].message })
             }
+
+            // START TRANSACTION
+            await session.startTransaction();
 
             const product = await Product.findById(productID).session(session);
             if (!product) {
@@ -142,7 +147,7 @@ class TransactionController {
                 kind: "ad_sponsorhip",
                 bearer: req.user?._id,
                 product: product._id,
-                status: pending,
+                status: "pending",
                 payment_method: payment_method,
                 details: `For sponsorship of product: "${product.description}"`,
                 amount: sponsorship_duration === "1Week" ? 7000 : 22_000 //!TODO => FIX THIS
