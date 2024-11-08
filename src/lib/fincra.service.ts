@@ -172,7 +172,7 @@ class FincraService {
                     metadata: {
                         "customer_id": owner.id,
                         "product_id": product.id,
-                        "payment_for": "ad_sponsorhip"
+                        "payment_for": "ad_sponsorship"
                     },
                     "successMessage": "You have successfully intiated transfer",
                     "paymentMethods": [paymentMethod],

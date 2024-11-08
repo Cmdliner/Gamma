@@ -28,7 +28,7 @@ class WebhookController {
                     if(payload.data.metadata.payment_for === "product_payment") {
                         await WebhookService.handleSuccessfulProductPurchase(payload);
                     } else if (payload.data.metadata.payment_for === "ad_sponsorship") {
-                        await WebhookService.handleProductSponsorPayment(payload)
+                        await WebhookService.handleProductSponsorPayment(payload);
                     }
                     return res.status(200).json({ success: true, message: "Payment successful" })
                 } catch (error) {
@@ -41,15 +41,3 @@ class WebhookController {
 }
 
 export default WebhookController;
-
-/* 
-{
-  status: true,
-  message: "Hosted link generated",
-  data: {
-    link: "https://sandbox-checkout.fincra.com/pay/fcr-p-7db8160151",
-    reference: "672c8d54ba63a1b935801b0a",
-    payCode: "fcr-p-7db8160151",
-  },
-}
-*/
