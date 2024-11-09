@@ -10,15 +10,18 @@ const UserSchema = new Schema({
     middle_name: {
         type: String
     },
+    last_name: {
+        type: String,
+        required: true
+    },
+    display_pic: {
+        type: String
+    },
     interested_categories: [{
         type: String,
         enum: allowedCategories,
         required: true
     }],
-    last_name: {
-        type: String,
-        required: true
-    },
     location: {
         type: String
     },
