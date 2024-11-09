@@ -9,18 +9,24 @@ import { compareObjectID, Next5Mins } from "../lib/main";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../bid/bid.model";
 
-class TransactionController {
+class PaymentController {
+
     static async withdrawFromWallet(req: Request, res: Response) {
         try {
-            const user = req.user?._id as Types.ObjectId;
-            const bankAccount = req.user?.bank_details?.account_no as number;
-
+            const user = req.user as IUser;
+            const bankAccount = user.bank_details?.account_no as number;
+            const { amount_to_withdraw } = req.body;
 
             // Get user wallet
-            // const wallet = await Wallet.findOne({ user });
-            // if (!wallet) throw { custom_error: true, mssg: "Error finding wallet" };
+            const wallet = await Wallet.findById(user.wallet);
+            if (!wallet) return res.status(404).json({ error: true, message: "Error finding wallet" });
 
-            // const withdrawal = await FincraService.withdrawFunds(wallet, bankAccount);
+            // Check amount to withdraw
+            if (amount_to_withdraw > wallet.balance) {
+                return res.status(400).json({ error: true, message: "Insufficient funds!" });
+            }
+
+            await FincraService.withdrawFunds(wallet, bankAccount);
 
             return res.status(200).json({ success: true, message: "Withdrawal has been initiated" })
 
@@ -111,7 +117,7 @@ class TransactionController {
                 product: productID,
                 details: `For purchase of ${product.description}`,
                 payment_method
-            }); 
+            });
             await itemPurchaseTransaction.save({ session });
             const transactionRef = itemPurchaseTransaction.id;
 
@@ -190,5 +196,7 @@ class TransactionController {
         }
     }
 
+    static async withdrawRewards(req: Request, res: Response) { }
+
 }
-export default TransactionController;
+export default PaymentController;

@@ -1,11 +1,11 @@
 import { Router } from "express";
-import TransactionController from "./payment.controller";
+import PaymentController from "./payment.controller";
 
-const transaction = Router();
+const payment = Router();
 
-transaction.get("/history", TransactionController.getTransactionHistory);
-transaction.post("/:productID/purchase", TransactionController.purchaseItem);
-transaction.post("/:productID/:bidID/purchase", TransactionController.purchaseItem); //this one uses bid
-transaction.post("/:productID/sponsor", TransactionController.sponsorAd);
+payment.get("/history", PaymentController.getTransactionHistory);
+payment.post("/:productID/purchase", PaymentController.purchaseItem);
+payment.post("/:productID/:bidID/purchase", PaymentController.purchaseItem); //this one uses bid
+payment.post("/:productID/sponsor", PaymentController.sponsorAd);
 
-export default transaction;
+export default payment;

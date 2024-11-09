@@ -86,7 +86,6 @@ class FincraService {
         }
     }
 
-
     static async collectPayment(product: IProduct, customer: IUser, ref: string, paymentMethod: string, bidPrice?: number) {
         try {
             const opts: AxiosRequestConfig = {
@@ -122,25 +121,6 @@ class FincraService {
             return res.data;
         } catch (error) {
             console.error(error);
-            throw error;
-        }
-    }
-
-    static async verifyPayment(ref: string) {
-        try {
-            const opts: AxiosRequestConfig = {
-                method: "GET",
-                url: `${FincraService.FINCRA_BASE_URL}/checkout/payments/merchant-reference/${ref}`,
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "api-key": process.env.FINCRA_SECRET_KEY,
-                    "x-business-id": process.env.FINCRA_BUSINESS_ID,
-                }
-            }
-            const res = await axios.request(opts);
-            return res.data;
-        } catch (error) {
             throw error;
         }
     }
@@ -205,62 +185,3 @@ class FincraService {
 }
 
 export default FincraService;
-
-
-/* 
-Fincra response
-{
-    "success": true,
-    "message": "We use this to communicate information to you.",
-    "data": {
-        "status": "approved",
-        "isActive": true,
-        "accountNumber": "3992219528",
-        "merchantReference": null,
-        "KYCInformation": {
-            "firstName": "John",
-            "lastName": "Doe",
-            "email": "customer@theiremail.com"
-        },
-        "accountInformation": {
-            "accountNumber": "3992219528",
-            "accountName": "Customer's full name",
-            "bankName": "GLOBUS BANK",
-            "bankCode": "103"
-        },
-        "verifiedKYCData": null,
-        "note": null,
-        "accountOpeningFee": 0,
-        "pendingAdditionalInfoCount": 0,
-        "isPermanent": true,
-        "expiresAt": null,
-        "isCheckoutVa": false,
-        "isBankTransferVa": false,
-        "isSuspended": false,
-        "reason": null,
-        "monthlyVolume": null,
-        "entityName": null,
-        "paymentFlowDescription": null,
-        "attachments": [],
-        "meansOfId": [],
-        "bankStatement": [],
-        "utilityBill": [],
-        "virtualAccountType": "additional",
-        "riskRating": null,
-        "checklist": null,
-        "riskScreening": null,
-        "channelKycUpdateStatus": null,
-        "channelKycUpdateResponse": null,
-        "_id": "************************",
-        "business": "*******************",
-        "currency": "NGN",
-        "accountType": "individual",
-        "entityType": "main_account",
-        "currencyType": "fiat",
-        "createdAt": "@timestamp",
-        "updatedAt": "@timestamp"
-    }
-}
-
-    
-*/
