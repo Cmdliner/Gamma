@@ -87,7 +87,7 @@ class FincraService {
     }
 
 
-    static async collectPayment(product: IProduct, customer: IUser, ref: string, paymentMethod: string) {
+    static async collectPayment(product: IProduct, customer: IUser, ref: string, paymentMethod: string, bidPrice?: number) {
         try {
             const opts: AxiosRequestConfig = {
                 url: `${FincraService.FINCRA_BASE_URL}/checkout/payments`,
@@ -99,7 +99,7 @@ class FincraService {
                     "x-pub-key": process.env.FINCRA_PUBLIC_KEY,
                 },
                 data: {
-                    "amount": product.price,
+                    "amount": bidPrice ? bidPrice : product.price,
                     "currency": "NGN",
                     "customer": {
                         "name": `${customer.first_name} ${customer.last_name}`,

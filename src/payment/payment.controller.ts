@@ -5,8 +5,9 @@ import FincraService from "../lib/fincra.service";
 import Transaction from "./transaction.model";
 import IUser from "../types/user.schema";
 import Product from "../product/product.model";
-import { compareObjectID } from "../lib/main";
+import { compareObjectID, Next5Mins } from "../lib/main";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
+import Bid from "../bid/bid.model";
 
 class TransactionController {
     static async withdrawFromWallet(req: Request, res: Response) {
@@ -47,7 +48,7 @@ class TransactionController {
         const session = await startSession();
         try {
             const userId = req.user?._id;
-            const { productID } = req.params;
+            const { productID, bidID } = req.params;
             const { payment_method } = req.body;
             if (!payment_method) {
                 return res.status(422).json({ error: true, message: "Payment method required!" })
@@ -63,6 +64,26 @@ class TransactionController {
             const product = await Product.findById(productID).session(session);
             if (!product || product.status !== "available") {
                 return res.status(400).json({ error: true, message: "Product not available!" });
+            }
+
+            // CHECK IF THIS REQUEST IS FOR A BID
+            let bidPrice = undefined; // Initialize bid price
+            if (bidID) {
+                const bid = await Bid.findOne({ _id: bidID, status: "accepted" }).session(session);
+                if (!bid) return res.status(404).json({ error: true, message: "Couldn't find bid" });
+
+                // Ensure bid has not yet expired
+                if (bid.expires.valueOf() < Date.now()) {
+                    bid.status = "expired";
+                    await bid.save({ session });
+                    return res.status(400).json({ error: true, message: "Bid expired!" })
+                }
+
+                const isBidder = compareObjectID(bid.buyer, req.user?._id!);
+                if (!isBidder) return res.status(403).json({ error: true, message: "Action Forbidden!" });
+
+                // Set bid Price to that negotiated
+                bidPrice = bid.negotiating_price as number;
             }
 
             const updatedProduct = await Product.findOneAndUpdate({
@@ -85,17 +106,18 @@ class TransactionController {
             const itemPurchaseTransaction = new Transaction({
                 bearer: userId,
                 kind: "product_payment",
-                amount: product.price,
+                // set to negotiated price or actual price based on whether it's a bid or not
+                amount: bidPrice ? bidPrice : product.price,
                 product: productID,
                 details: `For purchase of ${product.description}`,
                 payment_method
-            });
+            }); 
             await itemPurchaseTransaction.save({ session });
             const transactionRef = itemPurchaseTransaction.id;
 
 
             // Initiate payment with fincra then commit transaction to db
-            const fincraResponse = await FincraService.collectPayment(product, req.user!, transactionRef, payment_method);
+            const fincraResponse = await FincraService.collectPayment(product, req.user!, transactionRef, payment_method, bidPrice);
             await session.commitTransaction();
 
             return res.status(200).json({ success: true, transaction_id: itemPurchaseTransaction._id, fincra: fincraResponse });

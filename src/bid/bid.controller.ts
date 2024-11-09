@@ -18,7 +18,10 @@ class BidController {
             }
 
             const productBids = await Bid.find({ product: productID }).populate(["buyer", "product"]);
-            if (!productBids || productBids.length == 0) return res.status(404).json({ error: true, message: "No bids found" });
+            if (!productBids || !productBids.length) {
+                return res.status(404).json({ error: true, message: "No bids found" });
+            }
+
             return res.status(200).json({ success: true, message: "Bids found", bids: productBids });
         } catch (error) {
             console.error(error);

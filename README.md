@@ -32,23 +32,15 @@ bun run dev
 ## BUGS
 
 ## TODOS
-- Handle webhook for purchases
-- Handle error handling in webhook
-- Handle ACID compliance by using db transactions
-- rename transaction to payments
-- ad sponsorship for 7 days or 1 month
 - after 14 days temporarily remove ads (x delete item)
-- On sucessful first transaction of user check if they have a referrer and reward them if they have
 - Product listing should be unique for a particular category
 - Payment to wallet when buying
 - sort bidding direct purchase order
-- 5 mins bid expiry
 - deals (pending, accepted )
 - withdraw earnings if referred user is active and if referr has at least one transaction that day
 - create disputes
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
 - App pays them through escrow account
-- Users put money in app by bank account or card
 - On buyer payment create transaction receipts with method of payment and transaction id
 - Create notification model
 - Implement push-notifications with appropraitely named lib
