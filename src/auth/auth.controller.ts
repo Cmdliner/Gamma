@@ -82,7 +82,7 @@ class AuthController {
             // Add wallet 
             const wallet = new Wallet();
             await wallet.save({ session });
-            
+
             user.wallet = wallet._id as Types.ObjectId;
             await user.save({ session });
 
@@ -237,7 +237,10 @@ class AuthController {
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
             const user = await User.findById(decodedToken.id);
+            const bvnInUse = await User.findOne({ "bvn.encrypted_data": encryptBvn(bvn) });
+
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
+            if(bvnInUse) return res.status(400).json({error: true, message: "BVN is already in use"})
 
             const bvnValidationRes = await FincraService.resolveBvn(bvn, process.env.FINCRA_BUSINESS_ID);
 
@@ -302,10 +305,10 @@ class AuthController {
 
 
             // Validate bank account with paystack
-             const isValidBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
-             if (!isValidBankAcc) {
-                 return res.status(400).json({ error: true, message: "Invalid bank details " })
-             }
+            const isValidBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
+            if (!isValidBankAcc) {
+                return res.status(400).json({ error: true, message: "Invalid bank details " })
+            }
 
             user.bank_details = { account_no, bank_code, added_at: new Date() };
 
