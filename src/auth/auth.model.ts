@@ -9,7 +9,7 @@ const nextHour = () => {
 const OTPSchema = new Schema({
     kind: {
         type: String,
-        enum: ["verification", "password_reset"],
+        enum: ["verification", "password_reset", "funds_approval"],
         required: true
     },
     owner: {
