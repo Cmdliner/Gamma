@@ -239,6 +239,7 @@ class AuthController {
             const user = await User.findById(decodedToken.id);
             const bvnInUse = await User.findOne({ "bvn.encrypted_data": encryptBvn(bvn) });
 
+            // Check that bvn recors do not exist in db
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
             if(bvnInUse) return res.status(400).json({error: true, message: "BVN is already in use"})
 
