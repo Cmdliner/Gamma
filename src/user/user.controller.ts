@@ -6,8 +6,7 @@ import PaystackService from "../lib/paystack.service";
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
         try {
-            const user = await User.findById(req.user?._id!).select(["-password", "-bvn"])
-                .populate([""]);
+            const user = await User.findById(req.user?._id!).select(["-password", "-bvn"]);
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
             return res.status(200).json({ success: true, user });
