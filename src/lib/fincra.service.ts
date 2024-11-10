@@ -11,7 +11,7 @@ class FincraService {
     private static fincra = new Fincra(
         process.env.FINCRA_PUBLIC_KEY,
         process.env.FINCRA_SECRET_KEY,
-        { sandbox: process.env.NODE_ENV === "production" ? false : true }
+        { sandbox: process.env.NODE_ENV === "PRODUCTION" ? false : true }
     );
 
     static async getBusinessInfo() {
