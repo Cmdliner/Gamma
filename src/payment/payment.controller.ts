@@ -157,7 +157,7 @@ class PaymentController {
             }
 
             // START TRANSACTION
-            await session.startTransaction();
+            session.startTransaction();
 
             const product = await Product.findById(productID).session(session);
             if (!product) {
@@ -169,6 +169,10 @@ class PaymentController {
                 return res.status(403).json({ error: true, message: "Forbidden!!!" });
             }
 
+            // CHECK IF PRODUCT IS SOLD
+            if (product.status === "sold") {
+                return res.status(400).json({ error: true, message: "Product sold!" })
+            }
 
             // Create Transaction for ad sponsorhsip
             const transaction = new Transaction({
