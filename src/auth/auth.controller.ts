@@ -225,7 +225,7 @@ class AuthController {
             }
 
             // Sanitize the bvn make sure it is required no of digits and all numerical
-            const isBvnDigit = /^\d$/.test(bvn);
+            const isBvnDigit = /^\d+$/.test(bvn);
             if (bvn.length !== 11 || isBvnDigit) {
                 return res.status(422).json({ error: true, message: "Invalid bvn" });
             }
