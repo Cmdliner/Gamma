@@ -52,6 +52,16 @@ class ProductController {
             const { error } = electronicsValidationSchema.validate(electronicProductData);
             if (error) return res.status(422).json({ error: true, message: error.details[0] });
 
+            // check that no similar product exists in db
+            const similarProdInDb = await Electronics.findOne({
+                name: electronicProductData.name,
+                description: electronicProductData.description,
+                price: electronicProductData.price,
+            });
+            if (similarProdInDb) {
+                return res.status(400).json({ error: true, message: "A similar product exists" });
+            }
+
             const newElectronics = await Electronics.create(electronicProductData);
             if (!newElectronics) {
                 return res.status(400).json({ error: true, message: "Error uploading product" });
@@ -89,6 +99,17 @@ class ProductController {
             if (error) {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
+
+            // CHECK THAT NO SIMILAR PROD EXISTS IN DB
+            const similarProdInDb = await LandedProperty.findOne({
+                name: landedPropertyData.name,
+                description: landedPropertyData.description,
+                price: landedPropertyData.price,
+            });
+            if (similarProdInDb) {
+                return res.status(400).json({ error: true, message: "A similar product exists" });
+            }
+
 
             const newLandedProperty = await LandedProperty.create(landedPropertyData);
             if (!newLandedProperty) {
@@ -129,6 +150,16 @@ class ProductController {
             const { error } = gadgetValidationSchema.validate(gadgetData);
             if (error) {
                 return res.status(422).json({ error: true, message: error.details[0].message });
+            }
+
+            // CHECK THAT NO SIMILAR PROD EXISTS IN DB
+            const similarProdInDb = await Gadget.findOne({
+                name: gadgetData.name,
+                description: gadgetData.description,
+                price: gadgetData.price,
+            });
+            if (similarProdInDb) {
+                return res.status(400).json({ error: true, message: "A similar product exists" });
             }
 
             const newGadget = await Gadget.create(gadgetData);
@@ -173,6 +204,16 @@ class ProductController {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
+             // CHECK THAT NO SIMILAR PROD EXISTS IN DB
+             const similarProdInDb = await Vehicle.findOne({
+                name: vehicleData.name,
+                description: vehicleData.description,
+                price: vehicleData.price,
+            });
+            if (similarProdInDb) {
+                return res.status(400).json({ error: true, message: "A similar product exists" });
+            }
+
             const newVehicle = await Vehicle.create(vehicleData);
             if (!newVehicle) {
                 return res.status(400).json({ error: true, message: "Error uploading vehicle" });
@@ -203,6 +244,16 @@ class ProductController {
             const { error } = genericValidationSchema.validate(genericProductData);
             if (error) {
                 return res.status(422).json({ error: true, message: error.details[0].message });
+            }
+
+             // CHECK THAT NO SIMILAR PROD EXISTS IN DB
+             const similarProdInDb = await Product.findOne({
+                name: genericProductData.name,
+                description: genericProductData.description,
+                price: genericProductData.price,
+            });
+            if (similarProdInDb) {
+                return res.status(400).json({ error: true, message: "A similar product exists" });
             }
 
             switch (genericProductData.category) {
@@ -329,9 +380,9 @@ class ProductController {
         const { price } = req.body;
 
         try {
+
             // FIND PRODUCT AND MAKE SURE THERE ARE NO PENDING OPERATIONS LIKE
             // TRANSACTION, BIDS ON IT TO AVOID FRAUDULENT ACTIVITY
-
             const product = await Product.findOne({ _id: productID });
             if (!product) {
                 return res.status(404).json({ error: true, message: "Product not found" });
