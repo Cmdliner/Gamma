@@ -98,6 +98,30 @@ class UserController {
         const display_pic = req.file;
         console.log(display_pic?.path);
     }
+
+    static async updateInfo(req: Request, res: Response) {
+        const { phone_no_1, phone_no_2, location } = req.body;
+
+        // !TODO => VALIDATE INPUTS AND HANDLE VERIFICATION DOCS UPLOAD
+
+        try {
+            const user = await User.findById(req.user?._id!);
+            if (!user) return res.status(404).json({ error: true, message: "User not found!" });
+
+
+            if (phone_no_1) user.phone_numbers[0] = phone_no_1
+            if (phone_no_2) user.phone_numbers[1] = phone_no_2;
+            if (location) user.location = location;
+
+            await user.save();
+            return res.status(200).json({ success: true, message: "User details updated" });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error occured while updating info" });
+
+        }
+
+    }
 }
 
 export default UserController;
