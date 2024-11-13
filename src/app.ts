@@ -3,10 +3,8 @@ import auth from "./auth/auth.routes";
 import user from "./user/user.routes";
 import DB from "./config/db";
 import Settings from "./config/settings";
-import SwaggerUI from "swagger-ui-express";
 import product from "./product/product.routes";
 import AuthMiddleware from "./middlewares/auth.middlewares";
-import swaggerSpec from "./config/swagger";
 import cors, { type CorsOptions } from "cors";
 import bid from "./bid/bid.routes";
 import helmet from "helmet";
@@ -37,7 +35,6 @@ const app = express();
  app.use(`/${API_VERSION}/payments`, AuthMiddleware.requireAuth, payment);
  app.use(`/${API_VERSION}/bids`, AuthMiddleware.requireAuth, bid);
  app.use(`/${API_VERSION}/disputes`, AuthMiddleware.requireAuth, dispute);
- app.use(`/${API_VERSION}/docs`, SwaggerUI.serve, SwaggerUI.setup(swaggerSpec));
  app.post('/webhooks', WebhookController.confirm);
  app.get("/healthz", (_req: Request, res: Response) => {
      res.status(200).json({ active: "The hood is up commandliner⚡" });

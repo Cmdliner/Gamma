@@ -76,7 +76,7 @@ class AuthController {
             user.phone_numbers = phone_numbers;
 
             const referralCode = await AuthService.generateUniqueReferralCode();
-            if (!referralCode) throw new Error("Error creating referral code");
+            if (!referralCode) return res.status(500).json({ error: true, message: "Error creating referral code" });
             user.referral_code = referralCode;
 
             // Add wallet 
@@ -241,7 +241,7 @@ class AuthController {
 
             // Check that bvn recors do not exist in db
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
-            if(bvnInUse) return res.status(400).json({error: true, message: "BVN is already in use"})
+            if (bvnInUse) return res.status(400).json({ error: true, message: "BVN is already in use" })
 
             const bvnValidationRes = await FincraService.resolveBvn(bvn, process.env.FINCRA_BUSINESS_ID);
 
