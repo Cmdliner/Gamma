@@ -13,32 +13,71 @@ import { AdPayments } from "@/types/ad.enums";
 class PaymentController {
 
     static async withdrawFromWallet(req: Request, res: Response) {
+
+        const session = await startSession();
+
         try {
             const user = req.user as IUser;
             const bankAccount = user.bank_details?.account_no as number;
             const { amount_to_withdraw } = req.body;
 
+            session.startTransaction();
             // Get user wallet
-            const wallet = await Wallet.findById(user.wallet);
+            const wallet = await Wallet.findById(user.wallet).session(session);
             if (!wallet) return res.status(404).json({ error: true, message: "Error finding wallet" });
 
+            // Make sure user does not try to add to their balance by atempting to withdraw negative values
+            if (amount_to_withdraw < 500) {
+                return res.status(400).json({ error: true, message: "Amount too small" });
+            }
             // Check amount to withdraw
             if (amount_to_withdraw > wallet.balance) {
                 return res.status(400).json({ error: true, message: "Insufficient funds!" });
             }
 
-            await FincraService.withdrawFunds(wallet, bankAccount);
+            // Generate a new transaction for the payout
+            const payoutTransaction = new Transaction({
+                kind: "withdrawal",
+                bearer: req.user?._id!,
+                amount: amount_to_withdraw,
+                status: "pending",
+                payment_method: "bank_transfer"
+            });
+            await payoutTransaction.save({ session });
+
+            // Get transaction reference
+            const transactionRef = payoutTransaction.id;
+
+            // Attempt to transfer to user bank acc using fincra
+            const withdrawalRes = await FincraService.withdrawFunds(user, transactionRef, amount_to_withdraw, bankAccount);
+
+            // Update balance and transaction once payout is not failed
+            if (withdrawalRes.data.status !== "failed") {
+                wallet.balance -= amount_to_withdraw;
+                await wallet.save({ session });
+
+                // Update transaction
+                await Transaction.findByIdAndUpdate(
+                  transactionRef,
+                  { charge_ref: withdrawalRes.data.reference },
+                  { new: true, session }
+                );
+            }
+
+            await session.commitTransaction();
 
             return res.status(200).json({ success: true, message: "Withdrawal has been initiated" })
 
-
         } catch (error) {
-            if ((error as any).custom_error) {
-                return res.status(400).json({ error: (error as any).message });
-            }
-            return res.status(500).json({ error: "Error withdrawing money from wallet" });
+            await session.abortTransaction();
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error withdrawing money from wallet" });
+        } finally {
+            await session.endSession();
         }
     }
+    
+    // !TODO => verify transaction
 
     static async getTransactionHistory(req: Request, res: Response) {
         try {
@@ -183,7 +222,7 @@ class PaymentController {
                 status: "pending",
                 payment_method: payment_method,
                 details: `For sponsorship of product: "${product.description}"`,
-                amount: sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly 
+                amount: sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly
             })
             await transaction.save({ session });
 

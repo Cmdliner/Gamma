@@ -126,12 +126,45 @@ class FincraService {
         }
     }
 
-    static async withdrawFunds(wallet: IWallet, bank_account: number) {
-        // find the wallet account no and withdraw balance
-        // parse the blance to an int
+    static async withdrawFunds(user: IUser, ref: string, amount: number, bank_account: number) {
+        try {
+            const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
+            const headers = {
+                "api-key": process.env.FINCRA_SECRET_KEY,
+                "Content-Type": "application/json",
+                "Accepts": "application/json"
+            }
+            const res = await axios.post(payoutUrl, {
+                business: process.env.FINCRA_BUSINESS_ID,
+                sourceCurrency: "NGN",
+                destinationCurrency: "NGN",
+                amount: amount,
+                description: "Payment",
+                customerReference: ref,
+                beneficiary: {
+                    firstName: user.first_name,
+                    lastName: user.last_name,
+                    email: user.email,
+                    type: "individual",
+                    accountHolderName: `${user.first_name} ${user.last_name}`,
+                    accountNumber: user.bank_details.account_no,
+                    country: "NG",
+                    bankCode: user.bank_details.bank_code,
+                },
+                sender: {
+                    name: "Customer Name",
+                    email: "customer@theirmail.com",
+                },
+                paymentDestination: "bank_account",
+            }, { headers });
+
+            return res.data;
+        } catch (error) {
+            throw error;
+        }
     }
 
-    static async sponsorProduct(product: IProduct, owner: IUser, sponsorshipDuration: SponsorshipDuration, ref: string,  paymentMethod: string) {
+    static async sponsorProduct(product: IProduct, owner: IUser, sponsorshipDuration: SponsorshipDuration, ref: string, paymentMethod: string) {
         try {
             const opts: AxiosRequestConfig = {
                 url: `${FincraService.FINCRA_BASE_URL}/checkout/payments`,
@@ -143,7 +176,7 @@ class FincraService {
                     "x-pub-key": process.env.FINCRA_PUBLIC_KEY,
                 },
                 data: {
-                    "amount": sponsorshipDuration == "1Week" ? AdPayments.weekly: AdPayments.monthly,
+                    "amount": sponsorshipDuration == "1Week" ? AdPayments.weekly : AdPayments.monthly,
                     "currency": "NGN",
                     "customer": {
                         "name": `${owner.first_name} ${owner.last_name}`,
