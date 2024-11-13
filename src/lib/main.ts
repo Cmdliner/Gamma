@@ -1,17 +1,17 @@
 import { Types } from "mongoose"
 import crypto, { randomInt } from "crypto";
 
-export function compareObjectID(obj1: Types.ObjectId, obj2: Types.ObjectId) {
+export function compareObjectID(obj1: Types.ObjectId, obj2: Types.ObjectId): boolean {
     return obj1.toString() === obj2.toString();
 };
 
-export const Next5Mins = () => {
+export const Next5Mins = (): Date => {
     let fiveMinsInMs = (1000 * 60 * 5);
     let nowInMs = new Date().valueOf()
     return new Date(nowInMs + fiveMinsInMs);
 }
 
-export const validateBankCardUsingLuhnsAlgo = (cardNo: string) => {
+export const validateBankCardUsingLuhnsAlgo = (cardNo: string): boolean => {
     // Return false if cardNo is not 11 digits long or an invalid number
     if (cardNo.length !== 11 || isNaN(parseInt(cardNo))) return false;
 
@@ -41,11 +41,11 @@ export const validateBankCardUsingLuhnsAlgo = (cardNo: string) => {
     return sum % 10 === 0
 }
 
-export function generateOTP() {
+export function generateOTP(): string {
     return `${randomInt(9)}${randomInt(6)}${randomInt(9)}${randomInt(8)}`;
 }
 
-export const encryptBvn = (bvn: string) => {
+export const encryptBvn = (bvn: string): string => {
     try {
         const IV_LENGTH = 16;
 
@@ -70,7 +70,7 @@ export const encryptBvn = (bvn: string) => {
     }
 }
 
-export const decryptBvn = (encryptedData: string) => {
+export const decryptBvn = (encryptedData: string): string => {
     try {
         const ENCRYPTION_KEY = Buffer.from(process.env.BVN_ENCRYPTION_KEY, "base64");
 
@@ -90,3 +90,4 @@ export const decryptBvn = (encryptedData: string) => {
     }
 
 }
+

@@ -9,9 +9,6 @@ class PaystackService {
 		await axios.get("", { headers })
 	}
 
-	
-
-
 	static async validateAccountDetails(accountNo: string, bankCode: string): Promise<object | null> {
 		const headers = {
 			"Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`

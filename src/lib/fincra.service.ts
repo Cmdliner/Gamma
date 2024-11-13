@@ -4,6 +4,7 @@ import IWallet from "../types/wallet.schema";
 import IUser from "../types/user.schema";
 import IProduct, { SponsorshipDuration } from "../types/product.schema";
 import { decryptBvn } from "./main";
+import { AdPayments } from "@/types/ad.enums";
 
 class FincraService {
 
@@ -142,7 +143,7 @@ class FincraService {
                     "x-pub-key": process.env.FINCRA_PUBLIC_KEY,
                 },
                 data: {
-                    "amount": sponsorshipDuration == "1Week" ? 7_000: 22_000,
+                    "amount": sponsorshipDuration == "1Week" ? AdPayments.weekly: AdPayments.monthly,
                     "currency": "NGN",
                     "customer": {
                         "name": `${owner.first_name} ${owner.last_name}`,

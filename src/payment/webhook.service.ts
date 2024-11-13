@@ -6,6 +6,7 @@ import Wallet from "../user/wallet.model";
 import { startSession, Types } from "mongoose";
 import { ChargeSuccessPayload } from "../types/webhook.schema";
 import crypto from "crypto";
+import { AdPayments } from "@/types/ad.enums";
 
 class WebhookService {
 
@@ -72,9 +73,11 @@ class WebhookService {
     }
 
     static async handleProductSponsorPayment(payload: ChargeSuccessPayload) {
-        console.log(payload);
-        const SevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        const OneMonthFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);;
+
+        // Ads expire one week after payment plan chosen
+        const SevenDaysFromNow = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+        const OneMonthFromNow = new Date(Date.now() + 37 * 24 * 60 * 60 * 1000);
+        
         const session = await startSession();
 
         try {
@@ -82,8 +85,8 @@ class WebhookService {
             const amountPaid = payload.data.amountToSettle;
             let expiry = new Date();
 
-            if (amountPaid === 7_000) expiry = SevenDaysFromNow;
-            else if (amountPaid === 22_000) expiry = OneMonthFromNow;
+            if (amountPaid === AdPayments.weekly) expiry = SevenDaysFromNow;
+            else if (amountPaid === AdPayments.monthly) expiry = OneMonthFromNow;
             else {/*handle underpayments here */ }
 
             // Update product expiry

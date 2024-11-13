@@ -8,6 +8,7 @@ import Product from "../product/product.model";
 import { compareObjectID, Next5Mins } from "../lib/main";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../bid/bid.model";
+import { AdPayments } from "@/types/ad.enums";
 
 class PaymentController {
 
@@ -182,7 +183,7 @@ class PaymentController {
                 status: "pending",
                 payment_method: payment_method,
                 details: `For sponsorship of product: "${product.description}"`,
-                amount: sponsorship_duration === "1Week" ? 7000 : 22_000 //!TODO => FIX THIS
+                amount: sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly 
             })
             await transaction.save({ session });
 
