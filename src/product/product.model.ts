@@ -65,7 +65,7 @@ const ProductSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["available", "processing_payment", "sold", "pending_bid_approval"],
+        enum: ["available", "processing_payment", "sold", "pending_bid_approval", "in_dispute"],
         default: "available"
     },
     sponsorship: {
@@ -208,7 +208,6 @@ const VehicleSchema = new Schema({
         required: true
     }
 });
-
 
 const Product = model<IProduct>("Product", ProductSchema);
 

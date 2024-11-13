@@ -19,12 +19,11 @@ interface IProduct extends Document {
     };
     ownership_documents: string[];
     category: ProductCategory;
-    status: "available" | "processing_payment" | "pending_bid_approval" | "sold";
+    status: "available" | "processing_payment" | "pending_bid_approval" | "sold" | "in_dispute";
     sponsorship: {
         sponsored_at: Date;
         expires: Date;
     };
 }
-
 
 export default IProduct;

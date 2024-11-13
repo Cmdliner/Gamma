@@ -310,7 +310,7 @@ class ProductController {
             }
             const skips = (page - 1) * limit;
 
-            //!TODO => validate product category
+            // validate product category
             const isValidCategory = allowedCategories.includes(productCategory);
             if (!isValidCategory) return res.status(400).json({ error: true, message: "Invalid product category!" });
 
@@ -388,12 +388,14 @@ class ProductController {
                 return res.status(404).json({ error: true, message: "Product not found" });
             }
             if (product.status !== "available") {
-                return res.status(400).json({ error: true, message: "Cannot delete product!" });
+                return res.status(400).json({ error: true, message: "Cannot edit product!" });
             }
 
             // Find all pending bids and reject them
-            const pendingBids = await Bid.find({ product: product._id, status: "pending" });
-            if (pendingBids) pendingBids.forEach((bid) => bid.status = "rejected");
+            const pendingBids = await Bid.updateMany(
+                { product: product._id, status: "pending" },
+                { $set: {status: "rejected"} }
+            );
 
             // !TODO => UPDATE PRODUCT LISTING
             return res.status(200).json({ success: true, message: "Product updated successfully" });
