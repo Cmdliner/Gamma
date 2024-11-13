@@ -4,7 +4,7 @@
   "main": "dist/app.js",
   "type": "commonjs",
   "scripts": {
-    "build": "rm -rf dist/ && tsc && node --env-file .env dist/app.js",
+    "build": "rm -rf dist/ && tsc && node .env dist/app.js",
     "start": "node dist/app.js",
     "dev": "bun --watch  src/app.ts"
   },
