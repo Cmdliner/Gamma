@@ -4,6 +4,7 @@ import Bid from "./bid.model";
 import type IBid from "../types/bid.schema";
 import { Types } from "mongoose";
 import { compareObjectID, Next5Mins } from "../lib/main";
+import IProduct from "@/types/product.schema";
 
 class BidController {
 
@@ -14,7 +15,7 @@ class BidController {
             // CHECK IF USER IS PRODUCT OWNER
             const isProductOwner = await Product.findOne({ _id: productID, owner: req.user?._id });
             if (!isProductOwner) {
-                return res.status(403).json({ error: true, message: "Forbidden" });
+                return res.status(400).json({ error: true, message: "Forbidden" });
             }
 
             const productBids = await Bid.find({ product: productID }).populate(["buyer", "product"]);
@@ -37,7 +38,7 @@ class BidController {
             if (!negotiating_price) return res.status(422).json({ error: true, message: "Negotiating price required" });
 
             if (negotiating_price < 0) {
-                return res.status(422).json({ error: true, message: "Negotiating price cannot be negative" });
+                return res.status(422).json({ error: true, message: "Negotiating price must be a positive integer" });
             }
 
             const product = await Product.findById(productID);
@@ -46,7 +47,7 @@ class BidController {
 
             // Ensure seller does not bid for their own item
             const canBidForItem = !compareObjectID(req.user?._id!, product.owner);
-            if (!canBidForItem) return res.status(403).json({ error: true, message: "Cannot bid for your own item!" });
+            if (!canBidForItem) return res.status(400).json({ error: true, message: "Cannot bid for your own item!" });
 
             const bidData: Pick<IBid, "buyer" | "negotiating_price" | "product"> = {
                 buyer: req.user?._id!,
@@ -68,8 +69,17 @@ class BidController {
     static async acceptBid(req: Request, res: Response) {
         try {
             const { bidID } = req.params;
-            const bid = await Bid.findById(bidID);
+            const bid = await Bid.findById(bidID).populate("product");
             if (!bid) return res.status(404).json({ error: true, message: "Bid not found" });
+
+            // ENSURE CURRENT USER IS PRODUCT OWNER
+            const userId = req.user?._id;
+            const productOwner = (bid.product as unknown as IProduct).owner;
+            const isProductOwner = compareObjectID(userId, productOwner);
+            if (!isProductOwner) {
+                return res.status(400).json({ error: true, message: "Unauthorized!" });
+            }
+
 
             bid.status = "accepted";
             bid.expires = Next5Mins();
@@ -87,8 +97,18 @@ class BidController {
     static async rejectBid(req: Request, res: Response) {
         try {
             const { bidID } = req.params;
-            const bid = await Bid.findById(bidID);
+            const bid = await Bid.findById(bidID).populate("product");
             if (!bid) return res.status(404).json({ error: true, message: "Bid not found!" });
+
+
+            // ENSURE CURRENT USER IS PRODUCT OWNER
+            const userId = req.user?._id;
+            const productOwner = (bid.product as unknown as IProduct).owner;
+            const isProductOwner = compareObjectID(userId, productOwner);
+            if (!isProductOwner) {
+                return res.status(400).json({ error: true, message: "Unauthorized!" });
+            }
+
 
             bid.status = "rejected";
             await bid.save();

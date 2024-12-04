@@ -370,7 +370,7 @@ class AuthController {
             if (!user) return res.status(422).json({ error: true, message: "Error verifying otp!" });
 
             const otpInDb = await OTP.findOneAndDelete({ owner: user._id, token: otp });
-            if (!otpInDb) return res.status(403).json({ error: true, message: "OTP verification failed!" });
+            if (!otpInDb) return res.status(400).json({ error: true, message: "OTP verification failed!" });
 
             if (otpInDb.expires.valueOf() < Date.now().valueOf()) {
                 return res.status(400).json({ error: true, message: "OTP expired!" });
@@ -429,7 +429,7 @@ class AuthController {
             if (!passwordsMatch) return res.status(403).json({ error: true, message: "Invalid username or password!" });
 
             if (user.bvn?.verification_status !== "verified" || !user.bank_details || !user.email_verified) {
-                return res.status(403).json({ error: true, message: "Cannot skip onboarding process" });
+                return res.status(400).json({ error: true, message: "Cannot skip onboarding process" });
             }
             const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
             res.setHeader("Authorization", `Bearer ${authToken}`);

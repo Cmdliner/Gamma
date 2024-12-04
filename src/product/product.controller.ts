@@ -340,11 +340,11 @@ class ProductController {
             if (!productListing) return res.status(404).json({ error: true, message: "Product not found!" });
 
             const isAuthorizedToDelete = compareObjectID(currentUser!, productListing.owner);
-            if (!isAuthorizedToDelete) return res.status(403).json({ error: true, message: "Unauthorized!" });
+            if (!isAuthorizedToDelete) return res.status(400).json({ error: true, message: "Unauthorized!" });
 
             // check if there are no pending operations (transactions, bids) on this item
             if (productListing.purchase_lock.is_locked) {
-                return res.status(403)
+                return res.status(400)
                     .json({ error: true, message: "Product still has pending operations cannot delete at the moment" });
             }
             const deletedProductListing = await Product.findByIdAndDelete(productID);

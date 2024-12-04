@@ -39,7 +39,7 @@ class DisputeController {
             // Check if current user is the buyer or seller
             const isBuyerOrSeller = compareObjectID(buyer._id, req.user?._id!) || compareObjectID(seller, req.user?._id!);
             if (!isBuyerOrSeller) {
-                return res.status(403).json({ error: true, message: "Forbidden!" });
+                return res.status(400).json({ error: true, message: "Forbidden!" });
             }
 
             // Raise dispute if this req passes validation checks above

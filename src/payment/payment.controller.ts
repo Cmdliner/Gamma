@@ -9,6 +9,7 @@ import { compareObjectID, Next5Mins } from "../lib/main";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../bid/bid.model";
 import { AdPayments } from "@/types/ad.enums";
+import User from "@/user/user.model";
 
 class PaymentController {
 
@@ -58,9 +59,9 @@ class PaymentController {
 
                 // Update transaction
                 await Transaction.findByIdAndUpdate(
-                  transactionRef,
-                  { charge_ref: withdrawalRes.data.reference },
-                  { new: true, session }
+                    transactionRef,
+                    { charge_ref: withdrawalRes.data.reference },
+                    { new: true, session }
                 );
             }
 
@@ -76,7 +77,7 @@ class PaymentController {
             await session.endSession();
         }
     }
-    
+
     // !TODO => verify transaction
 
     static async getTransactionHistory(req: Request, res: Response) {
@@ -99,6 +100,12 @@ class PaymentController {
             if (!payment_method) {
                 return res.status(422).json({ error: true, message: "Payment method required!" })
             }
+
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ error: true, message: "User not found!" })
+            }
+
 
             // VALIDATION LOGIC
             const { error } = ItemPurchaseValidation.validate({ payment_method });
@@ -126,7 +133,7 @@ class PaymentController {
                 }
 
                 const isBidder = compareObjectID(bid.buyer, req.user?._id!);
-                if (!isBidder) return res.status(403).json({ error: true, message: "Action Forbidden!" });
+                if (!isBidder) return res.status(400).json({ error: true, message: "Action Forbidden!" });
 
                 // Set bid Price to that negotiated
                 bidPrice = bid.negotiating_price as number;
@@ -206,7 +213,7 @@ class PaymentController {
 
             const isProductOwner = compareObjectID(product.owner, req.user?._id!);
             if (!isProductOwner) {
-                return res.status(403).json({ error: true, message: "Forbidden!!!" });
+                return res.status(400).json({ error: true, message: "Forbidden!!!" });
             }
 
             // CHECK IF PRODUCT IS SOLD
