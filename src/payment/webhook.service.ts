@@ -35,7 +35,7 @@ class WebhookService {
                 // Seller
                 const sellerWallet = await Wallet.findById((product.owner as unknown as IUser).wallet).session(session);
                 if (!sellerWallet) throw new Error("Wallet not found");
-                sellerWallet.balance += payload.data.amountToSettle;
+                if(payload.data.amountToSettle > 0) sellerWallet.balance += payload.data.amountToSettle;
                 await sellerWallet.save({ session });
 
 

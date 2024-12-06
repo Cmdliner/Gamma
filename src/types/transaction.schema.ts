@@ -1,6 +1,6 @@
-import { Types } from "mongoose";
+import { Document, Types } from "mongoose";
 
-interface ITransaction {
+interface ITransaction extends Document {
     kind: "ad_sponsorhip" | "product_payment" | "payment_refund" | "withdrawal";
     bearer: Types.ObjectId;
     amount: number;

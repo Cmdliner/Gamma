@@ -67,6 +67,7 @@ const UserSchema = new Schema({
         balance: {
             type: Number,
             min: 0,
+            default: 0
         }
     },
     referred_by: {

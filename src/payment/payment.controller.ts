@@ -5,16 +5,16 @@ import FincraService from "../lib/fincra.service";
 import Transaction from "./transaction.model";
 import IUser from "../types/user.schema";
 import Product from "../product/product.model";
-import { compareObjectID, Next5Mins } from "../lib/main";
+import { compareObjectID } from "../lib/main";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../bid/bid.model";
 import { AdPayments } from "@/types/ad.enums";
 import User from "@/user/user.model";
 
+
 class PaymentController {
-
     static async withdrawFromWallet(req: Request, res: Response) {
-
+        const MIN_WITHDRAWAL_VALUE = 500;
         const session = await startSession();
 
         try {
@@ -27,8 +27,9 @@ class PaymentController {
             const wallet = await Wallet.findById(user.wallet).session(session);
             if (!wallet) return res.status(404).json({ error: true, message: "Error finding wallet" });
 
-            // Make sure user does not try to add to their balance by atempting to withdraw negative values
-            if (amount_to_withdraw < 500) {
+            // Make sure user does not try to add to their balance by atempting to withdraw 
+            // negative balance or less than the MIN_WITHDRAW_VALUE
+            if (amount_to_withdraw < MIN_WITHDRAWAL_VALUE) {
                 return res.status(400).json({ error: true, message: "Amount too small" });
             }
             // Check amount to withdraw
@@ -247,7 +248,23 @@ class PaymentController {
         }
     }
 
-    static async withdrawRewards(req: Request, res: Response) { }
+    static async withdrawRewards(req: Request, res: Response) {
+        try {
+            const userId = req.user?._id;
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ error: true, message: "User  not found!" });
+            }
+
+            await FincraService.withdrawRewards(user);
+            // Handle response and service of rewards
+
+            return res.status(200).json({success: true, message: "Rewards have been sent to account"})
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error withdrawing rewards!" })
+        }
+    }
 
 }
 export default PaymentController;

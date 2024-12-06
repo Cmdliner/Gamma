@@ -127,6 +127,9 @@ class FincraService {
     }
 
     static async withdrawFunds(user: IUser, ref: string, amount: number, bank_account: number) {
+        // const OYEAH_CUT = 0.05 
+        // const AMOUNT_TO_WITHDRAW = 
+        //! TODO => REMOVE OYEAH CUT 
         try {
             const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
@@ -159,6 +162,15 @@ class FincraService {
             }, { headers });
 
             return res.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async withdrawRewards(user: IUser) {
+        //! TODO => Implement payment with oyeah service cut
+        try {
+            
         } catch (error) {
             throw error;
         }
