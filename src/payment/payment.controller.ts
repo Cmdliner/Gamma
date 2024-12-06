@@ -8,8 +8,8 @@ import Product from "../product/product.model";
 import { compareObjectID } from "../lib/main";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../bid/bid.model";
-import { AdPayments } from "@/types/ad.enums";
-import User from "@/user/user.model";
+import { AdPayments } from "../types/ad.enums";
+import User from "../user/user.model";
 
 
 class PaymentController {

@@ -6,7 +6,7 @@ import Wallet from "../user/wallet.model";
 import { startSession, Types } from "mongoose";
 import { ChargeSuccessPayload } from "../types/webhook.schema";
 import crypto from "crypto";
-import { AdPayments } from "@/types/ad.enums";
+import { AdPayments } from "../types/ad.enums";
 
 class WebhookService {
 

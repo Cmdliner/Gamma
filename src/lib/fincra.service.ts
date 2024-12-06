@@ -1,10 +1,11 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { Fincra } from "fincra-node-sdk";
 import IWallet from "../types/wallet.schema";
-import IUser from "../types/user.schema";
-import IProduct, { SponsorshipDuration } from "../types/product.schema";
+import type IUser from "../types/user.schema";
+import type IProduct from "../types/product.schema";
+import type { SponsorshipDuration } from "../types/product.schema";
 import { decryptBvn } from "./main";
-import { AdPayments } from "@/types/ad.enums";
+import { AdPayments } from "../types/ad.enums";
 
 class FincraService {
 

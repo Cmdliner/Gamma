@@ -15,7 +15,7 @@ const BidSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["accepted", "pending" , "rejected", "expired"],
+        enum: ["accepted", "pending", "rejected", "expired"],
         default: "pending"
     },
     negotiating_price: {
@@ -26,7 +26,7 @@ const BidSchema = new Schema({
     expires: {
         type: Date,
     }
-});
+}, { timestamps: true });
 
 const Bid = model<IBid>("Bid", BidSchema);
 
