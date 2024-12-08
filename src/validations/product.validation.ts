@@ -31,7 +31,7 @@ export const electronicsValidationSchema = Joi.object({
     category: Joi.valid(...allowedCategories).required(),
 });
 
-const validPropertyconditions = [
+const validPropertyConditions = [
     "fairly_used",
     "newly_built",
     "old",
@@ -56,7 +56,7 @@ export const landedPropertyValidationSchema = Joi.object({
     localty: Joi.string().required(),
     dimensions: Joi.string().required(),
     category: Joi.valid(...allowedCategories).required(),
-    condition: Joi.valid(...validPropertyconditions).required()
+    condition: Joi.valid(...validPropertyConditions).required()
 });
 
 export const gadgetValidationSchema = Joi.object({

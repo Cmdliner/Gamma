@@ -14,7 +14,7 @@ export const registerValidationSchema = Joi.object({
     referral_code: Joi.string(),
     location: Joi.object({
         type: Joi.string().valid("Point").required(),
-        coordinates: Joi.array().valid(Joi.number()).length(2).required(),
+        coordinates: Joi.array().allow(Joi.number().required()).length(2).required(),
         human_readable: Joi.string().required(),
     }).required(),
 });

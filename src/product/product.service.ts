@@ -5,7 +5,7 @@ type ProductCoords = [number, number];
 class ProductService {
 
     static async filterAndSortByLocation(
-        [longitude, latitude]: ProductCoords,
+        coordinates: ProductCoords,
         category: string,
         limit: number,
         skips: number
@@ -15,7 +15,7 @@ class ProductService {
                 $geoNear: {
                     near: {
                         type: "Point",
-                        coordinates: [longitude, latitude],
+                        coordinates,
                     },
                     distanceField: "distance",
                     spherical: true,
@@ -28,7 +28,7 @@ class ProductService {
         ]);
 
         return products;
-    }
+    }''
 }
 
 export default ProductService;
