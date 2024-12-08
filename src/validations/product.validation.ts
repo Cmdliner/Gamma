@@ -19,7 +19,7 @@ export const electronicsValidationSchema = Joi.object({
     owner: Joi.object().required(),
     location: Joi.object({
         type: Joi.string().valid("Point").required(),
-        coordinates: Joi.array().valid(Joi.number()).length(2).required(),
+        coordinates: Joi.array().items(Joi.number().required()).length(2).required(),
         human_readable: Joi.string().required(),
     }).required(),
     price: Joi.number().min(10).required(),
@@ -47,7 +47,7 @@ export const landedPropertyValidationSchema = Joi.object({
     owner: Joi.object().required(),
     location: Joi.object({
         type: Joi.string().valid("Point").required(),
-        coordinates: Joi.array().valid(Joi.number()).length(2).required(),
+        coordinates: Joi.array().items(Joi.number().required()).length(2).required(),
         human_readable: Joi.string().required(),
     }).required(),
     price: Joi.number().min(10).required(),
@@ -67,7 +67,7 @@ export const gadgetValidationSchema = Joi.object({
     owner: Joi.object().required(),
     location: Joi.object({
         type: Joi.string().valid("Point").required(),
-        coordinates: Joi.array().valid(Joi.number()).length(2).required(),
+        coordinates: Joi.array().items(Joi.number().required()).length(2).required(),
         human_readable: Joi.string().required(),
     }).required(),
     is_negotiable: Joi.boolean().required(),
@@ -87,7 +87,7 @@ export const vehiclevalidationSchema = Joi.object({
     owner: Joi.object().required(),
     location: Joi.object({
         type: Joi.string().valid("Point").required(),
-        coordinates: Joi.array().valid(Joi.number()).length(2).required(),
+        coordinates: Joi.array().items(Joi.number().required()).length(2).required(),
         human_readable: Joi.string().required(),
     }).required(),
     is_negotiable: Joi.boolean().required(),
@@ -108,7 +108,7 @@ export const genericValidationSchema = Joi.object({
     owner: Joi.object().required(),
     location: Joi.object({
         type: Joi.string().valid("Point").required(),
-        coordinates: Joi.array().valid(Joi.number()).length(2).required(),
+        coordinates: Joi.array().items(Joi.number().required()).length(2).required(),
         human_readable: Joi.string().required(),
     }).required(),
     price: Joi.number().min(10).required(),
