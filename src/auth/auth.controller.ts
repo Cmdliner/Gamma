@@ -48,7 +48,8 @@ class AuthController {
 
             // ! MODIFY WITH CAUTION;
             // !! ESSENTIAL FOR GEOSPATIAL LOCATION TRACKING
-            const humanReadableLocation = req.body.location as string;
+            const DEFAULT_LOCATION = "Lagos State";
+            const humanReadableLocation = req.body.location ? req.body.location as string : DEFAULT_LOCATION;
             if (humanReadableLocation) {
                 const location: {
                     type: "Point";

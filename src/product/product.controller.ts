@@ -25,6 +25,8 @@ import type { IFurniture } from "../types/generic.schema";
 import { compareObjectID } from "../lib/main";
 import Bid from "../bid/bid.model";
 import { GeospatialDataNigeria } from "../lib/location.data";
+import ProductService from "./product.service";
+import User from "src/user/user.model";
 
 
 class ProductController {
@@ -377,6 +379,11 @@ class ProductController {
     static async getAllProductsInCategory(req: Request, res: Response) {
         try {
             const { productCategory } = req.params;
+
+            const user = await User.findById(req.user?._id!);
+            if(!user) {
+                return res.status(404).json({error: true, message: "User not found!" });
+            }
             let page = 1;
             if (!isNaN(parseInt(req.query.page as string))) {
                 page = parseInt(req.query.page as string)
@@ -400,8 +407,13 @@ class ProductController {
 
 
 
-            const products = await Product.find({ category: productCategory }).limit(limit).skip(skips);
-            // const products = await ProductService.filterAndSortByLocation([])
+            // const products = await Product.find({ category: productCategory }).limit(limit).skip(skips);
+            const products = await ProductService.filterAndSortByLocation(
+              user.location?.coordinates,
+              productCategory,
+              limit,
+              skips
+            );
             if (products) return res.status(200).json({ success: true, message: "Products found!", products });
         } catch (error) {
             console.error(error);
