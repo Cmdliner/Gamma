@@ -7,7 +7,7 @@ const auth = Router();
 auth.get("/bank-codes", AuthController.getBankCodes);
 auth.post("/register", AuthController.register);
 auth.post("/resend-verification-mail", AuthController.resendVerificationMail);
-auth.post("/verify", AuthController.verifyEmail);
+auth.post("/verify-email", AuthController.verifyEmail);
 auth.post("/validate-bank-details", AuthController.validateBankDetails);
 auth.post("/verify-bvn", verifyBvnLimiter, AuthController.verifyBVN);
 auth.post("/create-password", AuthController.setPassword);

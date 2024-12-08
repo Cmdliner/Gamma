@@ -23,8 +23,8 @@ import type IGadget from "../types/gadget.schema";
 import type IVehicle from "../types/vehicle.schema";
 import type { IFurniture } from "../types/generic.schema";
 import { compareObjectID } from "../lib/main";
-import FincraService from "../lib/fincra.service";
 import Bid from "../bid/bid.model";
+import { GeospatialDataNigeria } from "../lib/location.data";
 
 
 class ProductController {
@@ -34,10 +34,25 @@ class ProductController {
         try {
             const { ownership_documents, product_images } = req.processed_images;
 
+            const humanReadableLocation = req.body.location as string;
+
+            //!TODO => Try and validate the human readable location
+            const location: {
+                type: string;
+                human_readable: string;
+                coordinates: [number, number];
+            } = {
+                human_readable: humanReadableLocation,
+                coordinates: [
+                    GeospatialDataNigeria[humanReadableLocation].lat,
+                    GeospatialDataNigeria[humanReadableLocation].long,
+                ],
+                type: "Point"
+            };
             const electronicProductData: Partial<IElectronics> = {
                 name: req.body.name,
                 description: req.body.description,
-                location: req.body.location,
+                location,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
                 brand: req.body.brand,
@@ -57,6 +72,7 @@ class ProductController {
                 name: electronicProductData.name,
                 description: electronicProductData.description,
                 price: electronicProductData.price,
+                "location.human_readable": electronicProductData.location.human_readable
             });
             if (similarProdInDb) {
                 return res.status(400).json({ error: true, message: "A similar product exists" });
@@ -80,10 +96,24 @@ class ProductController {
         try {
             const { ownership_documents, product_images } = req.processed_images;
 
+            const humanReadableLocation = req.body.location as string;
+            const location: {
+                type: string;
+                human_readable: string;
+                coordinates: [number, number];
+            } = {
+                human_readable: humanReadableLocation,
+                coordinates: [
+                    GeospatialDataNigeria[humanReadableLocation].lat,
+                    GeospatialDataNigeria[humanReadableLocation].long,
+                ],
+                type: "Point"
+            };
+
             const landedPropertyData: Partial<ILandedProperty> = {
                 name: req.body.name,
                 description: req.body.description,
-                location: req.body.location,
+                location,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
                 category: req.body.category,
@@ -105,6 +135,7 @@ class ProductController {
                 name: landedPropertyData.name,
                 description: landedPropertyData.description,
                 price: landedPropertyData.price,
+                "location.human_readable": landedPropertyData.location.human_readable
             });
             if (similarProdInDb) {
                 return res.status(400).json({ error: true, message: "A similar product exists" });
@@ -129,13 +160,27 @@ class ProductController {
         try {
             const { product_images, ownership_documents } = req.processed_images;
 
+            const humanReadableLocation = req.body.location as string;
+            const location: {
+                type: string;
+                human_readable: string;
+                coordinates: [number, number];
+            } = {
+                human_readable: humanReadableLocation,
+                coordinates: [
+                    GeospatialDataNigeria[humanReadableLocation].lat,
+                    GeospatialDataNigeria[humanReadableLocation].long,
+                ],
+                type: "Point"
+            };
+
 
             const gadgetData: Partial<IGadget> = {
                 product_images: product_images,
                 name: req.body.name,
                 description: req.body.description,
                 owner: req.user?._id,
-                location: req.body.location,
+                location,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
                 category: req.body.category,
@@ -157,6 +202,7 @@ class ProductController {
                 name: gadgetData.name,
                 description: gadgetData.description,
                 price: gadgetData.price,
+                "location.human_readable": gadgetData.location.human_readable
             });
             if (similarProdInDb) {
                 return res.status(400).json({ error: true, message: "A similar product exists" });
@@ -179,12 +225,26 @@ class ProductController {
         try {
             const { product_images, ownership_documents } = req.processed_images;
 
+            const humanReadableLocation = req.body.location as string;
+            const location: {
+                type: string;
+                human_readable: string;
+                coordinates: [number, number];
+            } = {
+                human_readable: humanReadableLocation,
+                coordinates: [
+                    GeospatialDataNigeria[humanReadableLocation].lat,
+                    GeospatialDataNigeria[humanReadableLocation].long,
+                ],
+                type: "Point"
+            };
+
             const vehicleData: Partial<IVehicle> = {
                 product_images: product_images,
                 name: req.body.name,
                 description: req.body.description,
                 owner: req.user?._id,
-                location: req.body.location,
+                location,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
                 category: req.body.category,
@@ -204,11 +264,12 @@ class ProductController {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
-             // CHECK THAT NO SIMILAR PROD EXISTS IN DB
-             const similarProdInDb = await Vehicle.findOne({
+            // CHECK THAT NO SIMILAR PROD EXISTS IN DB
+            const similarProdInDb = await Vehicle.findOne({
                 name: vehicleData.name,
                 description: vehicleData.description,
                 price: vehicleData.price,
+                "location.human_readable": vehicleData.location.human_readable
             });
             if (similarProdInDb) {
                 return res.status(400).json({ error: true, message: "A similar product exists" });
@@ -229,11 +290,26 @@ class ProductController {
     static async uploadGenericProduct(req: Request, res: Response) {
         try {
             const { ownership_documents, product_images } = req.processed_images;
+
+            const humanReadableLocation = req.body.location as string;
+            const location: {
+                type: string;
+                human_readable: string;
+                coordinates: [number, number];
+            } = {
+                human_readable: humanReadableLocation,
+                coordinates: [
+                    GeospatialDataNigeria[humanReadableLocation].lat,
+                    GeospatialDataNigeria[humanReadableLocation].long,
+                ],
+                type: "Point"
+            };
+
             const genericProductData: Partial<IFurniture> = {
                 name: req.body.name,
                 description: req.body.description,
                 owner: req.user?._id,
-                location: req.body.location,
+                location,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
                 condition: req.body.condition,
@@ -246,11 +322,12 @@ class ProductController {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
-             // CHECK THAT NO SIMILAR PROD EXISTS IN DB
-             const similarProdInDb = await Product.findOne({
+            // CHECK THAT NO SIMILAR PROD EXISTS IN DB
+            const similarProdInDb = await Product.findOne({
                 name: genericProductData.name,
                 description: genericProductData.description,
                 price: genericProductData.price,
+                "location.human_readable": genericProductData.location.human_readable
             });
             if (similarProdInDb) {
                 return res.status(400).json({ error: true, message: "A similar product exists" });
@@ -324,6 +401,7 @@ class ProductController {
 
 
             const products = await Product.find({ category: productCategory }).limit(limit).skip(skips);
+            // const products = await ProductService.filterAndSortByLocation([])
             if (products) return res.status(200).json({ success: true, message: "Products found!", products });
         } catch (error) {
             console.error(error);
@@ -394,7 +472,7 @@ class ProductController {
             // Find all pending bids and reject them
             const pendingBids = await Bid.updateMany(
                 { product: product._id, status: "pending" },
-                { $set: {status: "rejected"} }
+                { $set: { status: "rejected" } }
             );
 
             // !TODO => UPDATE PRODUCT LISTING

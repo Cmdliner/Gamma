@@ -14,6 +14,7 @@ import { encryptBvn, generateOTP } from "../lib/main";
 import PaystackService from "../lib/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../lib/fincra.service";
+import { GeospatialDataNigeria } from "../lib/location.data";
 
 const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
@@ -32,8 +33,7 @@ class AuthController {
                 last_name, middle_name,
                 dob, email,
                 gender, referral_code,
-                state_of_origin, location,
-                interested_categories,
+                state_of_origin, interested_categories,
                 phone_no_1, phone_no_2
             }: IRegisterUser = req.body;
 
@@ -45,7 +45,25 @@ class AuthController {
             }
             // Add middle name and location if present
             if (middle_name) registerInfo.middle_name = middle_name;
-            if (location) registerInfo.location = location;
+
+            // ! MODIFY WITH CAUTION;
+            // !! ESSENTIAL FOR GEOSPATIAL LOCATION TRACKING
+            const humanReadableLocation = req.body.location as string;
+            if (humanReadableLocation) {
+                const location: {
+                    type: "Point";
+                    human_readable: string;
+                    coordinates: [number, number];
+                } = {
+                    human_readable: humanReadableLocation,
+                    coordinates: [
+                        GeospatialDataNigeria[humanReadableLocation].lat,
+                        GeospatialDataNigeria[humanReadableLocation].long,
+                    ],
+                    type: "Point"
+                };
+                registerInfo.location = location;
+            }
 
             const phone_numbers = [phone_no_1];
             if (phone_no_2) phone_numbers.push(phone_no_2);

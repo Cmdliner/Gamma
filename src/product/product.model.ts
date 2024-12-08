@@ -30,8 +30,9 @@ const ProductSchema = new Schema({
         required: true,
     },
     location: {
-        type: String,
-        required: true,
+        type: { type: String, enum: ["Point"], required: true },
+        coordinates: { type: [Number], required: true },
+        human_readable: { type: String, required: true },
     },
     price: {
         type: Number,
@@ -88,16 +89,16 @@ const ProductSchema = new Schema({
 const ElectronicsSchema = new Schema({
     brand: {
         type: String,
-        required: true
+        // required: true
     },
     item_model: {
         type: String,
-        required: true
+        // required: true
     },
     condition: {
         type: String,
         enum: ["new", "used"],
-        required: true
+        // required: true
     }
 });
 
@@ -105,7 +106,7 @@ const FashionProductSchema = new Schema({
     condition: {
         type: String,
         enum: ["used", "new"],
-        required: true
+        // required: true
     }
 });
 
@@ -113,27 +114,27 @@ const FurnitureSchema = new Schema({
     condition: {
         type: String,
         enum: ["used", "new"],
-        required: true
+        // required: true
     }
 });
 
 const GadgetSchema = new Schema({
     brand: {
         type: String,
-        required: true
+        // required: true
     },
     item_model: {
         type: String,
-        required: true
+        // required: true
     },
     RAM: {
         type: String,
-        required: true
+        // required: true
     },
     condition: {
         type: String,
         enum: ["used", "new"],
-        required: true
+        // required: true
     }
 
 });
@@ -142,7 +143,7 @@ const OtherProductSchema = new Schema({
     condition: {
         type: String,
         enum: ["used", "new"],
-        required: true
+        // required: true
     }
 });
 
@@ -153,7 +154,7 @@ const LandedPropertySchema = new Schema({
     },
     dimensions: {
         type: String,
-        required: true
+        // required: true
     },
     condition: {
         type: String,
@@ -165,7 +166,7 @@ const LandedPropertySchema = new Schema({
             "under_construction",
             "empty_land",
         ],
-        required: true
+        // required: true
     }
 });
 
@@ -173,41 +174,44 @@ const MachinerySchema = new Schema({
     condition: {
         type: String,
         enum: ["used", "new"],
-        required: true
+        // required: true
     }
 });
 
 const VehicleSchema = new Schema({
     make: {
         type: String,
-        required: true
+        // required: true
     },
     is_registered: {
         type: Boolean,
-        required: true
+        // required: true
     },
     item_model: {
         type: String,
-        required: true
+        // required: true
     },
     year: {
         type: Number,
-        required: true
+        // required: true
     },
     condition: {
         type: String,
         enum: ["used", "new"],
-        required: true
+        // required: true
     },
     vin: {
         type: String,
-        required: true
+        // required: true
     },
     transmission_type: {
         type: String,
-        required: true
+        // required: true
     }
 });
+
+// Index 2dsphere for geospatial queries
+ProductSchema.index({ location: "2dsphere" });
 
 const Product = model<IProduct>("Product", ProductSchema);
 

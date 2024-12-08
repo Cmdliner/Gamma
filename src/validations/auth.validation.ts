@@ -11,5 +11,10 @@ export const registerValidationSchema = Joi.object({
     gender: Joi.string().required(),
     interested_categories: Joi.array().items(Joi.string().valid(...allowedCategories)).required(),
     state_of_origin: Joi.string().required(),
-    referral_code: Joi.string()
-})
+    referral_code: Joi.string(),
+    location: Joi.object({
+        type: Joi.string().valid("Point").required(),
+        coordinates: Joi.array().valid(Joi.number()).length(2).required(),
+        human_readable: Joi.string().required(),
+    }).required(),
+});
