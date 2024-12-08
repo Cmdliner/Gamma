@@ -28,7 +28,7 @@ class ProductService {
         ]);
 
         return products;
-    }''
+    }
 }
 
 export default ProductService;
