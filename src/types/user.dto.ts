@@ -4,7 +4,11 @@ export interface IRegisterUser {
     middle_name?: string;
     email: string;
     dob: Date | string;
-    location: string;
+    location: {
+        human_readable: string;
+        coordinates: [number, number];
+        type: "Point";
+    };
     gender: string;
     referral_code?: string;
     interested_categories: string[];

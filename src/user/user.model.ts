@@ -23,7 +23,9 @@ const UserSchema = new Schema({
         required: true
     }],
     location: {
-        type: String
+        type: { type: String, enum: ["Point"], required: true },
+        coordinates: { type: [Number], required: true },
+        human_readable: { type: String, required: true },
     },
     dob: {
         type: Date,
@@ -97,6 +99,7 @@ const UserSchema = new Schema({
     }]
 }, { timestamps: true });
 
+UserSchema.index({ location: "2dsphere" });
 const User = model<IUser>("User", UserSchema);
 
 export default User;

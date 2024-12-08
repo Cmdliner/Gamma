@@ -53,7 +53,7 @@ const processLocalImage = async (file: Express.Multer.File): Promise<string> => 
     return filePath;
 }
 
-const processCloudinaryImage = async (file: Express.Multer.File): Promise<string> => {
+export const ProcessCloudinaryImage = async (file: Express.Multer.File): Promise<string> => {
     const processedImageBuffer = await sharp(file.buffer)
         .resize(MAX_WIDTH, MAX_HEIGHT, { fit: "inside", withoutEnlargement: true })
         .webp({ quality: QUALITY })
@@ -78,6 +78,7 @@ const processCloudinaryImage = async (file: Express.Multer.File): Promise<string
         uploadStream.end(processedImageBuffer);
     });
 }
+
 export const ValidateAndProcessUpload = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as ReqFiles;
     if (!files || !files.product_images) {
@@ -86,7 +87,7 @@ export const ValidateAndProcessUpload = async (req: Request, res: Response, next
     }
     const { ownership_documents, product_images } = files;
     try {
-        const processImage = isProd ? processCloudinaryImage : processLocalImage;
+        const processImage = isProd ? ProcessCloudinaryImage : processLocalImage;
 
         const processedProductImages = await Promise.all(product_images.map(processImage));
         const processedOwnershipDocs = ownership_documents ? await Promise.all(ownership_documents.map(processImage)) : [];
@@ -100,4 +101,10 @@ export const ValidateAndProcessUpload = async (req: Request, res: Response, next
         console.error("Error processing images:", error);
         return res.status(500).json({ error: true, message: "Error processing uploaded images" });
     }
+}
+
+export const ValidateAndProcessSingle = async (req: Request, res: Response, next: NextFunction) => {
+    // Get single img
+    // Process with cloudinary
+    // return img
 }

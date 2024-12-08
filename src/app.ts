@@ -39,7 +39,7 @@ const app = express();
  app.get("/healthz", (_req: Request, res: Response) => {
      res.status(200).json({ active: "The hood is up commandliner⚡" });
  });
-app.use((_req: Request, res: Response, next: NextFunction) => {
+app.use((_req: Request, res: Response, _next: NextFunction) => {
     console.log("A fatal error occured" );
     
     return res.status(500).json({ error: true, message: "An  error occured" });
@@ -47,7 +47,7 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
 
 DB.connect()
     .then(() => app.listen(PORT, () => console.log("Server is up and running on PORT " + PORT)))
-    .catch((error) => console.error({ error: (error as Error).name }));
+    .catch((error) => console.error({ error }));
 
 
 export default app;

@@ -8,7 +8,11 @@ interface IProduct extends Document {
     name: string;
     description: string;
     owner: Types.ObjectId;
-    location: string;
+    location: {
+        type: string;
+        coordinates: [number, number];
+        human_readable: string;
+    };
     price: number;
     is_negotiable: boolean;
     active_bid: Types.ObjectId;

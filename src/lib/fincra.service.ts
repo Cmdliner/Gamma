@@ -55,7 +55,9 @@ class FincraService {
             throw error;
         }
     }
-
+    /*
+     * @deprecated 
+     */
     static async createVirtualWallet(user: IUser) {
         try {
             const opts: AxiosRequestConfig = {
@@ -128,9 +130,10 @@ class FincraService {
     }
 
     static async withdrawFunds(user: IUser, ref: string, amount: number, bank_account: number) {
-        // const OYEAH_CUT = 0.05 
-        // const AMOUNT_TO_WITHDRAW = 
-        //! TODO => REMOVE OYEAH CUT 
+        const OYEAH_CUT = (5 / 100);
+        const PROCESSING_FEE = 200
+        const AMOUNT_TO_WITHDRAW = amount - OYEAH_CUT - PROCESSING_FEE;
+        //! TODO => ENSURE YOU ARE RM RIGHT AMOUNT AS PROCESSING FEE AND OYEAH PERCENT 
         try {
             const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
@@ -142,7 +145,7 @@ class FincraService {
                 business: process.env.FINCRA_BUSINESS_ID,
                 sourceCurrency: "NGN",
                 destinationCurrency: "NGN",
-                amount: amount,
+                amount: AMOUNT_TO_WITHDRAW,
                 description: "Payment",
                 customerReference: ref,
                 beneficiary: {

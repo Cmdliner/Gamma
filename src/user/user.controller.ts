@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import User from "./user.model";
 import IWallet from "../types/wallet.schema";
 import PaystackService from "../lib/paystack.service";
+import { ProcessCloudinaryImage } from "src/middlewares/upload.middlewares";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -95,8 +96,29 @@ class UserController {
     }
 
     static async updateDisplayPicture(req: Request, res: Response) {
-        const display_pic = req.file;
-        console.log(display_pic?.path);
+        try {
+            const displayPic = req.file;
+            const userId = req.user?._id;
+            if (!displayPic || !displayPic.mimetype.startsWith("image/")) {
+                return res.status(422).json({ error: true, message: "Image file required!" });
+            }
+
+            // Upload to cloudinary
+            const uploadPath = await ProcessCloudinaryImage(displayPic);
+
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ error: true, message: "User not found!" });
+            }
+
+            user.display_pic = uploadPath;
+            await user.save();
+
+            return res.status(200).json({ error: true, message: "Display picture upload successful" });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error updating display picture" })
+        }
     }
 
     static async updateInfo(req: Request, res: Response) {

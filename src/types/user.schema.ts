@@ -9,7 +9,11 @@ interface IUser extends Document {
     last_name: string;
     display_pic: string;
     dob: Date,
-    location?: string;
+    location?: {
+        human_readable: string;
+        coordinates: [number, number];
+        type: string;
+    };
     gender: string;
     state_of_origin: string;
     phone_numbers: string[];
