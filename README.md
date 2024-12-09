@@ -30,10 +30,9 @@ bun run dev
 ```
 
 ## BUGS
-
+- Bvn can be resued (bvn.encrypted_data ????) //encryption gives fdifferent values; only decryption is uniform
+- Timeout for payment (maybe 5 minutes)
 ## TODOS
-- after 14 days temporarily remove ads (x delete item)
-- Product listing should be unique for a particular category
 - Payment to wallet when buying
 - sort bidding direct purchase order
 - deals (pending, accepted )

@@ -47,9 +47,10 @@ class WebhookService {
                     customer.account_status = "active";
 
                     if (customer.referred_by) {
+                        const AMOUNT_TO_REWARD = (0.5 / 100) * payload.data.amountToSettle;
                         const referrer = await User.findById(customer.referred_by).session(session);
                         if (!referrer) throw new Error("Referrer not found");
-                        referrer.rewards.balance += 500;
+                        referrer.rewards.balance += AMOUNT_TO_REWARD;
                         await referrer.save({ session });
                     }
 

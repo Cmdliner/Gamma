@@ -67,6 +67,7 @@ class UserController {
             const { account_no, bank_code } = req.body;
 
             const bankDetails = req.user?.bank_details;
+            console.log({ bank_details: bankDetails });
             if (!bankDetails) {
                 return res.status(400).json({ error: true, message: "Cannot update bank details" });
             }
@@ -76,7 +77,7 @@ class UserController {
 
             // Check if 3 months has passed
             if (threeMonthsFromDateAdded > Date.now()) {
-                return res.status(400).json({ error: true, message: "Cannot update bank account details" })
+                return res.status(400).json({ error: true, message: "Cannot update bank account details at this moment" })
             }
 
             // Verify bank account with paystack

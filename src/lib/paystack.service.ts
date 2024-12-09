@@ -23,6 +23,7 @@ class PaystackService {
 			}
 		} catch (error) {
 			console.log(error);
+			throw error;
 		}
 
 		return null;
