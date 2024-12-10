@@ -22,7 +22,7 @@ import type ILandedProperty from "../types/landed_property.schema";
 import type IGadget from "../types/gadget.schema";
 import type IVehicle from "../types/vehicle.schema";
 import type { IFurniture } from "../types/generic.schema";
-import { compareObjectID } from "../lib/main";
+import { compareObjectID, isValidState } from "../lib/main";
 import Bid from "../bid/bid.model";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import ProductService from "./product.service";
@@ -37,6 +37,9 @@ class ProductController {
             const { ownership_documents, product_images } = req.processed_images;
 
             const humanReadableLocation = req.body.location as string;
+            if (!isValidState(humanReadableLocation)) {
+                return res.status(422).json({ error: true, message: "Invalid location format" });
+            }
 
             //!TODO => Try and validate the human readable location
             const location: {
@@ -99,6 +102,10 @@ class ProductController {
             const { ownership_documents, product_images } = req.processed_images;
 
             const humanReadableLocation = req.body.location as string;
+            if (!isValidState(humanReadableLocation)) {
+                return res.status(422).json({ error: true, message: "Invalid location format" });
+            }
+
             const location: {
                 type: string;
                 human_readable: string;
@@ -163,6 +170,9 @@ class ProductController {
             const { product_images, ownership_documents } = req.processed_images;
 
             const humanReadableLocation = req.body.location as string;
+            if (!isValidState(humanReadableLocation)) {
+                return res.status(422).json({ error: true, message: "Invalid location format" });
+            }
             const location: {
                 type: string;
                 human_readable: string;
@@ -228,6 +238,9 @@ class ProductController {
             const { product_images, ownership_documents } = req.processed_images;
 
             const humanReadableLocation = req.body.location as string;
+            if (!isValidState(humanReadableLocation)) {
+                return res.status(422).json({ error: true, message: "Invalid location format" });
+            }
             const location: {
                 type: string;
                 human_readable: string;
@@ -294,6 +307,9 @@ class ProductController {
             const { ownership_documents, product_images } = req.processed_images;
 
             const humanReadableLocation = req.body.location as string;
+            if (!isValidState(humanReadableLocation)) {
+                return res.status(422).json({ error: true, message: "Invalid location format" });
+            }
             const location: {
                 type: string;
                 human_readable: string;
