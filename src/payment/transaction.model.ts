@@ -22,7 +22,7 @@ const TransactionSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["success", "failed", "pending"],
+        enum: ["success", "failed", "pending", "in_dispute", "resolved"],
         default: "pending"
     },
     payment_method: {

@@ -4,28 +4,27 @@ import Product from "../product/product.model";
 import User from "../user/user.model";
 import { compareObjectID } from "../lib/main";
 import Dispute from "./dispute.model";
+import ITransaction from "../types/transaction.schema";
+import Transaction from "../payment/transaction.model";
 
 class DisputeController {
     static async raiseDispute(req: Request, res: Response) {
         const { productID, transactionID } = req.params;
         const { issues, comments } = req.body;
 
-        if (!productID || !isValidObjectId(productID)) {
-            return res.status(422).json({ error: true, message: "Product ID required" });
-        }
-        if (!transactionID || !isValidObjectId(transactionID)) {
-            return res.status(422).json({ error: true, message: "Product ID required" });
-        }
-
         // VALIDATE REQUEST BODY
         if (!issues.trim() || !comments.trim()) {
-            return res.status(422).json({error: true, message: `${!issues ? "issues" : "comments"} required`})
+            return res.status(422).json({ error: true, message: `${!issues ? "issues" : "comments"} required` })
         }
 
         try {
             const product = await Product.findById(productID);
             if (!product) {
                 return res.status(404).json({ error: true, message: "Product not found" });
+            }
+            const transaction = await Transaction.findById(transactionID);
+            if (!transaction) {
+                return res.status(400).json({ error: true, message: "Transaction not found!" })
             }
             // Find the seller
             const seller = product.owner;
@@ -43,8 +42,10 @@ class DisputeController {
             }
 
             // Raise dispute if this req passes validation checks above
+            transaction.status = "resolved";
             product.status = "in_dispute";
             await product.save();
+            await transaction.save();
 
             const dispute = new Dispute({
                 status: "ongoing",
@@ -61,7 +62,25 @@ class DisputeController {
         }
     }
 
-    static async resolveDispute(req: Request, res: Response) { }
+    static async resolveDispute(req: Request, res: Response) {
+        try {
+            const { disputeID } = req.params;
+
+            const dispute = await Dispute.findById(disputeID).populate("transaction");
+            const isDisputeRaiser = compareObjectID(req.user?._id, dispute.raised_by);
+            if (!dispute || !isDisputeRaiser) {
+                return res.status(404).json({ error: true, message: "Dispute not found for current user" });
+            }
+
+            dispute.status = "resolved";
+            (dispute.transaction as unknown as ITransaction).status = "resolved";
+            await dispute.save();
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error resolving dispute" });
+        }
+    }
 }
 
 export default DisputeController;

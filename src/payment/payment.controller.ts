@@ -266,5 +266,9 @@ class PaymentController {
         }
     }
 
+    static async makeRefund(req: Request, res: Response) {
+        
+    }
+
 }
 export default PaymentController;

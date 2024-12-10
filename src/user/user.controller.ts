@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import User from "./user.model";
 import IWallet from "../types/wallet.schema";
 import PaystackService from "../lib/paystack.service";
-import { ProcessCloudinaryImage } from "src/middlewares/upload.middlewares";
+import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {

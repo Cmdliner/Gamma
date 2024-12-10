@@ -32,18 +32,14 @@ bun run dev
 ## BUGS
 - Bvn can be resued (bvn.encrypted_data ????) //encryption gives fdifferent values; only decryption is uniform
 - Timeout for payment (maybe 5 minutes)
+
+
 ## TODOS
 - Payment to wallet when buying
-- sort bidding direct purchase order
 - deals (pending, accepted )
-- withdraw earnings if referred user is active and if referr has at least one transaction that day
-- create disputes
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
-- App pays them through escrow account
 - On buyer payment create transaction receipts with method of payment and transaction id
-- Create notification model
-- Implement push-notifications with appropraitely named lib
-- Add push token to user model
+
 
 ## REMEMBER
 - Upload can only error due to client-side errors; upload middleware is very stable

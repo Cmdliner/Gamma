@@ -26,7 +26,7 @@ import { compareObjectID } from "../lib/main";
 import Bid from "../bid/bid.model";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import ProductService from "./product.service";
-import User from "src/user/user.model";
+import User from "../user/user.model";
 
 
 class ProductController {

@@ -5,7 +5,7 @@ interface ITransaction extends Document {
     bearer: Types.ObjectId;
     amount: number;
     product: Types.ObjectId;
-    status: "success" | "failed" | "pending";
+    status: "success" | "failed" | "pending" | "in_dispute" | "resolved";
     charge_ref: string;
     payment_method: "card" | "bank_transfer";
     details: string;
