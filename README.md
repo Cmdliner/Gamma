@@ -37,6 +37,7 @@ bun run dev
 ## TODOS
 - Payment to wallet when buying
 - deals (pending, accepted )
+- Sanitize inputs for all actions (impl max char length, rm whitespace, dont allow special characters)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
 - On buyer payment create transaction receipts with method of payment and transaction id
 

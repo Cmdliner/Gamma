@@ -7,6 +7,6 @@ bid.get("/:productID/all", BidController.getAllBidsForProduct);
 bid.post("/:productID/new", BidController.createBid);
 bid.post("/:bidID/accept", BidController.acceptBid);
 bid.post("/:bidID/reject", BidController.rejectBid);
-bid.delete("/:bidID/delete", BidController.deleteBid);
+bid.delete("/:bidID", BidController.deleteBid);
 
 export default bid;
