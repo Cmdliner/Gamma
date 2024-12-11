@@ -1,6 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { Fincra } from "fincra-node-sdk";
-import IWallet from "../types/wallet.schema";
 import type IUser from "../types/user.schema";
 import type IProduct from "../types/product.schema";
 import type { SponsorshipDuration } from "../types/product.schema";
@@ -13,7 +12,7 @@ class FincraService {
     private static fincra = new Fincra(
         process.env.FINCRA_PUBLIC_KEY,
         process.env.FINCRA_SECRET_KEY,
-        { sandbox: process.env.NODE_ENV === "PRODUCTION" ? false : true }
+        { sandbox: process.env.NODE_ENV === "prouction" ? false : true }
     );
 
     static async getBusinessInfo() {
@@ -130,10 +129,9 @@ class FincraService {
     }
 
     static async withdrawFunds(user: IUser, ref: string, amount: number, bank_account: number) {
-        const OYEAH_CUT = (5 / 100);
+        const OYEAH_CUT = (5 / 100) * amount;
         const PROCESSING_FEE = 200
         const AMOUNT_TO_WITHDRAW = amount - OYEAH_CUT - PROCESSING_FEE;
-        //! TODO => ENSURE YOU ARE RM RIGHT AMOUNT AS PROCESSING FEE AND OYEAH PERCENT 
         try {
             const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
@@ -171,10 +169,40 @@ class FincraService {
         }
     }
 
-    static async withdrawRewards(user: IUser) {
+    static async withdrawRewards(user: IUser, ref: string) {
         //! TODO => Implement payment with oyeah service cut
         try {
-            
+            const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
+            const headers = {
+                "api-key": process.env.FINCRA_SECRET_KEY,
+                "Content-Type": "application/json",
+                "Accepts": "application/json"
+            }
+            const res = await axios.post(payoutUrl, {
+                business: process.env.FINCRA_BUSINESS_ID,
+                sourceCurrency: "NGN",
+                destinationCurrency: "NGN",
+                amount: user.rewards.balance,
+                description: "Payment",
+                customerReference: ref,
+                beneficiary: {
+                    firstName: user.first_name,
+                    lastName: user.last_name,
+                    email: user.email,
+                    type: "individual",
+                    accountHolderName: `${user.first_name} ${user.last_name}`,
+                    accountNumber: user.bank_details.account_no.toString(),
+                    country: "NG",
+                    bankCode: user.bank_details.bank_code.toString(),
+                },
+                sender: {
+                    name: "Oyeah Escrow",
+                    email: "payments@oyeahescrow.com",
+                },
+                paymentDestination: "bank_account",
+            }, { headers });
+
+            return res.data;
         } catch (error) {
             throw error;
         }

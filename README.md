@@ -32,6 +32,7 @@ bun run dev
 ## BUGS
 - Bvn can be resued (bvn.encrypted_data ????) //encryption gives fdifferent values; only decryption is uniform
 - Timeout for payment (maybe 5 minutes)
+- Referrer doesnt get rewarded
 
 
 ## TODOS
@@ -55,14 +56,80 @@ bun run dev
 
 ```sh
 .
-├── admin
 ├── bun.lockb
-├── Dockerfile
-├── docs
+├── dist
+│   ├── app.js
 │   ├── auth
-│   │   └── register.yaml
-│   └── healthz.yaml
-├── monoService.js
+│   │   ├── auth.controller.js
+│   │   ├── auth.model.js
+│   │   ├── auth.routes.js
+│   │   └── auth.service.js
+│   ├── bid
+│   │   ├── bid.controller.js
+│   │   ├── bid.model.js
+│   │   └── bid.routes.js
+│   ├── config
+│   │   ├── db.js
+│   │   └── settings.js
+│   ├── dispute
+│   │   ├── dispute.controller.js
+│   │   ├── dispute.model.js
+│   │   └── dispute.routes.js
+│   ├── lib
+│   │   ├── bank_codes.js
+│   │   ├── email.service.js
+│   │   ├── fincra.service.js
+│   │   ├── location.data.js
+│   │   ├── main.js
+│   │   └── paystack.service.js
+│   ├── middlewares
+│   │   ├── auth.middlewares.js
+│   │   ├── ratelimit.middleware.js
+│   │   └── upload.middlewares.js
+│   ├── notification
+│   │   └── notification.model.js
+│   ├── payment
+│   │   ├── payment.controller.js
+│   │   ├── payment.routes.js
+│   │   ├── transaction.model.js
+│   │   ├── webhook.controller.js
+│   │   └── webhook.service.js
+│   ├── product
+│   │   ├── product.controller.js
+│   │   ├── product.model.js
+│   │   ├── product.routes.js
+│   │   └── product.service.js
+│   ├── __tests__
+│   │   └── auth.test.js
+│   ├── types
+│   │   ├── ad.enums.js
+│   │   ├── bid.schema.js
+│   │   ├── common.js
+│   │   ├── electronics.schema.js
+│   │   ├── gadget.schema.js
+│   │   ├── generic.schema.js
+│   │   ├── landed_property.schema.js
+│   │   ├── multer_file.js
+│   │   ├── otp.schema.js
+│   │   ├── phone_number.schema.js
+│   │   ├── product.dto.js
+│   │   ├── product.schema.js
+│   │   ├── transaction.schema.js
+│   │   ├── user.dto.js
+│   │   ├── user.schema.js
+│   │   ├── vehicle.schema.js
+│   │   ├── wallet.schema.js
+│   │   └── webhook.schema.js
+│   ├── user
+│   │   ├── user.controller.js
+│   │   ├── user.model.js
+│   │   ├── user.routes.js
+│   │   └── wallet.model.js
+│   └── validations
+│       ├── auth.validation.js
+│       ├── payment.validation.js
+│       └── product.validation.js
+├── Dockerfile
 ├── nodemon.json
 ├── package.json
 ├── README.md
@@ -73,34 +140,51 @@ bun run dev
 │   ├── auth
 │   │   ├── auth.controller.ts
 │   │   ├── auth.model.ts
-│   │   └── auth.routes.ts
+│   │   ├── auth.routes.ts
+│   │   └── auth.service.ts
 │   ├── bid
 │   │   ├── bid.controller.ts
 │   │   ├── bid.model.ts
 │   │   └── bid.routes.ts
 │   ├── config
 │   │   ├── db.ts
-│   │   ├── settings.ts
-│   │   └── swagger.ts
-│   ├── emails
-│   │   └── email.service.ts
+│   │   └── settings.ts
+│   ├── dispute
+│   │   ├── dispute.controller.ts
+│   │   ├── dispute.model.ts
+│   │   └── dispute.routes.ts
 │   ├── env.d.ts
 │   ├── express.d.ts
 │   ├── lib
+│   │   ├── bank_codes.ts
+│   │   ├── email.service.ts
+│   │   ├── fincra.service.ts
+│   │   ├── location.data.ts
 │   │   ├── main.ts
-│   │   └── otp.ts
+│   │   └── paystack.service.ts
 │   ├── middlewares
 │   │   ├── auth.middlewares.ts
+│   │   ├── ratelimit.middleware.ts
 │   │   └── upload.middlewares.ts
-│   ├── monoService.ts
+│   ├── notification
+│   │   └── notification.model.ts
+│   ├── payment
+│   │   ├── payment.controller.ts
+│   │   ├── payment.routes.ts
+│   │   ├── transaction.model.ts
+│   │   ├── webhook.controller.ts
+│   │   └── webhook.service.ts
 │   ├── product
 │   │   ├── product.controller.ts
 │   │   ├── product.model.ts
-│   │   └── product.routes.ts
+│   │   ├── product.routes.ts
+│   │   └── product.service.ts
 │   ├── __tests__
 │   │   └── auth.test.ts
 │   ├── types
+│   │   ├── ad.enums.ts
 │   │   ├── bid.schema.ts
+│   │   ├── common.ts
 │   │   ├── electronics.schema.ts
 │   │   ├── gadget.schema.ts
 │   │   ├── generic.schema.ts
@@ -110,20 +194,25 @@ bun run dev
 │   │   ├── phone_number.schema.ts
 │   │   ├── product.dto.ts
 │   │   ├── product.schema.ts
+│   │   ├── transaction.schema.ts
 │   │   ├── user.dto.ts
 │   │   ├── user.schema.ts
-│   │   └── vehicle.schema.ts
+│   │   ├── vehicle.schema.ts
+│   │   ├── wallet.schema.ts
+│   │   └── webhook.schema.ts
 │   ├── user
 │   │   ├── user.controller.ts
 │   │   ├── user.model.ts
-│   │   └── user.routes.ts
+│   │   ├── user.routes.ts
+│   │   └── wallet.model.ts
 │   └── validations
 │       ├── auth.validation.ts
+│       ├── payment.validation.ts
 │       └── product.validation.ts
 ├── templates
 │   ├── password_reset.html
 │   └── verification_email.html
 └── tsconfig.json
 
-18 directories, 52 files
+31 directories, 127 files
 ```

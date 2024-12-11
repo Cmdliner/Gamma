@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { startSession, Types } from "mongoose";
+import { startSession } from "mongoose";
 import Wallet from "../user/wallet.model";
 import FincraService from "../lib/fincra.service";
 import Transaction from "./transaction.model";
@@ -21,6 +21,10 @@ class PaymentController {
             const user = req.user as IUser;
             const bankAccount = user.bank_details?.account_no as number;
             const { amount_to_withdraw } = req.body;
+
+            if (!amount_to_withdraw) {
+                return res.status(422).json({ error: true, message: "amount required!" })
+            }
 
             session.startTransaction();
             // Get user wallet
@@ -80,11 +84,14 @@ class PaymentController {
     }
 
     // !TODO => verify transaction
+    static async verifyPayment(req: Request, res: Response) {
+
+    }
 
     static async getTransactionHistory(req: Request, res: Response) {
         try {
             const user = req.user as IUser;
-            const transactions = await Transaction.find({ bearer: user._id }).sort({ createdAt: -1 });
+            const transactions = await Transaction.find({ bearer: user._id }).sort({ createdAt: -1 }).populate("product");
             return res.status(200).json({ success: "Transactions found", transactions });
         } catch (error) {
             console.error(error);
@@ -256,10 +263,29 @@ class PaymentController {
                 return res.status(404).json({ error: true, message: "User  not found!" });
             }
 
-            await FincraService.withdrawRewards(user);
+            // Ensure user has made a transaction in the last 30 days
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            const transactionsInThePast30Days = await Transaction.find({
+                createdAt: { $gte: thirtyDaysAgo }
+            })
+            const canWithdrawRewards = transactionsInThePast30Days.length ? true : false;
+
+            if (!canWithdrawRewards) {
+                return res.status(400)
+                    .json({
+                            error: true,
+                            message: "Cannot claim rewards. No transactions in the past 30 days",
+                        });
+            }
+
+            const fincraRes = await FincraService.withdrawRewards(user, `${user.id}-${Date.now()}`);
             // Handle response and service of rewards
 
-            return res.status(200).json({success: true, message: "Rewards have been sent to account"})
+            if (fincraRes.data.status !== "failed") {
+                user.rewards.balance = 0;
+                await user.save()
+            }
+            return res.status(200).json({ success: true, message: "Rewards have been sent to account" })
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error withdrawing rewards!" })
@@ -267,7 +293,7 @@ class PaymentController {
     }
 
     static async makeRefund(req: Request, res: Response) {
-        
+
     }
 
 }

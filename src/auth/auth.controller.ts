@@ -10,7 +10,7 @@ import OTP from "./auth.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
-import { encryptBvn, generateOTP } from "../lib/main";
+import { encryptBvn, generateOTP, isValidState } from "../lib/main";
 import PaystackService from "../lib/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../lib/fincra.service";
@@ -51,6 +51,10 @@ class AuthController {
             const DEFAULT_LOCATION = "Lagos State";
             const humanReadableLocation = req.body.location ? req.body.location as string : DEFAULT_LOCATION;
             if (humanReadableLocation) {
+                //  Validate the location
+                if (!isValidState(humanReadableLocation)) {
+                    return res.status(422).json({ error: true, message: "Invalid location format" });
+                }
                 const location: {
                     type: "Point";
                     human_readable: string;
@@ -103,13 +107,15 @@ class AuthController {
             await wallet.save({ session });
 
             user.wallet = wallet._id as Types.ObjectId;
-            await user.save({ session });
 
             // Check if there is a valid referrer and add new user to list of referrals if true
             if (referrer) {
                 referrer.referrals.push(user._id);
+                user.referred_by = referrer._id;
                 await referrer.save({ session });
             }
+
+            await user.save({ session });
 
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
             if (!emailVToken) {
