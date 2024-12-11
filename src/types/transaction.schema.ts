@@ -1,14 +1,27 @@
 import { Document, Types } from "mongoose";
 
 interface ITransaction extends Document {
-    kind: "ad_sponsorhip" | "product_payment" | "payment_refund" | "withdrawal";
+    kind: "ad_sponsorhip" | "product_payment" | "payment_refund" | "withdrawal" | "referral";
     bearer: Types.ObjectId;
     amount: number;
+    status: "success" | "failed" | "pending" | "processing_payment" | "in_dispute" | "resolved";
+    reason: string;
+}
+
+export interface IPaymentTransaction extends ITransaction {
+    payment_method: "bank_transfer" | "card";
     product: Types.ObjectId;
-    status: "success" | "failed" | "pending" | "in_dispute" | "resolved";
-    charge_ref: string;
+    external_ref: string;
+}
+
+export interface IReferralTransaction extends ITransaction {
+    referee: Types.ObjectId;
+}
+
+export interface IWithdrawalTransaction extends ITransaction {
     payment_method: "card" | "bank_transfer";
-    details: string;
+    external_ref: string;
+    from: "rewards" | "wallet"
 }
 
 export default ITransaction;

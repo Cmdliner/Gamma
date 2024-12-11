@@ -3,6 +3,7 @@ import User from "./user.model";
 import IWallet from "../types/wallet.schema";
 import PaystackService from "../lib/paystack.service";
 import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
+import { ReferralTransaction } from "src/payment/transaction.model";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -145,6 +146,20 @@ class UserController {
         }
 
     }
+
+    static async getReferralHistory(req: Request, res: Response) {
+        try {
+            const transactions = await ReferralTransaction.find({ bearer: req.user?._id! });
+            if (!transactions || !transactions.length) {
+                return res.status(404).json({ error: true, message: "No active referrals yet" });
+            }
+            return res.status(200).json({ success: true, message: "Referrals found", transactions });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error getting referral history" });
+        }
+    }
+
 }
 
 export default UserController;

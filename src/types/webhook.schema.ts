@@ -1,6 +1,6 @@
 export interface ChargeSuccessPayload {
     data: {
-        id: 40817;
+        id: number;
         authorization: {
             mode: null;
             redirect: null;

@@ -1,12 +1,12 @@
 import User from "../user/user.model";
 import Product from "../product/product.model";
 import IUser from "../types/user.schema";
-import Transaction from "./transaction.model";
 import Wallet from "../user/wallet.model";
-import { startSession, Types } from "mongoose";
+import { startSession } from "mongoose";
 import { ChargeSuccessPayload } from "../types/webhook.schema";
 import crypto from "crypto";
 import { AdPayments } from "../types/ad.enums";
+import { PaymentTransaction, ReferralTransaction } from "./transaction.model";
 
 class WebhookService {
 
@@ -35,7 +35,7 @@ class WebhookService {
                 // Seller
                 const sellerWallet = await Wallet.findById((product.owner as unknown as IUser).wallet).session(session);
                 if (!sellerWallet) throw new Error("Wallet not found");
-                if(payload.data.amountToSettle > 0) sellerWallet.balance += payload.data.amountToSettle;
+                if (payload.data.amountToSettle > 0) sellerWallet.balance += payload.data.amountToSettle;
                 await sellerWallet.save({ session });
 
 
@@ -45,23 +45,35 @@ class WebhookService {
 
                 if (customer.account_status === "dormant") {
                     customer.account_status = "active";
-                    
+
                     if (customer.referred_by) {
                         const AMOUNT_TO_REWARD = (0.5 / 100) * payload.data.amountToSettle;
                         const referrer = await User.findById(customer.referred_by).session(session);
                         if (!referrer) throw new Error("Referrer not found");
                         referrer.rewards.balance += AMOUNT_TO_REWARD;
                         await referrer.save({ session });
+
+                        // CREATE TRANSACTION FOR THIS REFERRAL REWARD
+                        const referralRewardTransaction = new ReferralTransaction({
+                            kind: "referral",
+                            bearer: referrer._id,
+                            amount: AMOUNT_TO_REWARD,
+                            status: "success",
+                            reason: `Reward for referral of ${customer.first_name + " " + customer.last_name
+                                }`,
+                            referee: customer._id
+                        });
+                        await referralRewardTransaction.save({ session });
                     }
 
                 }
                 await customer.save({ session });
 
                 // Transaction
-                const transaction = await Transaction.findById(payload.data.reference).session(session);
+                const transaction = await PaymentTransaction.findById(payload.data.reference).session(session);
                 if (!transaction) throw new Error("Transaction not found");
                 transaction.status = "success";
-                transaction.charge_ref = payload.data.chargeReference
+                transaction.external_ref = payload.data.chargeReference
                 await transaction.save({ session });
             }
         } catch (error) {
@@ -78,7 +90,7 @@ class WebhookService {
         // Ads expire one week after payment plan chosen
         const SevenDaysFromNow = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
         const OneMonthFromNow = new Date(Date.now() + 37 * 24 * 60 * 60 * 1000);
-        
+
         const session = await startSession();
 
         try {
@@ -98,8 +110,8 @@ class WebhookService {
             if (!product) throw new Error();
 
             // Update transaction status
-            await Transaction.findByIdAndUpdate(payload.data.reference, {
-                charge_ref: payload.data.chargeReference,
+            await PaymentTransaction.findByIdAndUpdate(payload.data.reference, {
+                external_ref: payload.data.chargeReference,
                 status: "success"
             }, { new: true, session });
             await session.commitTransaction();

@@ -10,6 +10,7 @@ import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/
 import Bid from "../bid/bid.model";
 import { AdPayments } from "../types/ad.enums";
 import User from "../user/user.model";
+import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
 
 
 class PaymentController {
@@ -42,12 +43,14 @@ class PaymentController {
             }
 
             // Generate a new transaction for the payout
-            const payoutTransaction = new Transaction({
+            const payoutTransaction = new WithdrawalTransaction({
                 kind: "withdrawal",
                 bearer: req.user?._id!,
                 amount: amount_to_withdraw,
                 status: "pending",
-                payment_method: "bank_transfer"
+                reason: `Payout: From Oyeah wallet to bank account`,
+                payment_method: "bank_transfer",
+                from: "wallet"
             });
             await payoutTransaction.save({ session });
 
@@ -63,9 +66,9 @@ class PaymentController {
                 await wallet.save({ session });
 
                 // Update transaction
-                await Transaction.findByIdAndUpdate(
+                await WithdrawalTransaction.findByIdAndUpdate(
                     transactionRef,
-                    { charge_ref: withdrawalRes.data.reference },
+                    { external_ref: withdrawalRes.data.reference },
                     { new: true, session }
                 );
             }
@@ -164,13 +167,14 @@ class PaymentController {
             }
 
             // CREATE TRANSACTION FOR PRODUCT PURCHASE
-            const itemPurchaseTransaction = new Transaction({
+            const itemPurchaseTransaction = new PaymentTransaction({
                 bearer: userId,
-                kind: "product_payment",
+                // kind: "product_payment",
                 // set to negotiated price or actual price based on whether it's a bid or not
                 amount: bidPrice ? bidPrice : product.price,
+                status: "pending",
                 product: productID,
-                details: `For purchase of ${product.description}`,
+                reason: `Product purchase: \nFor the purchase of ${product.name}`,
                 payment_method
             });
             await itemPurchaseTransaction.save({ session });
@@ -230,13 +234,14 @@ class PaymentController {
             }
 
             // Create Transaction for ad sponsorhsip
-            const transaction = new Transaction({
+            const adsDurationFmt = sponsorship_duration == "1Week" ? "one week" : "one month";
+            const transaction = new PaymentTransaction({
                 kind: "ad_sponsorhip",
                 bearer: req.user?._id,
                 product: product._id,
                 status: "pending",
                 payment_method: payment_method,
-                details: `For sponsorship of product: "${product.description}"`,
+                reason: `Product sponsorship:\n To run ads for ${product.name} for a duration of ${adsDurationFmt}`,
                 amount: sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly
             })
             await transaction.save({ session });
@@ -256,6 +261,7 @@ class PaymentController {
     }
 
     static async withdrawRewards(req: Request, res: Response) {
+        // ! TODO => USE MONGOOSE TRANSACTION FOR ACIDITY
         try {
             const userId = req.user?._id;
             const user = await User.findById(userId);
@@ -265,9 +271,9 @@ class PaymentController {
 
             // Ensure user has made a transaction in the last 30 days
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-            const transactionsInThePast30Days = await Transaction.find({
+            const transactionsInThePast30Days = await PaymentTransaction.find({
                 createdAt: { $gte: thirtyDaysAgo }
-            })
+            });
             const canWithdrawRewards = transactionsInThePast30Days.length ? true : false;
 
             if (!canWithdrawRewards) {
@@ -277,6 +283,17 @@ class PaymentController {
                             message: "Cannot claim rewards. No transactions in the past 30 days",
                         });
             }
+            // Create transaction
+            const payoutTransaction = new WithdrawalTransaction({
+                kind: "withdrawal",
+                bearer: userId,
+                amount: user.rewards.balance,
+                status: "pending",
+                reason: `Withdrawing rewards earned`,
+                payment_method: "bank_transfer",
+                from: "rewards"
+            });
+            await payoutTransaction.save();
 
             const fincraRes = await FincraService.withdrawRewards(user, `${user.id}-${Date.now()}`);
             // Handle response and service of rewards
@@ -285,6 +302,9 @@ class PaymentController {
                 user.rewards.balance = 0;
                 await user.save()
             }
+            await WithdrawalTransaction.findByIdAndUpdate(payoutTransaction._id, {
+                status: "success"
+            });
             return res.status(200).json({ success: true, message: "Rewards have been sent to account" })
         } catch (error) {
             console.error(error);

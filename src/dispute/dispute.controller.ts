@@ -42,7 +42,7 @@ class DisputeController {
             }
 
             // Raise dispute if this req passes validation checks above
-            transaction.status = "resolved";
+            transaction.status = "in_dispute";
             product.status = "in_dispute";
             await product.save();
             await transaction.save();
@@ -73,6 +73,7 @@ class DisputeController {
             }
 
             dispute.status = "resolved";
+            // !TODO => CONFIRM THAT THIS WORKS
             (dispute.transaction as unknown as ITransaction).status = "resolved";
             await dispute.save();
 
