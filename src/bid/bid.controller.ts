@@ -31,6 +31,59 @@ class BidController {
 
     }
 
+    static async getAllReceivedBids(req: Request, res: Response) {
+        try {
+            // CHECK IF USER IS PRODUCT OWNER
+            const isProductOwner = await Product.findOne({ owner: req.user?._id });
+            if (!isProductOwner) {
+                return res.status(400).json({ error: true, message: "Forbidden" });
+            }
+
+            const bids = await Bid.find({ status: "accepted", seller: req.user?._id }).populate("buyer");
+            if (!bids || !bids.length) {
+                return res.status(404).json({ error: true, message: "No bids found!" });
+            }
+            return res.status(200).json({ success: true, message: "Bids found", bids })
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error getting deals" })
+        }
+    }
+
+    static async getAllAcceptedBids(req: Request, res: Response) {
+        try {
+
+            // CHECK IF USER IS PRODUCT OWNER
+            const isProductOwner = await Product.findOne({ owner: req.user?._id });
+            if (!isProductOwner) {
+                return res.status(400).json({ error: true, message: "Forbidden" });
+            }
+
+            const bids = await Bid.find({ seller: req.user?._id!, status: "accepted" }).populate("buyer");
+        } catch (error) {
+
+        }
+    }
+
+    static async getExpiredBids(req: Request, res: Response) {
+        try {
+            const bids = await Bid.find({ buyer: req.user?._id!, status: "accepted" });
+            return res.status(200).json({ success: true, message: "Bids found!", bids });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error finding bids!" })
+        }
+    }
+
+    static async getRejectedBids(req: Request, res: Response) {
+        try {
+            const bids = await Bid.find({"product.owner": req.user?._id!, status: "rejected"}).populate(["product"])
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error fetching rejected bids"})
+        }
+    }
+
     static async createBid(req: Request, res: Response) {
         try {
             const { productID } = req.params;
