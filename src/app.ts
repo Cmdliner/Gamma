@@ -12,6 +12,7 @@ import payment from "./payment/payment.routes";
 import compression from "compression";
 import WebhookController from "./payment/webhook.controller";
 import dispute from "./dispute/dispute.routes";
+import deals from "./payment/deals.routes";
 
 
 const { PORT, API_VERSION } = Settings;
@@ -33,6 +34,7 @@ const app = express();
  app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
  app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
  app.use(`/${API_VERSION}/payments`, AuthMiddleware.requireAuth, payment);
+ app.use(`/${API_VERSION}/deals`, AuthMiddleware.requireAuth, deals);
  app.use(`/${API_VERSION}/bids`, AuthMiddleware.requireAuth, bid);
  app.use(`/${API_VERSION}/disputes`, AuthMiddleware.requireAuth, dispute);
  app.post('/webhooks', WebhookController.confirm);
