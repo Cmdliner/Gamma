@@ -10,7 +10,7 @@ import OTP from "./auth.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
-import { encryptBvn, generateOTP, isValidState } from "../lib/main";
+import { encryptBvn, generateOTP, hashBvn, isValidState } from "../lib/main";
 import PaystackService from "../lib/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../lib/fincra.service";
@@ -262,7 +262,7 @@ class AuthController {
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
             const user = await User.findById(decodedToken.id);
-            const bvnInUse = await User.findOne({ "bvn.encrypted_data": encryptBvn(bvn) });
+            const bvnInUse = await User.findOne({ "bvn.hash": hashBvn(bvn) });
 
             // Check that bvn recors do not exist in db
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
@@ -280,8 +280,14 @@ class AuthController {
             }
 
             const encryptedData = encryptBvn(bvn);
+            const bvnHash = hashBvn(bvn);
 
-            user.bvn = { verification_status: "verified", verified_at: new Date(), encrypted_data: encryptedData };
+            user.bvn = {
+                verification_status: "verified",
+                verified_at: new Date(),
+                encrypted_data: encryptedData,
+                hash: bvnHash,
+            };
             await user.save();
 
             return res.status(200).json({ success: true, message: "Bvn verification successful" });
@@ -331,8 +337,8 @@ class AuthController {
 
 
             // Validate bank account with paystack
-            const isValidBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
-            if (!isValidBankAcc) {
+            const validBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
+            if (!validBankAcc) {
                 return res.status(400).json({ error: true, message: "Invalid bank details " })
             }
 
@@ -342,7 +348,7 @@ class AuthController {
 
             // Commit  transactions to the db
             await session.commitTransaction();
-            return res.status(200).json({ success: true, message: "Bank details added successfully" });
+            return res.status(200).json({ success: true, message: "Bank details added successfully", account: validBankAcc });
 
         } catch (error) {
             console.error(error);
