@@ -3,7 +3,7 @@ import User from "./user.model";
 import IWallet from "../types/wallet.schema";
 import PaystackService from "../lib/paystack.service";
 import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
-import { ReferralTransaction } from "src/payment/transaction.model";
+import { ReferralTransaction } from "../payment/transaction.model";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -149,7 +149,7 @@ class UserController {
 
     static async getReferralHistory(req: Request, res: Response) {
         try {
-            const transactions = await ReferralTransaction.find({ bearer: req.user?._id! });
+            const transactions = await ReferralTransaction.find({ bearer: req.user?._id! }).populate(["product"]);
             if (!transactions || !transactions.length) {
                 return res.status(404).json({ error: true, message: "No active referrals yet" });
             }
