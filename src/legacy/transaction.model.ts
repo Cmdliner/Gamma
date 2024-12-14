@@ -4,7 +4,7 @@ import ITransaction from "./transaction.schema";
 const TransactionSchema = new Schema({
     kind: {
         type: String,
-        enum: ["ad_sponsorhip", "product_payment", "payment_refund", "withdrawal"]
+        enum: ["ad_sponsorship", "product_payment", "payment_refund", "withdrawal"]
     },
     bearer: {
         type: Schema.Types.ObjectId,
