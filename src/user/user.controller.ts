@@ -4,6 +4,8 @@ import IWallet from "../types/wallet.schema";
 import PaystackService from "../lib/paystack.service";
 import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
 import { ReferralTransaction } from "../payment/transaction.model";
+import { isValidState } from "src/lib/main";
+import { GeospatialDataNigeria } from "src/lib/location.data";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -124,7 +126,7 @@ class UserController {
     }
 
     static async updateInfo(req: Request, res: Response) {
-        const { phone_no_1, phone_no_2, location } = req.body;
+        const { phone_no_1, phone_no_2 } = req.body;
 
         // !TODO => VALIDATE INPUTS AND HANDLE VERIFICATION DOCS UPLOAD
 
@@ -135,7 +137,22 @@ class UserController {
 
             if (phone_no_1) user.phone_numbers[0] = phone_no_1
             if (phone_no_2) user.phone_numbers[1] = phone_no_2;
-            if (location) user.location = location;
+            if (req.body.location) {
+                if (!isValidState(req.body.location)) {
+                    return res.status(422).json({ error: true, message: "Invalid location" });
+                }
+                const location = {
+                    human_readable: req.body.location,
+                    coordinates: GeospatialDataNigeria[req.body.location],
+                    type: "Point"
+                }
+                user.location = location;
+            }
+
+            const phoneNumberInUse = await User.findOne({ $or: [{ phone_no_1, phone_no_2 }] });
+            if (phoneNumberInUse) {
+                return res.status(400).json({ error: true, message: "Phone number in user!!" });
+            }
 
             await user.save();
             return res.status(200).json({ success: true, message: "User details updated" });
