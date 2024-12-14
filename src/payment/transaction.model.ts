@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import ITransaction, { IPaymentTransaction, IReferralTransaction, IWithdrawalTransaction } from "src/types/transaction.schema";
+import ITransaction, { IPaymentTransaction, IReferralTransaction, IWithdrawalTransaction } from "../types/transaction.schema";
 
 const TransactionSchema = new Schema({
     bearer: {

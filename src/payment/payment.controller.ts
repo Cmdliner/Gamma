@@ -212,7 +212,7 @@ class PaymentController {
             // VALIDATE SPONSORSHIP DURATION AND PAYMENT METHOD
             const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
             if (error) {
-                return res.status(422).json({ error: true, messaage: error.details[0].message })
+                return res.status(422).json({ error: true, message: error.details[0].message })
             }
 
             // START TRANSACTION
@@ -226,6 +226,11 @@ class PaymentController {
             const isProductOwner = compareObjectID(product.owner, req.user?._id!);
             if (!isProductOwner) {
                 return res.status(400).json({ error: true, message: "Forbidden!!!" });
+            }
+
+            // CHECK IF AD SPONOSRHIP IS NOT YET EXPIRED
+            if ((product.sponsorship?.expires?.valueOf() || 1) > Date.now()) {
+                return res.status(400).json({ error: true, message: "" });
             }
 
             // CHECK IF PRODUCT IS SOLD
@@ -279,9 +284,9 @@ class PaymentController {
             if (!canWithdrawRewards) {
                 return res.status(400)
                     .json({
-                            error: true,
-                            message: "Cannot claim rewards. No transactions in the past 30 days",
-                        });
+                        error: true,
+                        message: "Cannot claim rewards. No transactions in the past 30 days",
+                    });
             }
             // Create transaction
             const payoutTransaction = new WithdrawalTransaction({
@@ -314,6 +319,48 @@ class PaymentController {
 
     static async makeRefund(req: Request, res: Response) {
 
+    }
+
+    static async getSuccessfulDeals(req: Request, res: Response) {
+        try {
+            const deals = await PaymentTransaction.find({ seller: req.user?._id!, status: "success" })
+                .populate(["buyer", "product"]);
+            if (!deals || !deals.length) {
+                return res.status(404).json({ error: true, message: "No deals found!" })
+            }
+            return res.status(200).json({ success: true, deals });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error getting deals at this moment" });
+        }
+    }
+
+    static async getPendingDeals(req: Request, res: Response) {
+        try {
+            const deals = await PaymentTransaction.find({ seller: req.user?._id!, status: "pending" })
+                .populate(["buyer", "product"]);
+            if (!deals || !deals.length) {
+                return res.status(404).json({ error: true, message: "No deals found" })
+            }
+            return res.status(200).json({ success: true, deals });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error getting deals at the moment" });
+        }
+    }
+
+    static async getFailedDeals(req: Request, res: Response) {
+        try {
+            const deals = await PaymentTransaction.find({ seller: req.user?._id!, status: "failed" })
+                .populate(["buyer", "product"]);
+            if (!deals || !deals.length) {
+                return res.status(404).json({ error: true, message: "No deals found" })
+            }
+            return res.status(200).json({ success: true, deals });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error getting deals at the moment" });
+        }
     }
 
 }
