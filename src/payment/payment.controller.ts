@@ -44,7 +44,7 @@ class PaymentController {
 
             // Generate a new transaction for the payout
             const payoutTransaction = new WithdrawalTransaction({
-                kind: "withdrawal",
+                for: "withdrawal",
                 bearer: req.user?._id!,
                 amount: amount_to_withdraw,
                 status: "pending",
@@ -88,7 +88,6 @@ class PaymentController {
 
     // !TODO => verify transaction
     static async verifyPayment(req: Request, res: Response) {
-
     }
 
     static async getTransactionHistory(req: Request, res: Response) {
@@ -169,13 +168,13 @@ class PaymentController {
             // CREATE TRANSACTION FOR PRODUCT PURCHASE
             const itemPurchaseTransaction = new PaymentTransaction({
                 bearer: userId,
-                // kind: "product_payment",
                 // set to negotiated price or actual price based on whether it's a bid or not
                 amount: bidPrice ? bidPrice : product.price,
                 status: "pending",
                 product: productID,
                 reason: `Product purchase: \nFor the purchase of ${product.name}`,
-                payment_method
+                payment_method,
+                for: "product_payment"
             });
             await itemPurchaseTransaction.save({ session });
             const transactionRef = itemPurchaseTransaction.id;
@@ -241,7 +240,7 @@ class PaymentController {
             // Create Transaction for ad sponsorhsip
             const adsDurationFmt = sponsorship_duration == "1Week" ? "one week" : "one month";
             const transaction = new PaymentTransaction({
-                kind: "ad_sponsorhip",
+                for: "ad_sponsorship",
                 bearer: req.user?._id,
                 product: product._id,
                 status: "pending",
@@ -290,7 +289,7 @@ class PaymentController {
             }
             // Create transaction
             const payoutTransaction = new WithdrawalTransaction({
-                kind: "withdrawal",
+                for: "withdrawal",
                 bearer: userId,
                 amount: user.rewards.balance,
                 status: "pending",

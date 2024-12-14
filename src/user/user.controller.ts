@@ -4,8 +4,8 @@ import IWallet from "../types/wallet.schema";
 import PaystackService from "../lib/paystack.service";
 import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
 import { ReferralTransaction } from "../payment/transaction.model";
-import { isValidState } from "src/lib/main";
-import { GeospatialDataNigeria } from "src/lib/location.data";
+import { isValidState } from "../lib/main";
+import { GeospatialDataNigeria } from "../lib/location.data";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -166,7 +166,7 @@ class UserController {
 
     static async getReferralHistory(req: Request, res: Response) {
         try {
-            const transactions = await ReferralTransaction.find({ bearer: req.user?._id! }).populate(["product"]);
+            const transactions = await ReferralTransaction.find({ bearer: req.user?._id! }).populate(["referee"]);
             if (!transactions || !transactions.length) {
                 return res.status(404).json({ error: true, message: "No active referrals yet" });
             }

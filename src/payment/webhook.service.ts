@@ -55,7 +55,7 @@ class WebhookService {
 
                         // CREATE TRANSACTION FOR THIS REFERRAL REWARD
                         const referralRewardTransaction = new ReferralTransaction({
-                            kind: "referral",
+                            for: "referral",
                             bearer: referrer._id,
                             amount: AMOUNT_TO_REWARD,
                             status: "success",

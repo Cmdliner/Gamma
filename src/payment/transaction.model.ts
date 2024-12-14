@@ -14,7 +14,12 @@ const TransactionSchema = new Schema({
     },
     kind: {
         type: String,
-        enum: ["ad_sponsorhip", "product_payment", "payment_refund", "withdrawal", "referral"],
+        enum: ["PaymentTransaction", "ReferralTransaction", "WithdrawalTransaction"],
+        required: true
+    },
+    for: {
+        type: String,
+        enum: ["ad_sponsorship", "product_payment", "payment_refund", "withdrawal", "referral"],
         required: true
     },
     status: {
@@ -26,7 +31,7 @@ const TransactionSchema = new Schema({
         type: String,
         required: true,
     },
-}, { timestamp: true, discriminatorKey: "kind" });
+}, { timestamps: true, discriminatorKey: "kind" });
 
 //   For Product Purchase and Ad sponsorship
 const PaymentTransactionShema = new Schema({
@@ -40,7 +45,9 @@ const PaymentTransactionShema = new Schema({
         required: true
     },
     external_ref: {
-        type: String
+        type: String,
+        unique: true,
+        sparse: true
     }
 });
 

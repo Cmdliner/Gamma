@@ -1,6 +1,6 @@
 import { Types } from "mongoose"
 import crypto, { randomInt } from "crypto";
-import { GeospatialDataNigeria } from "./location.data";
+import { GeospatialDataNigeria } from "../legacy/location.data";
 
 export function compareObjectID(obj1: Types.ObjectId, obj2: Types.ObjectId): boolean {
     return obj1.toString() === obj2.toString();
@@ -46,6 +46,9 @@ export function generateOTP(): string {
     return `${randomInt(9)}${randomInt(6)}${randomInt(9)}${randomInt(8)}`;
 }
 
+export const hashBvn = (bvn: string) => {
+    return crypto.createHash("sha256").update(bvn).digest("hex");
+}
 export const encryptBvn = (bvn: string): string => {
     try {
         const IV_LENGTH = 16;

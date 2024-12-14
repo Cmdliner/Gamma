@@ -24,6 +24,7 @@ interface IUser extends Document {
         verified_at: Date;
         verification_status: "verified" | "unverified",
         encrypted_data: string;
+        hash: string;
     };
     bank_details?: {
         account_no: number;

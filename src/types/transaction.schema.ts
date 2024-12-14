@@ -1,7 +1,8 @@
 import { Document, Types } from "mongoose";
 
 interface ITransaction extends Document {
-    kind: "ad_sponsorhip" | "product_payment" | "payment_refund" | "withdrawal" | "referral";
+    kind: "PaymentTransaction" | "ReferralTransaction" | "WithdrawalTransaction";
+    for: "ad_sponsorship" | "product_payment" | "payment_refund" | "withdrawal" | "referral";
     bearer: Types.ObjectId;
     amount: number;
     status: "success" | "failed" | "pending" | "processing_payment" | "in_dispute" | "resolved";
