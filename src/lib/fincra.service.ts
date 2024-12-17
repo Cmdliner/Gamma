@@ -160,6 +160,9 @@ class FincraService {
                     name: "Customer Name",
                     email: "customer@theirmail.com",
                 },
+                metadata: {
+                    withdrawal_from: "balance"
+                },
                 paymentDestination: "bank_account",
             }, { headers });
 
@@ -182,7 +185,7 @@ class FincraService {
                 business: process.env.FINCRA_BUSINESS_ID,
                 sourceCurrency: "NGN",
                 destinationCurrency: "NGN",
-                amount: user.rewards.balance,
+                amount: `${user.rewards.balance}`,
                 description: "Payment",
                 customerReference: ref,
                 beneficiary: {
@@ -198,6 +201,9 @@ class FincraService {
                 sender: {
                     name: "Oyeah Escrow",
                     email: "payments@oyeahescrow.com",
+                },
+                metadata: {
+                    withdrawal_from: "rewards"
                 },
                 paymentDestination: "bank_account",
             }, { headers });

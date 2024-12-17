@@ -3,7 +3,7 @@ import Product from "../product/product.model";
 import IUser from "../types/user.schema";
 import Wallet from "../user/wallet.model";
 import { startSession } from "mongoose";
-import { ChargeSuccessPayload } from "../types/webhook.schema";
+import { ChargeSuccessPayload, PayoutSuccessPayload } from "../types/webhook.schema";
 import crypto from "crypto";
 import { AdPayments } from "../types/ad.enums";
 import { PaymentTransaction, ReferralTransaction } from "./transaction.model";
@@ -77,7 +77,6 @@ class WebhookService {
                 await transaction.save({ session });
             }
         } catch (error) {
-            console.error(error);
             await session.abortTransaction();
             throw error;
         } finally {
@@ -117,10 +116,19 @@ class WebhookService {
             await session.commitTransaction();
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
             throw error;
         } finally {
             await session.endSession();
+        }
+    }
+
+    static async handleRewardsPayout(payload: PayoutSuccessPayload) {
+        try {
+            if(payload.data.status === "successful") {
+                
+            }
+        } catch (error) {
+            throw error;
         }
     }
 }

@@ -45,4 +45,32 @@ export interface ChargeSuccessPayload {
         amountToSettle: number;
         chargeReference: string;
     }
-} 
+}
+
+
+export interface PayoutSuccessPayload {
+        data: {
+            id: number;
+            amountCharged: number;
+            amountReceived: number;
+            recipient: {
+                name: string;
+                accountNumber: string;
+                type: string;
+                email: string;
+            },
+            fee: number;
+            rate: number;
+            paymentScheme: string;
+            paymentDestination: string;
+            sourceCurrency: string;
+            destinationCurrency: string;
+            status: string; // successful
+            createdAt: Date;
+            updatedAt: Date;
+            reference: string;
+            reason: string;
+            traceId: null,
+            valuedAt: Date;
+        }
+}

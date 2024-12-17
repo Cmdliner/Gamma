@@ -46,9 +46,7 @@ bun run dev
 ## REMEMBER
 - Upload can only error due to client-side errors; upload middleware is very stable
 - Implement https
-- Create referrals in user model
-- Create referral token by default on user model so it would be unique and will never be null.
-- Cannot accept multiple bids on same product item
+    
 - change min limit for images in products validation for all from 1 to 10
 - change ref to uppercase collection name when trying to ref sub_docs in a new model
 

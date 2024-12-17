@@ -265,10 +265,11 @@ class PaymentController {
     }
 
     static async withdrawRewards(req: Request, res: Response) {
-        // ! TODO => USE MONGOOSE TRANSACTION FOR ACIDITY
+        const session = await startSession();
+        session.startTransaction();
         try {
             const userId = req.user?._id;
-            const user = await User.findById(userId);
+            const user = await User.findById(userId).session(session);
             if (!user) {
                 return res.status(404).json({ error: true, message: "User  not found!" });
             }
@@ -277,14 +278,15 @@ class PaymentController {
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
             const transactionsInThePast30Days = await PaymentTransaction.find({
                 createdAt: { $gte: thirtyDaysAgo }
-            });
+            }).session(session);
             const canWithdrawRewards = transactionsInThePast30Days.length ? true : false;
+            // /* !REMOVE IN PROD */ const canWithdrawRewards = true;
 
             if (!canWithdrawRewards) {
                 return res.status(400)
                     .json({
                         error: true,
-                        message: "Cannot claim rewards. No transactions in the past 30 days",
+                        message: "Cannot claim rewards. No 'transactions' in the past 30 days",
                     });
             }
             // Create transaction
@@ -297,22 +299,23 @@ class PaymentController {
                 payment_method: "bank_transfer",
                 from: "rewards"
             });
-            await payoutTransaction.save();
+            await payoutTransaction.save({ session });
 
-            const fincraRes = await FincraService.withdrawRewards(user, `${user.id}-${Date.now()}`);
+            const fincraRes = await FincraService.withdrawRewards(user, payoutTransaction.id);
             // Handle response and service of rewards
 
-            if (fincraRes.data.status !== "failed") {
-                user.rewards.balance = 0;
-                await user.save()
-            }
+            if (fincraRes.data.status === "failed") { throw new Error() }
             await WithdrawalTransaction.findByIdAndUpdate(payoutTransaction._id, {
                 status: "success"
-            });
+            }).session(session);
+            await session.commitTransaction();
             return res.status(200).json({ success: true, message: "Rewards have been sent to account" })
         } catch (error) {
+            await session.abortTransaction();
             console.error(error);
             return res.status(500).json({ error: true, message: "Error withdrawing rewards!" })
+        } finally {
+            session.endSession();
         }
     }
 

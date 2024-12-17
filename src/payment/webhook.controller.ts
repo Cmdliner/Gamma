@@ -25,7 +25,7 @@ class WebhookController {
                 break;
             case "charge.successful":
                 try {
-                    if(payload.data.metadata.payment_for === "product_payment") {
+                    if (payload.data.metadata.payment_for === "product_payment") {
                         await WebhookService.handleSuccessfulProductPurchase(payload);
                     } else if (payload.data.metadata.payment_for === "ad_sponsorship") {
                         await WebhookService.handleProductSponsorPayment(payload);
@@ -34,6 +34,18 @@ class WebhookController {
                 } catch (error) {
                     return res.status(500).json({ error: true, message: "Error purchasing product" });
                 }
+            case "payout.successful":
+                try {
+                    if(payload.data.metadata.withdrawal_from === "balance") {
+                        // !TODO
+                    } else if(payload.data.metadata.withdrawal_from === "rewards") {
+                        // !TODO
+                    }
+                } catch (error) {
+                    console.error(error);
+                    return res.status(500).json({ error: true, message: "Error validationg payout!" });
+                }
+
             default:
                 console.log("That event not found");
         }
