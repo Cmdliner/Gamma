@@ -7,6 +7,7 @@ interface IUser extends Document {
     first_name: string;
     middle_name?: string;
     last_name: string;
+    device_push_token?: string;
     display_pic: string;
     dob: Date,
     location?: {

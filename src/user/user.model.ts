@@ -17,6 +17,11 @@ const UserSchema = new Schema({
     display_pic: {
         type: String
     },
+    device_push_token: {
+        type: String,
+        sparse: true,
+        unique: true
+    },
     interested_categories: [{
         type: String,
         enum: allowedCategories,

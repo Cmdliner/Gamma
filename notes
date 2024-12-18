@@ -5,3 +5,4 @@
 - How much you made from each referral; active referrals
 - rm sensitive data like balance, bvn, passwords, rewards from all endpoints
 - Especially when a diff user is having access to another person data
+- How do you update push tokens on login
