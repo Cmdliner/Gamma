@@ -131,6 +131,8 @@ class WebhookService {
             throw error;
         }
     }
+
+    static async handleBalancePayout(payload: any) {}
 }
 
 export default WebhookService;

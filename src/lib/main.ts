@@ -1,6 +1,6 @@
 import { Types } from "mongoose"
 import crypto, { randomInt } from "crypto";
-import { GeospatialDataNigeria } from "../legacy/location.data";
+import { GeospatialDataNigeria } from "../lib/location.data";
 
 export function compareObjectID(obj1: Types.ObjectId, obj2: Types.ObjectId): boolean {
     return obj1.toString() === obj2.toString();
