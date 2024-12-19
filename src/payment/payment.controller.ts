@@ -340,7 +340,7 @@ class PaymentController {
             await otp.save();
             await EmailService.sendVerificationEmail(req.user?.email!, fullName, otp.token);
 
-            return res.status(200).json({ success: true, seller_id: (transaction.product as IProduct).owner });
+            return res.status(200).json({ success: true, seller_id: (transaction.product as unknown as IProduct).owner });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Could not send funds to seller" });
