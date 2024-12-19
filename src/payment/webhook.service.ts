@@ -32,7 +32,7 @@ class WebhookService {
                 product.status = "sold";
                 await product.save({ session });
 
-                // Seller
+                /* /. Seller
                 const sellerWallet = await Wallet.findById((product.owner as unknown as IUser).wallet).session(session);
                 if (!sellerWallet) throw new Error("Wallet not found");
                 if (payload.data.amountToSettle > 0) sellerWallet.balance += payload.data.amountToSettle;
@@ -67,14 +67,17 @@ class WebhookService {
                     }
 
                 }
-                await customer.save({ session });
+                await customer.save({ session }); */
 
                 // Transaction
                 const transaction = await PaymentTransaction.findById(payload.data.reference).session(session);
                 if (!transaction) throw new Error("Transaction not found");
-                transaction.status = "success";
-                transaction.external_ref = payload.data.chargeReference
-                await transaction.save({ session });
+                if (payload.data.amountToSettle > 0) {
+                    transaction.status = "success";
+                    transaction.external_ref = payload.data.chargeReference
+                    await transaction.save({ session });
+                }
+
             }
         } catch (error) {
             await session.abortTransaction();

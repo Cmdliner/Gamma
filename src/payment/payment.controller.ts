@@ -2,15 +2,18 @@ import { Request, Response } from "express";
 import { startSession } from "mongoose";
 import Wallet from "../user/wallet.model";
 import FincraService from "../lib/fincra.service";
-import Transaction from "./transaction.model";
+import Transaction, { ReferralTransaction } from "./transaction.model";
 import IUser from "../types/user.schema";
 import Product from "../product/product.model";
-import { compareObjectID } from "../lib/main";
+import { compareObjectID, generateOTP } from "../lib/main";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../bid/bid.model";
 import { AdPayments } from "../types/ad.enums";
 import User from "../user/user.model";
 import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
+import EmailService from "src/lib/email.service";
+import OTP from "src/auth/auth.model";
+import IProduct from "src/types/product.schema";
 
 
 class PaymentController {
@@ -319,8 +322,123 @@ class PaymentController {
         }
     }
 
-    static async makeRefund(req: Request, res: Response) {
 
+    static async initiateFundsTransfer(req: Request, res: Response) {
+        try {
+            const { transactionID } = req.params;
+            const transaction = await PaymentTransaction.findOne({
+                status: "success",
+                bearer: req.user?._id!,
+                id: transactionID,
+            }).populate("product");
+            if (!transaction) {
+                return res.status(404).json({ error: true, message: "Transaction not found!" });
+            }
+            // Send otp to user to confirm transaction
+            const fullName = `${req.user?.first_name} ${req.user?.last_name}`;
+            const otp = new OTP({ kinds: "funds_approval", owner: req.user!, token: generateOTP });
+            await otp.save();
+            await EmailService.sendVerificationEmail(req.user?.email!, fullName, otp.token);
+
+            return res.status(200).json({ success: true, seller_id: (transaction.product as IProduct).owner });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Could not send funds to seller" });
+        }
+    }
+
+    static async transferfunds(req: Request, res: Response) {
+        const session = await startSession();
+        try {
+            session.startTransaction();
+            const { seller_id, transaction_id, otp } = req.body;
+
+            // !todo => verify otp
+            const now = new Date();
+            const otpMatch = await OTP.findOneAndDelete({
+                kind: "funds_approval",
+                owner: req.user?._id!,
+                token: otp,
+                expires: { $gte: now },
+            }).session(session);
+            if (!otpMatch) {
+                return res.status(400).json({ error: true, message: "Invalid OTP!" })
+            }
+            const transaction = await PaymentTransaction.findOne({
+                id: transaction_id,
+                for: "product_payment"
+            });
+            const seller = await User.findById(seller_id);
+            if (!seller) {
+                return res.status(404).json({ error: true, message: "Seller not found!" });
+            }
+            // Seller
+            const sellerWallet = await Wallet.findById((seller.wallet)).session(session);
+            if (!sellerWallet) throw new Error("Wallet not found");
+            sellerWallet.balance += transaction.amount;
+            await sellerWallet.save({ session });
+
+
+            // Customer
+            const customer = await User.findById(transaction.bearer).session(session);
+            if (!customer) throw new Error("Customer not found");
+
+            if (customer.account_status === "dormant") {
+                customer.account_status = "active";
+
+                if (customer.referred_by) {
+                    const AMOUNT_TO_REWARD = (0.5 / 100) * transaction.amount;
+                    const referrer = await User.findById(customer.referred_by).session(session);
+                    if (!referrer) throw new Error("Referrer not found");
+                    referrer.rewards.balance += AMOUNT_TO_REWARD;
+                    await referrer.save({ session });
+
+                    // CREATE TRANSACTION FOR THIS REFERRAL REWARD
+                    const referralRewardTransaction = new ReferralTransaction({
+                        for: "referral",
+                        bearer: referrer._id,
+                        amount: AMOUNT_TO_REWARD,
+                        status: "success",
+                        reason: `Reward for referral of ${customer.first_name + " " + customer.last_name}`,
+                        referee: customer._id
+                    });
+                    await referralRewardTransaction.save({ session });
+                }
+
+            }
+            await customer.save({ session });
+            await session.commitTransaction();
+            return res.status(200).json({ success: true });
+        } catch (error) {
+            await session.abortTransaction();
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error sending funds!" });
+        } finally {
+            await session.endSession()
+        }
+    }
+
+    // BUYER REQUESTS REFUND
+    static async requestRefund(req: Request, res: Response) {
+        try {
+            // SEND NOTIFICATION TO SELLER
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Failed to request refund" });
+        }
+    }
+
+    // SELLER APPROVES REFUND
+    static async approveRefund(req: Request, res: Response) {
+        try {
+            // CHANGE PREVIOUS TRANSACTION STATE TO FAILED
+            // UNLOCK PRODUCT
+            // MOVE MONEY FROM ESCROW TO CUSTOMER ACCOUNT
+            // THATS ALL FOR NOW (RETURN RESPONSE)
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Refund approval failed!" });
+        }
     }
 
     static async getSuccessfulDeals(req: Request, res: Response) {

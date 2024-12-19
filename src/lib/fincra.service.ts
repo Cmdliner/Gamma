@@ -128,6 +128,26 @@ class FincraService {
         }
     }
 
+    /**
+    * DOES THE SAME WORK AS WEBHOOKS JUST ACTS AS A FAILSAFE INCASE WEBHOOKS ARENT RECEIVED
+    **/
+    static async verifyPaymentStatus(ref: string) {
+        try {
+            const verifyPaymentEndpoint = `${FincraService.FINCRA_BASE_URL}/checkout/payments/merchant-reference/${ref}`;
+
+            const res = await axios.get(verifyPaymentEndpoint, {
+                headers: {
+                    "Accept": "application/json",
+                    "x-business-id": process.env.FINCRA_BUSINESS_ID
+                }
+            });
+            return res.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
     static async withdrawFunds(user: IUser, ref: string, amount: number, bank_account: number) {
         const OYEAH_CUT = (5 / 100) * amount;
         const PROCESSING_FEE = 200
