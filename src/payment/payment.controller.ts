@@ -23,7 +23,6 @@ class PaymentController {
 
         try {
             const user = req.user as IUser;
-            const bankAccount = user.bank_details?.account_no as number;
             const { amount_to_withdraw } = req.body;
 
             if (!amount_to_withdraw) {
@@ -61,7 +60,7 @@ class PaymentController {
             const transactionRef = payoutTransaction.id;
 
             // Attempt to transfer to user bank acc using fincra
-            const withdrawalRes = await FincraService.withdrawFunds(user, transactionRef, amount_to_withdraw, bankAccount);
+            const withdrawalRes = await FincraService.withdrawFunds(user, transactionRef, amount_to_withdraw);
 
             // Update balance and transaction once payout is not failed
             if (withdrawalRes.data.status !== "failed") {
@@ -184,7 +183,7 @@ class PaymentController {
 
 
             // Initiate payment with fincra then commit transaction to db
-            const fincraResponse = await FincraService.collectPayment(product, req.user!, transactionRef, payment_method, bidPrice);
+            const fincraResponse = await FincraService.purchaseItem(product, req.user!, transactionRef, payment_method, bidPrice);
             await session.commitTransaction();
 
             return res.status(200).json({ success: true, transaction_id: itemPurchaseTransaction._id, fincra: fincraResponse });
@@ -322,7 +321,6 @@ class PaymentController {
         }
     }
 
-
     static async initiateFundsTransfer(req: Request, res: Response) {
         try {
             const { transactionID } = req.params;
@@ -338,6 +336,8 @@ class PaymentController {
             const fullName = `${req.user?.first_name} ${req.user?.last_name}`;
             const otp = new OTP({ kinds: "funds_approval", owner: req.user!, token: generateOTP });
             await otp.save();
+
+            // Send email
             await EmailService.sendVerificationEmail(req.user?.email!, fullName, otp.token);
 
             return res.status(200).json({ success: true, seller_id: (transaction.product as unknown as IProduct).owner });
@@ -353,7 +353,7 @@ class PaymentController {
             session.startTransaction();
             const { seller_id, transaction_id, otp } = req.body;
 
-            // !todo => verify otp
+            // Validate and verify  otp entered
             const now = new Date();
             const otpMatch = await OTP.findOneAndDelete({
                 kind: "funds_approval",
@@ -364,22 +364,30 @@ class PaymentController {
             if (!otpMatch) {
                 return res.status(400).json({ error: true, message: "Invalid OTP!" })
             }
+
+            // Find transaction and update its status
             const transaction = await PaymentTransaction.findOne({
                 id: transaction_id,
                 for: "product_payment"
-            });
-            const seller = await User.findById(seller_id);
+            }).session(session);
+            if (!transaction) {
+                return res.status(404).json({ error: true, message: "Transaction not found!" });
+            }
+            transaction.status = "success";
+            await transaction.save({ session });
+
+            // Update seller's wallet balance
+            const seller = await User.findById(seller_id).session(session);
             if (!seller) {
                 return res.status(404).json({ error: true, message: "Seller not found!" });
             }
-            // Seller
             const sellerWallet = await Wallet.findById((seller.wallet)).session(session);
             if (!sellerWallet) throw new Error("Wallet not found");
             sellerWallet.balance += transaction.amount;
             await sellerWallet.save({ session });
 
 
-            // Customer
+            // Activate customer's account if dormant
             const customer = await User.findById(transaction.bearer).session(session);
             if (!customer) throw new Error("Customer not found");
 
