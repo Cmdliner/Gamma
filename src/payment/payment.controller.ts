@@ -33,15 +33,20 @@ class PaymentController {
             session.startTransaction();
             // Get user wallet
             const wallet = await Wallet.findById(user.wallet).session(session);
-            if (!wallet) return res.status(404).json({ error: true, message: "Error finding wallet" });
+            if (!wallet) {
+                await session.abortTransaction();
+                return res.status(404).json({ error: true, message: "Error finding wallet" });
+            }
 
             // Make sure user does not try to add to their balance by atempting to withdraw 
             // negative balance or less than the MIN_WITHDRAW_VALUE
             if (amount_to_withdraw < MIN_WITHDRAWAL_VALUE) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Amount too small" });
             }
             // Check amount to withdraw
             if (amount_to_withdraw > wallet.balance) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Insufficient funds!" });
             }
 
@@ -97,10 +102,10 @@ class PaymentController {
         try {
             const user = req.user as IUser;
             const transactions = await Transaction.find({ bearer: user._id }).sort({ createdAt: -1 }).populate("product");
-            return res.status(200).json({ success: "Transactions found", transactions });
+            return res.status(200).json({ success: true, message: "Transactions found", transactions });
         } catch (error) {
             console.error(error);
-            return res.send(500).json({ error: "Error getting transaction history" });
+            return res.send(500).json({ error: true, message: "Error getting transaction history" });
         }
     }
 
@@ -110,12 +115,15 @@ class PaymentController {
             const userId = req.user?._id;
             const { productID, bidID } = req.params;
             const { payment_method } = req.body;
+            session.startTransaction();
+
             if (!payment_method) {
                 return res.status(422).json({ error: true, message: "Payment method required!" })
             }
 
-            const user = await User.findById(userId);
+            const user = await User.findById(userId).session(session);
             if (!user) {
+                await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "User not found!" })
             }
 
@@ -123,12 +131,14 @@ class PaymentController {
             // VALIDATION LOGIC
             const { error } = ItemPurchaseValidation.validate({ payment_method });
             if (error) {
-                return res.status(500).json({ error: true, message: error.details[0].message });
+                await session.abortTransaction();
+                return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
-            session.startTransaction();
+            
             const product = await Product.findById(productID).session(session);
             if (!product || product.status !== "available") {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Product not available!" });
             }
 
@@ -136,7 +146,10 @@ class PaymentController {
             let bidPrice = undefined; // Initialize bid price
             if (bidID) {
                 const bid = await Bid.findOne({ _id: bidID, status: "accepted" }).session(session);
-                if (!bid) return res.status(404).json({ error: true, message: "Couldn't find bid" });
+                if (!bid) {
+                    await session.abortTransaction();
+                    return res.status(404).json({ error: true, message: "Couldn't find bid" });
+                }
 
                 // Ensure bid has not yet expired
                 if (bid.expires.valueOf() < Date.now()) {
@@ -165,6 +178,7 @@ class PaymentController {
                 }
             }, { new: true, session });
             if (!updatedProduct) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Product is currently unavaliable for purchase" });
             }
 
@@ -193,7 +207,7 @@ class PaymentController {
         } catch (error) {
             await session.abortTransaction();
             console.error(error);
-            return res.status(500).json({ error: "Error purchasing item" });
+            return res.status(500).json({ error: true, message: "Error purchasing item" });
         } finally {
             await session.endSession();
         }
@@ -214,7 +228,7 @@ class PaymentController {
             // VALIDATE SPONSORSHIP DURATION AND PAYMENT METHOD
             const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
             if (error) {
-                return res.status(422).json({ error: true, message: error.details[0].message })
+                return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
             // START TRANSACTION
@@ -222,21 +236,25 @@ class PaymentController {
 
             const product = await Product.findById(productID).session(session);
             if (!product) {
+                await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "Product not found!" });
             }
 
             const isProductOwner = compareObjectID(product.owner, req.user?._id!);
             if (!isProductOwner) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Forbidden!!!" });
             }
 
             // CHECK IF AD SPONOSRHIP IS NOT YET EXPIRED
             if ((product.sponsorship?.expires?.valueOf() || 1) > Date.now()) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "" });
             }
 
             // CHECK IF PRODUCT IS SOLD
             if (product.status === "sold") {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Product sold!" })
             }
 
@@ -274,6 +292,7 @@ class PaymentController {
             const userId = req.user?._id;
             const user = await User.findById(userId).session(session);
             if (!user) {
+                await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "User  not found!" });
             }
 
@@ -286,6 +305,7 @@ class PaymentController {
             // /* !REMOVE IN PROD */ const canWithdrawRewards = true;
 
             if (!canWithdrawRewards) {
+                await session.abortTransaction();
                 return res.status(400)
                     .json({
                         error: true,
@@ -312,13 +332,15 @@ class PaymentController {
                 status: "success"
             }).session(session);
             await session.commitTransaction();
-            return res.status(200).json({ success: true, message: "Rewards have been sent to account" })
+
+            return res.status(200).json({ success: true, message: "Rewards have been sent to account" });
+
         } catch (error) {
             await session.abortTransaction();
             console.error(error);
             return res.status(500).json({ error: true, message: "Error withdrawing rewards!" })
         } finally {
-            session.endSession();
+            await session.endSession();
         }
     }
 
@@ -363,6 +385,7 @@ class PaymentController {
                 expires: { $gte: now },
             }).session(session);
             if (!otpMatch) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Invalid OTP!" })
             }
 
@@ -372,6 +395,7 @@ class PaymentController {
                 for: "product_payment"
             }).session(session);
             if (!transaction) {
+                await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "Transaction not found!" });
             }
             transaction.status = "success";
@@ -380,6 +404,7 @@ class PaymentController {
             // Update seller's wallet balance
             const seller = await User.findById(seller_id).session(session);
             if (!seller) {
+                await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "Seller not found!" });
             }
             const sellerWallet = await Wallet.findById((seller.wallet)).session(session);

@@ -4,7 +4,6 @@ import BidController from "./bid.controller";
 const bid = Router();
 
 bid.get("/", BidController.getAllReceivedBids);
-bid.get("/expired", BidController.getExpiredBids);
 bid.get("/rejected", BidController.getRejectedBids);
 bid.get("/accepted", BidController.getAllAcceptedBids);
 bid.get("/:productID/all", BidController.getAllBidsForProduct);

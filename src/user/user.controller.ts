@@ -38,22 +38,6 @@ class UserController {
         }
     }
 
-    static async getReferredUsers(req: Request, res: Response) {
-        try {
-            const user = await User.findById(req.user?._id)
-                .populate("referrals")
-                .select("referrals");
-            if (!user || !user.referrals || !user.referrals.length) {
-                return res.status(404).json({ error: true, message: "No referrals found" });
-            }
-
-            return res.status(200).json({ success: true, referrals: user.referrals });
-        } catch (error) {
-            console.error(error)
-            return res.status(500).json({ error: true, message: "Error finding referrals" });
-        }
-    }
-
     static async getReferralInfo(req: Request, res: Response) {
         try {
             const user = await User.findById(req.user?._id).populate("referrals", "first_name", "last_name");
@@ -174,10 +158,7 @@ class UserController {
     static async getReferralHistory(req: Request, res: Response) {
         try {
             const transactions = await ReferralTransaction.find({ bearer: req.user?._id! }).populate(["referee"]);
-            if (!transactions || !transactions.length) {
-                return res.status(404).json({ error: true, message: "No active referrals yet" });
-            }
-            return res.status(200).json({ success: true, message: "Referrals found", transactions });
+            return res.status(200).json({ success: true, transactions });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error getting referral history" });

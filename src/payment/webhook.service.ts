@@ -22,6 +22,7 @@ class WebhookService {
     static async handleSuccessfulProductPurchase(payload: ChargeSuccessPayload) {
         const session = await startSession();
         try {
+            session.startTransaction();
             if (payload.data.status === "success") {
                 const { product_id } = payload.data.metadata;
 
@@ -38,7 +39,7 @@ class WebhookService {
                     transaction.external_ref = payload.data.chargeReference
                     await transaction.save({ session });
                 }
-
+                await session.commitTransaction();
             }
         } catch (error) {
             await session.abortTransaction();

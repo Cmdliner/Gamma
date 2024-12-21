@@ -8,7 +8,6 @@ const user = Router();
 user.get("/profile-info", UserController.getUserInfo);
 user.get("/my-wallet", UserController.getWalletBalance);
 user.get("/referral-history", UserController.getReferralHistory);
-user.get("/referrals", UserController.getReferredUsers);
 user.get("/referral-info", UserController.getReferralInfo);
 user.put("/bank-details", UserController.editBankAccountDetails);
 user.put("/info", UserController.updateInfo);
