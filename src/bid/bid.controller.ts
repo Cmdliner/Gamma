@@ -179,7 +179,7 @@ class BidController {
             const { bidID } = req.params;
             const bid = await Bid.findOneAndDelete({ id: bidID, buyer: req.user?._id! });
             if (!bid) throw new Error("Could not delete that bid");
-            return res.status(200).json({ error: true, message: "Bid deleted successfuly" })
+            return res.status(200).json({ success: true, message: "Bid deleted successfuly" })
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error deleting bid" });

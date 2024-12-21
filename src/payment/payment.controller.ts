@@ -11,12 +11,13 @@ import Bid from "../bid/bid.model";
 import { AdPayments } from "../types/ad.enums";
 import User from "../user/user.model";
 import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
-import EmailService from "src/lib/email.service";
-import OTP from "src/auth/auth.model";
-import IProduct from "src/types/product.schema";
+import EmailService from "../lib/email.service";
+import OTP from "../auth/auth.model";
+import IProduct from "../types/product.schema";
 
 
 class PaymentController {
+
     static async withdrawFromWallet(req: Request, res: Response) {
         const MIN_WITHDRAWAL_VALUE = 500;
         const session = await startSession();
@@ -451,8 +452,16 @@ class PaymentController {
 
     static async getSuccessfulDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentTransaction.find({ seller: req.user?._id!, status: "success" })
-                .populate(["buyer", "product"]);
+            const deals = await PaymentTransaction.find({
+                $or: [{ buyer: req.user?._id!, "product.owner": req.user?._id! }],
+                status: { $in: ["success"] },
+            }).populate("bearer").populate({
+                path: "product",
+                populate: {
+                    path: "bearer",
+                    model: "User"
+                }
+            });
             if (!deals || !deals.length) {
                 return res.status(404).json({ error: true, message: "No deals found!" })
             }
@@ -463,10 +472,18 @@ class PaymentController {
         }
     }
 
-    static async getPendingDeals(req: Request, res: Response) {
+    static async getDisputedDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentTransaction.find({ seller: req.user?._id!, status: "pending" })
-                .populate(["buyer", "product"]);
+            const deals = await PaymentTransaction.find({
+                $or: [{ buyer: req.user?._id!, "product.owner": req.user?._id! }],
+                status: "in_dispute",
+            }).populate("bearer").populate({
+                path: "product",
+                populate: {
+                    path: "bearer",
+                    model: "User"
+                }
+            });
             if (!deals || !deals.length) {
                 return res.status(404).json({ error: true, message: "No deals found" })
             }
@@ -479,8 +496,16 @@ class PaymentController {
 
     static async getFailedDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentTransaction.find({ seller: req.user?._id!, status: "failed" })
-                .populate(["buyer", "product"]);
+            const deals = await PaymentTransaction.find({
+                $or: [{ "product.owner": req.user?._id!, bearer: req.user?._id! }],
+                status: "failed",
+            }).populate("bearer").populate({
+                path: "product",
+                populate: {
+                    path: "bearer",
+                    model: "User",
+                },
+            });
             if (!deals || !deals.length) {
                 return res.status(404).json({ error: true, message: "No deals found" })
             }
@@ -488,6 +513,29 @@ class PaymentController {
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error getting deals at the moment" });
+        }
+    }
+
+    static async getOngoingDeals(req: Request, res: Response) {
+        try {
+            const deals = await PaymentTransaction.find({
+                $or: [{ buyer: req.user?._id!, "product.owner": req.user?._id! }],
+                status: "in_escrow",
+            }).populate("bearer").populate({
+                path: "product",
+                populate: {
+                    path: "bearer",
+                    model: "User"
+                }
+            });
+            if (!deals || !deals.length) {
+                return res.status(404).json({ error: true, message: "User has no ongoing transactions" });
+            }
+            return res.status(200).json({ success: true, deals });
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error getting ongoing dealas" })
         }
     }
 

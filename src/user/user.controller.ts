@@ -6,6 +6,7 @@ import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
 import { ReferralTransaction } from "../payment/transaction.model";
 import { isValidState } from "../lib/main";
 import { GeospatialDataNigeria } from "../lib/location.data";
+import IUser from "src/types/user.schema";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -21,18 +22,6 @@ class UserController {
         }
     }
 
-    static async getReferralToken(req: Request, res: Response) {
-        try {
-            const user = await User.findById(req.user?._id!);
-            if (!user) return res.status(404).json({ error: true, message: "User not found!" });
-
-            return res.status(200).json({ success: true, referral_code: user.referral_code });
-
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: true, message: "Error fetching refeferral token" });
-        }
-    }
 
     static async getWalletBalance(req: Request, res: Response) {
         try {
@@ -65,6 +54,24 @@ class UserController {
         }
     }
 
+    static async getReferralInfo(req: Request, res: Response) {
+        try {
+            const user = await User.findById(req.user?._id).populate("referrals", "first_name", "last_name");
+            if (!user) {
+                return res.status(404).json({ error: true, message: "User not found!" });
+            }
+            const referral_code = user.referral_code;
+            const total_referrals = user.referrals.length;
+            const active_referrals = (user.referrals as unknown as IUser[])
+                .filter((referral: IUser) => referral.account_status === "active").length;
+            const rewards_balance = user.rewards.balance;
+
+            return res.status(200).json({ success: true, info: { referral_code, total_referrals, active_referrals, rewards_balance } })
+        } catch (error) {
+
+        }
+    }
+
     static async editBankAccountDetails(req: Request, res: Response) {
         try {
             const { account_no, bank_code } = req.body;
@@ -90,7 +97,7 @@ class UserController {
             }
 
             await User.findByIdAndUpdate(req.user?._id!, { "bank_details.account_no": account_no }, { new: true });
-            return res.status(200).json({ error: true, message: "Bank details updated successfully!" });
+            return res.status(200).json({ success: true, message: "Bank details updated successfully!" });
 
         } catch (error) {
             console.error(error);
@@ -118,7 +125,7 @@ class UserController {
             user.display_pic = uploadPath;
             await user.save();
 
-            return res.status(200).json({ error: true, message: "Display picture upload successful" });
+            return res.status(200).json({ success: true, message: "Display picture upload successful" });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error updating display picture" })

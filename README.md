@@ -36,7 +36,6 @@ bun run dev
 
 
 ## TODOS
-- Product payment purchase can be ongoing (after payment to escrow)
 - User can then decide to raise dispute, call seller or initiate settlement
 - Deals ongoing, completed, disputed (from the buyer's side + seller's side);
 - deals (pending, accepted )
