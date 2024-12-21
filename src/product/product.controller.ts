@@ -213,14 +213,14 @@ class ProductController {
             const similarProdInDb = await Gadget.findOne({
                 name: gadgetData.name,
                 description: gadgetData.description,
-                price: gadgetData.price,
-                "location.human_readable": gadgetData.location.human_readable
+                price: gadgetData.price
             });
             if (similarProdInDb) {
                 return res.status(400).json({ error: true, message: "A similar product exists" });
             }
 
-            const newGadget = await Gadget.create(gadgetData);
+            const newGadget = new Gadget(gadgetData);
+            await newGadget.save();
             if (!newGadget) {
                 return res.status(400).json({ error: true, message: "Error uploading gadget" });
             }

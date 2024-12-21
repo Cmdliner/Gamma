@@ -160,7 +160,7 @@ class BidController {
     static async deleteBid(req: Request, res: Response) {
         try {
             const { bidID } = req.params;
-            const bid = await Bid.findOneAndDelete({ id: bidID, buyer: req.user?._id! });
+            const bid = await Bid.findOneAndDelete({ _id: bidID, buyer: req.user?._id! });
             if (!bid) throw new Error("Could not delete that bid");
             return res.status(200).json({ success: true, message: "Bid deleted successfuly" })
         } catch (error) {

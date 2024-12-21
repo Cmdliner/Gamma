@@ -4,7 +4,6 @@ import { ChargeSuccessPayload, PayoutSuccessPayload } from "../types/webhook.sch
 import crypto from "crypto";
 import { AdPayments } from "../types/ad.enums";
 import { PaymentTransaction } from "./transaction.model";
-import User from "src/user/user.model";
 
 class WebhookService {
 
@@ -72,13 +71,6 @@ class WebhookService {
                 "sponsorship.expires": expiry
             }, { new: true, session });
             if (!product) throw new Error();
-
-            // Activate user's account if dormant
-            const user = await User.findById(product.owner).session(session);
-            if (user.account_status === "dormant") {
-                user.account_status = "active";
-                await user.save({ session });
-            }
 
             // Update transaction status
             await PaymentTransaction.findByIdAndUpdate(payload.data.reference, {

@@ -348,16 +348,17 @@ class PaymentController {
         try {
             const { transactionID } = req.params;
             const transaction = await PaymentTransaction.findOne({
-                status: "success",
+                status: "in_escrow",
+                for: "product_payment",
                 bearer: req.user?._id!,
-                id: transactionID,
+                _id: transactionID,
             }).populate("product");
             if (!transaction) {
                 return res.status(404).json({ error: true, message: "Transaction not found!" });
             }
             // Send otp to user to confirm transaction
             const fullName = `${req.user?.first_name} ${req.user?.last_name}`;
-            const otp = new OTP({ kinds: "funds_approval", owner: req.user!, token: generateOTP });
+            const otp = new OTP({ kind: "funds_approval", owner: req.user!, token: generateOTP() });
             await otp.save();
 
             // Send email
@@ -391,8 +392,9 @@ class PaymentController {
 
             // Find transaction and update its status
             const transaction = await PaymentTransaction.findOne({
-                id: transaction_id,
-                for: "product_payment"
+                _id: transaction_id,
+                for: "product_payment",
+                status: "in_escrow"
             }).session(session);
             if (!transaction) {
                 await session.abortTransaction();

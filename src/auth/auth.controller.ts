@@ -10,7 +10,7 @@ import OTP from "./auth.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
-import { encryptBvn, generateOTP, hashBvn, isValidState } from "../lib/main";
+import { encryptBvn, generateOTP, hashBvn, isValidState, matchAccNameInDb } from "../lib/main";
 import PaystackService from "../lib/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../lib/fincra.service";
@@ -322,7 +322,6 @@ class AuthController {
 
         const matchedBanks = BankCodes.filter((bankCode: IBankInfo) => bankCode.name.match(searchPattern));
         if (matchedBanks) {
-            console.log("MAtched");
             return res.status(200).json({ success: true, banks: matchedBanks });
         }
         return res.status(200).json({ success: true, banks: BankCodes });
@@ -363,6 +362,16 @@ class AuthController {
                 await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Invalid bank details " })
             }
+            const accNameMatched = matchAccNameInDb(
+                user.first_name,
+                user.last_name,
+                user.middle_name ?? null,
+                (validBankAcc as any).account_name
+            );
+            if (!accNameMatched) {
+                await session.abortTransaction();
+                return res.status(400).json({ error: true, message: "Bank account and db user details mismatch!" });
+            }
 
             user.bank_details = { account_no, bank_code, added_at: new Date() };
 
@@ -373,8 +382,12 @@ class AuthController {
             return res.status(200).json({ success: true, message: "Bank details added successfully", account: validBankAcc });
 
         } catch (error) {
-            console.error(error);
             await session.abortTransaction();
+            console.error(error);
+            if (error.code === 11000) {
+                return res.status(422).json({ error: true, message: "A user exists with that account already" })
+            }
+
             return res.status(500).json({ error: true, message: "Error adding bank account details" })
         } finally {
             await session.endSession();
