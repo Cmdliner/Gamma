@@ -33,14 +33,8 @@ class BidController {
 
     static async getAllReceivedBids(req: Request, res: Response) {
         try {
-            // CHECK IF USER IS PRODUCT OWNER
-            const isProductOwner = await Product.findOne({ owner: req.user?._id });
-            if (!isProductOwner) {
-                return res.status(400).json({ error: true, message: "Forbidden" });
-            }
-
             const bids = await Bid.find({ status: "accepted", seller: req.user?._id }).populate("buyer");
-            if (!bids || !bids.length) {
+            if (!bids) {
                 return res.status(404).json({ error: true, message: "No bids found!" });
             }
             return res.status(200).json({ success: true, message: "Bids found", bids })
@@ -52,35 +46,24 @@ class BidController {
 
     static async getAllAcceptedBids(req: Request, res: Response) {
         try {
-
-            // CHECK IF USER IS PRODUCT OWNER
-            const isProductOwner = await Product.findOne({ owner: req.user?._id });
-            if (!isProductOwner) {
-                return res.status(400).json({ error: true, message: "Forbidden" });
-            }
-
             const bids = await Bid.find({ seller: req.user?._id!, status: "accepted" }).populate("buyer");
-        } catch (error) {
-
-        }
-    }
-
-    static async getExpiredBids(req: Request, res: Response) {
-        try {
-            const bids = await Bid.find({ buyer: req.user?._id!, status: "accepted" });
-            return res.status(200).json({ success: true, message: "Bids found!", bids });
+            if(!bids) {
+                return res.status(404).json({error: true, message: "Bids not found"});
+            }
+            return res.status(200).json({ success: true, bids });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error finding bids!" })
+            return res.status(500).json({ error: true, message: "Error fetching bids" })
         }
     }
+
 
     static async getRejectedBids(req: Request, res: Response) {
         try {
-            const bids = await Bid.find({"product.owner": req.user?._id!, status: "rejected"}).populate(["product"])
+            const bids = await Bid.find({ "product.owner": req.user?._id!, status: "rejected" }).populate(["product"])
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error fetching rejected bids"})
+            return res.status(500).json({ error: true, message: "Error fetching rejected bids" })
         }
     }
 
@@ -140,7 +123,7 @@ class BidController {
             if (!rejectedBids) throw new Error("Failed to reject other bids");
 
             await bid.save();
-            return res.status(200).json({ success: "Bid accepted successfully", bid });
+            return res.status(200).json({ success: true, message: "Bid accepted successfully", bid });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "An error occured while trying to accept bid" });
@@ -177,9 +160,9 @@ class BidController {
     static async deleteBid(req: Request, res: Response) {
         try {
             const { bidID } = req.params;
-            const bid = await Bid.findOneAndDelete({ id: bidID, buyer: req.user?._id! });
+            const bid = await Bid.findOneAndDelete({ _id: bidID, buyer: req.user?._id! });
             if (!bid) throw new Error("Could not delete that bid");
-            return res.status(200).json({ error: true, message: "Bid deleted successfuly" })
+            return res.status(200).json({ success: true, message: "Bid deleted successfuly" })
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error deleting bid" });

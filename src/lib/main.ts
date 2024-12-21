@@ -95,5 +95,41 @@ export const decryptBvn = (encryptedData: string): string => {
 
 }
 
+export function matchAccNameInDb(
+    db_first_name: string,
+    db_last_name: string,
+    db_middle_name: string | null,
+    external_account_name: string
+  ): boolean {
+    // Helper: Normalize and split a name into an array of words
+    const normalize_name = (name: string) => name.toLowerCase().trim();
+    const account_name_parts = external_account_name.split(" ").map(normalize_name);
+  
+    // Normalize database names
+    const normalized_first_name = normalize_name(db_first_name);
+    const normalized_last_name = normalize_name(db_last_name);
+    const normalized_middle_name = db_middle_name ? normalize_name(db_middle_name) : null;
+  
+    // Find positions of the first and last names in the account name parts
+    const first_name_index = account_name_parts.indexOf(normalized_first_name);
+    const last_name_index = account_name_parts.indexOf(normalized_last_name);
+  
+    // Validate that first and last names exist and are in distinct positions
+    if (first_name_index === -1 || last_name_index === -1 || first_name_index === last_name_index) {
+      return false;
+    }
+  
+    // If middle name is provided, validate it does not overlap with first or last names
+    if (normalized_middle_name && account_name_parts.includes(normalized_middle_name)) {
+      const middle_name_index = account_name_parts.indexOf(normalized_middle_name);
+      if (middle_name_index === first_name_index || middle_name_index === last_name_index) {
+        return false;
+      }
+    }
+  
+    return true; // All validations passed
+  }
+  
+
 export const isValidState = (state: string) => GeospatialDataNigeria[state] ? true : false;
 

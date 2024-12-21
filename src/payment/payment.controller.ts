@@ -2,25 +2,28 @@ import { Request, Response } from "express";
 import { startSession } from "mongoose";
 import Wallet from "../user/wallet.model";
 import FincraService from "../lib/fincra.service";
-import Transaction from "./transaction.model";
+import Transaction, { ReferralTransaction } from "./transaction.model";
 import IUser from "../types/user.schema";
 import Product from "../product/product.model";
-import { compareObjectID } from "../lib/main";
+import { compareObjectID, generateOTP } from "../lib/main";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../bid/bid.model";
 import { AdPayments } from "../types/ad.enums";
 import User from "../user/user.model";
 import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
+import EmailService from "../lib/email.service";
+import OTP from "../auth/auth.model";
+import IProduct from "../types/product.schema";
 
 
 class PaymentController {
+
     static async withdrawFromWallet(req: Request, res: Response) {
         const MIN_WITHDRAWAL_VALUE = 500;
         const session = await startSession();
 
         try {
             const user = req.user as IUser;
-            const bankAccount = user.bank_details?.account_no as number;
             const { amount_to_withdraw } = req.body;
 
             if (!amount_to_withdraw) {
@@ -30,15 +33,20 @@ class PaymentController {
             session.startTransaction();
             // Get user wallet
             const wallet = await Wallet.findById(user.wallet).session(session);
-            if (!wallet) return res.status(404).json({ error: true, message: "Error finding wallet" });
+            if (!wallet) {
+                await session.abortTransaction();
+                return res.status(404).json({ error: true, message: "Error finding wallet" });
+            }
 
             // Make sure user does not try to add to their balance by atempting to withdraw 
             // negative balance or less than the MIN_WITHDRAW_VALUE
             if (amount_to_withdraw < MIN_WITHDRAWAL_VALUE) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Amount too small" });
             }
             // Check amount to withdraw
             if (amount_to_withdraw > wallet.balance) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Insufficient funds!" });
             }
 
@@ -58,7 +66,7 @@ class PaymentController {
             const transactionRef = payoutTransaction.id;
 
             // Attempt to transfer to user bank acc using fincra
-            const withdrawalRes = await FincraService.withdrawFunds(user, transactionRef, amount_to_withdraw, bankAccount);
+            const withdrawalRes = await FincraService.withdrawFunds(user, transactionRef, amount_to_withdraw);
 
             // Update balance and transaction once payout is not failed
             if (withdrawalRes.data.status !== "failed") {
@@ -94,10 +102,10 @@ class PaymentController {
         try {
             const user = req.user as IUser;
             const transactions = await Transaction.find({ bearer: user._id }).sort({ createdAt: -1 }).populate("product");
-            return res.status(200).json({ success: "Transactions found", transactions });
+            return res.status(200).json({ success: true, message: "Transactions found", transactions });
         } catch (error) {
             console.error(error);
-            return res.send(500).json({ error: "Error getting transaction history" });
+            return res.send(500).json({ error: true, message: "Error getting transaction history" });
         }
     }
 
@@ -107,12 +115,15 @@ class PaymentController {
             const userId = req.user?._id;
             const { productID, bidID } = req.params;
             const { payment_method } = req.body;
+            session.startTransaction();
+
             if (!payment_method) {
                 return res.status(422).json({ error: true, message: "Payment method required!" })
             }
 
-            const user = await User.findById(userId);
+            const user = await User.findById(userId).session(session);
             if (!user) {
+                await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "User not found!" })
             }
 
@@ -120,12 +131,14 @@ class PaymentController {
             // VALIDATION LOGIC
             const { error } = ItemPurchaseValidation.validate({ payment_method });
             if (error) {
-                return res.status(500).json({ error: true, message: error.details[0].message });
+                await session.abortTransaction();
+                return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
-            session.startTransaction();
+            
             const product = await Product.findById(productID).session(session);
             if (!product || product.status !== "available") {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Product not available!" });
             }
 
@@ -133,7 +146,10 @@ class PaymentController {
             let bidPrice = undefined; // Initialize bid price
             if (bidID) {
                 const bid = await Bid.findOne({ _id: bidID, status: "accepted" }).session(session);
-                if (!bid) return res.status(404).json({ error: true, message: "Couldn't find bid" });
+                if (!bid) {
+                    await session.abortTransaction();
+                    return res.status(404).json({ error: true, message: "Couldn't find bid" });
+                }
 
                 // Ensure bid has not yet expired
                 if (bid.expires.valueOf() < Date.now()) {
@@ -162,6 +178,7 @@ class PaymentController {
                 }
             }, { new: true, session });
             if (!updatedProduct) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Product is currently unavaliable for purchase" });
             }
 
@@ -181,7 +198,7 @@ class PaymentController {
 
 
             // Initiate payment with fincra then commit transaction to db
-            const fincraResponse = await FincraService.collectPayment(product, req.user!, transactionRef, payment_method, bidPrice);
+            const fincraResponse = await FincraService.purchaseItem(product, req.user!, transactionRef, payment_method, bidPrice);
             await session.commitTransaction();
 
             return res.status(200).json({ success: true, transaction_id: itemPurchaseTransaction._id, fincra: fincraResponse });
@@ -190,7 +207,7 @@ class PaymentController {
         } catch (error) {
             await session.abortTransaction();
             console.error(error);
-            return res.status(500).json({ error: "Error purchasing item" });
+            return res.status(500).json({ error: true, message: "Error purchasing item" });
         } finally {
             await session.endSession();
         }
@@ -211,7 +228,7 @@ class PaymentController {
             // VALIDATE SPONSORSHIP DURATION AND PAYMENT METHOD
             const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
             if (error) {
-                return res.status(422).json({ error: true, message: error.details[0].message })
+                return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
             // START TRANSACTION
@@ -219,21 +236,25 @@ class PaymentController {
 
             const product = await Product.findById(productID).session(session);
             if (!product) {
+                await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "Product not found!" });
             }
 
             const isProductOwner = compareObjectID(product.owner, req.user?._id!);
             if (!isProductOwner) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Forbidden!!!" });
             }
 
             // CHECK IF AD SPONOSRHIP IS NOT YET EXPIRED
             if ((product.sponsorship?.expires?.valueOf() || 1) > Date.now()) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "" });
             }
 
             // CHECK IF PRODUCT IS SOLD
             if (product.status === "sold") {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Product sold!" })
             }
 
@@ -271,6 +292,7 @@ class PaymentController {
             const userId = req.user?._id;
             const user = await User.findById(userId).session(session);
             if (!user) {
+                await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "User  not found!" });
             }
 
@@ -283,6 +305,7 @@ class PaymentController {
             // /* !REMOVE IN PROD */ const canWithdrawRewards = true;
 
             if (!canWithdrawRewards) {
+                await session.abortTransaction();
                 return res.status(400)
                     .json({
                         error: true,
@@ -309,24 +332,163 @@ class PaymentController {
                 status: "success"
             }).session(session);
             await session.commitTransaction();
-            return res.status(200).json({ success: true, message: "Rewards have been sent to account" })
+
+            return res.status(200).json({ success: true, message: "Rewards have been sent to account" });
+
         } catch (error) {
             await session.abortTransaction();
             console.error(error);
             return res.status(500).json({ error: true, message: "Error withdrawing rewards!" })
         } finally {
-            session.endSession();
+            await session.endSession();
         }
     }
 
-    static async makeRefund(req: Request, res: Response) {
+    static async initiateFundsTransfer(req: Request, res: Response) {
+        try {
+            const { transactionID } = req.params;
+            const transaction = await PaymentTransaction.findOne({
+                status: "in_escrow",
+                for: "product_payment",
+                bearer: req.user?._id!,
+                _id: transactionID,
+            }).populate("product");
+            if (!transaction) {
+                return res.status(404).json({ error: true, message: "Transaction not found!" });
+            }
+            // Send otp to user to confirm transaction
+            const fullName = `${req.user?.first_name} ${req.user?.last_name}`;
+            const otp = new OTP({ kind: "funds_approval", owner: req.user!, token: generateOTP() });
+            await otp.save();
 
+            // Send email
+            await EmailService.sendVerificationEmail(req.user?.email!, fullName, otp.token);
+
+            return res.status(200).json({ success: true, seller_id: (transaction.product as unknown as IProduct).owner });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Could not send funds to seller" });
+        }
+    }
+
+    static async transferfunds(req: Request, res: Response) {
+        const session = await startSession();
+        try {
+            session.startTransaction();
+            const { seller_id, transaction_id, otp } = req.body;
+
+            // Validate and verify  otp entered
+            const now = new Date();
+            const otpMatch = await OTP.findOneAndDelete({
+                kind: "funds_approval",
+                owner: req.user?._id!,
+                token: otp,
+                expires: { $gte: now },
+            }).session(session);
+            if (!otpMatch) {
+                await session.abortTransaction();
+                return res.status(400).json({ error: true, message: "Invalid OTP!" })
+            }
+
+            // Find transaction and update its status
+            const transaction = await PaymentTransaction.findOne({
+                _id: transaction_id,
+                for: "product_payment",
+                status: "in_escrow"
+            }).session(session);
+            if (!transaction) {
+                await session.abortTransaction();
+                return res.status(404).json({ error: true, message: "Transaction not found!" });
+            }
+            transaction.status = "success";
+            await transaction.save({ session });
+
+            // Update seller's wallet balance
+            const seller = await User.findById(seller_id).session(session);
+            if (!seller) {
+                await session.abortTransaction();
+                return res.status(404).json({ error: true, message: "Seller not found!" });
+            }
+            const sellerWallet = await Wallet.findById((seller.wallet)).session(session);
+            if (!sellerWallet) throw new Error("Wallet not found");
+            sellerWallet.balance += transaction.amount;
+            await sellerWallet.save({ session });
+
+
+            // Activate customer's account if dormant
+            const customer = await User.findById(transaction.bearer).session(session);
+            if (!customer) throw new Error("Customer not found");
+
+            if (customer.account_status === "dormant") {
+                customer.account_status = "active";
+
+                if (customer.referred_by) {
+                    const AMOUNT_TO_REWARD = (0.5 / 100) * transaction.amount;
+                    const referrer = await User.findById(customer.referred_by).session(session);
+                    if (!referrer) throw new Error("Referrer not found");
+                    referrer.rewards.balance += AMOUNT_TO_REWARD;
+                    await referrer.save({ session });
+
+                    // CREATE TRANSACTION FOR THIS REFERRAL REWARD
+                    const referralRewardTransaction = new ReferralTransaction({
+                        for: "referral",
+                        bearer: referrer._id,
+                        amount: AMOUNT_TO_REWARD,
+                        status: "success",
+                        reason: `Reward for referral of ${customer.first_name + " " + customer.last_name}`,
+                        referee: customer._id
+                    });
+                    await referralRewardTransaction.save({ session });
+                }
+
+            }
+            await customer.save({ session });
+            await session.commitTransaction();
+            return res.status(200).json({ success: true });
+        } catch (error) {
+            await session.abortTransaction();
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error sending funds!" });
+        } finally {
+            await session.endSession()
+        }
+    }
+
+    // BUYER REQUESTS REFUND
+    static async requestRefund(req: Request, res: Response) {
+        try {
+            // SEND NOTIFICATION TO SELLER
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Failed to request refund" });
+        }
+    }
+
+    // SELLER APPROVES REFUND
+    static async approveRefund(req: Request, res: Response) {
+        try {
+            // CHANGE PREVIOUS TRANSACTION STATE TO FAILED
+            // UNLOCK PRODUCT
+            // MOVE MONEY FROM ESCROW TO CUSTOMER ACCOUNT
+            // THATS ALL FOR NOW (RETURN RESPONSE)
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Refund approval failed!" });
+        }
     }
 
     static async getSuccessfulDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentTransaction.find({ seller: req.user?._id!, status: "success" })
-                .populate(["buyer", "product"]);
+            const deals = await PaymentTransaction.find({
+                $or: [{ buyer: req.user?._id!, "product.owner": req.user?._id! }],
+                status: { $in: ["success"] },
+            }).populate("bearer").populate({
+                path: "product",
+                populate: {
+                    path: "bearer",
+                    model: "User"
+                }
+            });
             if (!deals || !deals.length) {
                 return res.status(404).json({ error: true, message: "No deals found!" })
             }
@@ -337,10 +499,18 @@ class PaymentController {
         }
     }
 
-    static async getPendingDeals(req: Request, res: Response) {
+    static async getDisputedDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentTransaction.find({ seller: req.user?._id!, status: "pending" })
-                .populate(["buyer", "product"]);
+            const deals = await PaymentTransaction.find({
+                $or: [{ buyer: req.user?._id!, "product.owner": req.user?._id! }],
+                status: "in_dispute",
+            }).populate("bearer").populate({
+                path: "product",
+                populate: {
+                    path: "bearer",
+                    model: "User"
+                }
+            });
             if (!deals || !deals.length) {
                 return res.status(404).json({ error: true, message: "No deals found" })
             }
@@ -353,8 +523,16 @@ class PaymentController {
 
     static async getFailedDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentTransaction.find({ seller: req.user?._id!, status: "failed" })
-                .populate(["buyer", "product"]);
+            const deals = await PaymentTransaction.find({
+                $or: [{ "product.owner": req.user?._id!, bearer: req.user?._id! }],
+                status: "failed",
+            }).populate("bearer").populate({
+                path: "product",
+                populate: {
+                    path: "bearer",
+                    model: "User",
+                },
+            });
             if (!deals || !deals.length) {
                 return res.status(404).json({ error: true, message: "No deals found" })
             }
@@ -362,6 +540,29 @@ class PaymentController {
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error getting deals at the moment" });
+        }
+    }
+
+    static async getOngoingDeals(req: Request, res: Response) {
+        try {
+            const deals = await PaymentTransaction.find({
+                $or: [{ buyer: req.user?._id!, "product.owner": req.user?._id! }],
+                status: "in_escrow",
+            }).populate("bearer").populate({
+                path: "product",
+                populate: {
+                    path: "bearer",
+                    model: "User"
+                }
+            });
+            if (!deals || !deals.length) {
+                return res.status(404).json({ error: true, message: "User has no ongoing transactions" });
+            }
+            return res.status(200).json({ success: true, deals });
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error getting ongoing dealas" })
         }
     }
 

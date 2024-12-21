@@ -36,7 +36,8 @@ bun run dev
 
 
 ## TODOS
-- Payment to wallet when buying
+- User can then decide to raise dispute, call seller or initiate settlement
+- Deals ongoing, completed, disputed (from the buyer's side + seller's side);
 - deals (pending, accepted )
 - Sanitize inputs for all actions (impl max char length, rm whitespace, dont allow special characters)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)

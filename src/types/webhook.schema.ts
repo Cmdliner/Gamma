@@ -25,6 +25,7 @@ export interface ChargeSuccessPayload {
         metadata: {
             customer_id: string;
             product_id: string;
+            amount_expected: number;
         };
         settlementDestination: "wallet";
         virtualAccount: {

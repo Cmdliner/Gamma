@@ -15,7 +15,7 @@ class FincraService {
         { sandbox: process.env.NODE_ENV === "production" ? false : true }
     );
 
-    static async getBusinessInfo() {
+    private static async getBusinessInfo() {
         try {
             const url = `${this.FINCRA_BASE_URL}/profile/business/me`;
             const headers = {
@@ -89,7 +89,7 @@ class FincraService {
         }
     }
 
-    static async collectPayment(product: IProduct, customer: IUser, ref: string, paymentMethod: string, bidPrice?: number) {
+    static async purchaseItem(product: IProduct, customer: IUser, ref: string, paymentMethod: string, bidPrice?: number) {
         try {
             const opts: AxiosRequestConfig = {
                 url: `${FincraService.FINCRA_BASE_URL}/checkout/payments`,
@@ -101,23 +101,24 @@ class FincraService {
                     "x-pub-key": process.env.FINCRA_PUBLIC_KEY,
                 },
                 data: {
-                    "amount": bidPrice ? bidPrice : product.price,
-                    "currency": "NGN",
-                    "customer": {
-                        "name": `${customer.first_name} ${customer.last_name}`,
-                        "email": customer.email,
-                        "phoneNumber": customer.phone_numbers[0]
+                    amount: bidPrice ? bidPrice : product.price,
+                    currency: "NGN",
+                    customer: {
+                        name: `${customer.first_name} ${customer.last_name}`,
+                        email: customer.email,
+                        phoneNumber: customer.phone_numbers[0]
                     },
                     metadata: {
-                        "customer_id": customer.id,
-                        "product_id": product.id,
-                        "payment_for": "product_payment"
+                        customer_id: customer.id,
+                        product_id: product.id,
+                        payment_for: "product_payment",
+                        amount_expected: bidPrice ? bidPrice : product.price,
                     },
-                    "successMessage": "You have successfully intiated transfer",
-                    "paymentMethods": [paymentMethod],
-                    "settlementDestination": "wallet",
-                    "feeBearer": "customer",
-                    "reference": ref
+                    successMessage: "You have successfully intiated transfer",
+                    paymentMethods: [paymentMethod],
+                    settlementDestination: "wallet",
+                    feeBearer: "customer",
+                    reference: ref
                 }
             }
             const res = await axios.request(opts);
@@ -128,7 +129,27 @@ class FincraService {
         }
     }
 
-    static async withdrawFunds(user: IUser, ref: string, amount: number, bank_account: number) {
+    /**
+    * DOES THE SAME WORK AS WEBHOOKS JUST ACTS AS A FAILSAFE INCASE WEBHOOKS ARENT RECEIVED
+    **/
+    static async verifyPaymentStatus(ref: string) {
+        try {
+            const verifyPaymentEndpoint = `${FincraService.FINCRA_BASE_URL}/checkout/payments/merchant-reference/${ref}`;
+
+            const res = await axios.get(verifyPaymentEndpoint, {
+                headers: {
+                    "Accept": "application/json",
+                    "x-business-id": process.env.FINCRA_BUSINESS_ID
+                }
+            });
+            return res.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    static async withdrawFunds(user: IUser, ref: string, amount: number) {
         const OYEAH_CUT = (5 / 100) * amount;
         const PROCESSING_FEE = 200
         const AMOUNT_TO_WITHDRAW = amount - OYEAH_CUT - PROCESSING_FEE;
@@ -236,7 +257,8 @@ class FincraService {
                     metadata: {
                         "customer_id": owner.id,
                         "product_id": product.id,
-                        "payment_for": "ad_sponsorship"
+                        "payment_for": "ad_sponsorship",
+                        amount_expected: sponsorshipDuration == "1Week" ? AdPayments.weekly : AdPayments.monthly
                     },
                     "successMessage": "You have successfully intiated transfer",
                     "paymentMethods": [paymentMethod],

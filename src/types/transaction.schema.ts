@@ -5,7 +5,7 @@ interface ITransaction extends Document {
     for: "ad_sponsorship" | "product_payment" | "payment_refund" | "withdrawal" | "referral";
     bearer: Types.ObjectId;
     amount: number;
-    status: "success" | "failed" | "pending" | "processing_payment" | "in_dispute" | "resolved";
+    status: "success" | "failed" | "pending" | "processing_payment" | "in_dispute" | "in_escrow" | "resolved";
     reason: string;
 }
 

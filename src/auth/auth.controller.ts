@@ -10,7 +10,7 @@ import OTP from "./auth.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
-import { encryptBvn, generateOTP, hashBvn, isValidState } from "../lib/main";
+import { encryptBvn, generateOTP, hashBvn, isValidState, matchAccNameInDb } from "../lib/main";
 import PaystackService from "../lib/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../lib/fincra.service";
@@ -41,7 +41,8 @@ class AuthController {
 
             // Add error that checks that at least we have a phone number 1 field
             if (!phone_no_1) {
-                return res.status(422).json({ error: "At least one phone number is required" });
+                await session.abortTransaction();
+                return res.status(422).json({ error: true, message: "At least one phone number is required" });
             }
             // Add middle name and location if present
             if (middle_name) registerInfo.middle_name = middle_name;
@@ -53,6 +54,7 @@ class AuthController {
             if (humanReadableLocation) {
                 //  Validate the location
                 if (!isValidState(humanReadableLocation)) {
+                    await session.abortTransaction();
                     return res.status(422).json({ error: true, message: "Invalid location format" });
                 }
                 const location: {
@@ -76,30 +78,44 @@ class AuthController {
             // Verify that no user has any of the phone numbers before
             const phoneNumberInUse = await User.findOne({ phone_numbers: { $in: phone_numbers } });
             if (phoneNumberInUse) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "A user with that phone number exists" });
             }
 
             const { error } = registerValidationSchema.validate({ ...registerInfo, phone_numbers });
             if (error) {
+                await session.abortTransaction();
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
             const emailTaken = await User.exists({ email }).session(session);
-            if (emailTaken) return res.status(422).json({ error: true, message: "Email taken!" });
+            if (emailTaken) {
+                await session.abortTransaction();
+                return res.status(422).json({ error: true, message: "Email taken!" });
+            }
 
             let referrer = null;
             if (referral_code) {
                 referrer = await User.findOne({ referral_code }).session(session);
-                if (!referrer) return res.status(404).json({ error: true, message: "Invalid referral code!" });
+                if (!referrer) {
+                    await session.abortTransaction();
+                    return res.status(404).json({ error: true, message: "Invalid referral code!" });
+                }
             }
             const user = new User(registerInfo);
-            if (!user) return res.status(400).json({ error: true, message: "Error registering user" });
+            if (!user) {
+                await session.abortTransaction();
+                return res.status(400).json({ error: true, message: "Error registering user" });
+            }
 
             // Add user phone numbers
             user.phone_numbers = phone_numbers;
 
             const referralCode = await AuthService.generateUniqueReferralCode();
-            if (!referralCode) return res.status(500).json({ error: true, message: "Error creating referral code" });
+            if (!referralCode) {
+                await session.abortTransaction();
+                return res.status(500).json({ error: true, message: "Error creating referral code" });
+            }
             user.referral_code = referralCode;
 
             // Add wallet 
@@ -119,6 +135,7 @@ class AuthController {
 
             const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
             if (!emailVToken) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Error sending verification mail" });
             }
             await emailVToken.save({ session });
@@ -141,7 +158,7 @@ class AuthController {
             await session.abortTransaction();
             return res.status(500).json({ error: true, message: "Error registering user" });
         } finally {
-            session.endSession();
+            await session.endSession();
         }
     }
 
@@ -305,7 +322,6 @@ class AuthController {
 
         const matchedBanks = BankCodes.filter((bankCode: IBankInfo) => bankCode.name.match(searchPattern));
         if (matchedBanks) {
-            console.log("MAtched");
             return res.status(200).json({ success: true, banks: matchedBanks });
         }
         return res.status(200).json({ success: true, banks: BankCodes });
@@ -318,9 +334,10 @@ class AuthController {
             const { account_no, bank_code } = req.body;
 
             if (!account_no || !bank_code) {
-                return res
-                    .status(422)
-                    .json({ error: true, message: `${account_no ? "Bank code" : "Account no"} is required` });
+                return res.status(422).json({
+                    error: true,
+                    message: `${account_no ? "Bank code" : "Account no"} is required`
+                });
             }
 
             // Verify onboarding token and check if user is valid
@@ -333,13 +350,27 @@ class AuthController {
             session.startTransaction();
 
             const user = await User.findById(decodedToken.id).session(session);
-            if (!user) return res.status(404).json({ error: true, message: "User not found!" });
+            if (!user) {
+                await session.abortTransaction();
+                return res.status(404).json({ error: true, message: "User not found!" });
+            }
 
 
             // Validate bank account with paystack
             const validBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
             if (!validBankAcc) {
+                await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Invalid bank details " })
+            }
+            const accNameMatched = matchAccNameInDb(
+                user.first_name,
+                user.last_name,
+                user.middle_name ?? null,
+                (validBankAcc as any).account_name
+            );
+            if (!accNameMatched) {
+                await session.abortTransaction();
+                return res.status(400).json({ error: true, message: "Bank account and db user details mismatch!" });
             }
 
             user.bank_details = { account_no, bank_code, added_at: new Date() };
@@ -351,8 +382,12 @@ class AuthController {
             return res.status(200).json({ success: true, message: "Bank details added successfully", account: validBankAcc });
 
         } catch (error) {
-            console.error(error);
             await session.abortTransaction();
+            console.error(error);
+            if (error.code === 11000) {
+                return res.status(422).json({ error: true, message: "A user exists with that account already" })
+            }
+
             return res.status(500).json({ error: true, message: "Error adding bank account details" })
         } finally {
             await session.endSession();

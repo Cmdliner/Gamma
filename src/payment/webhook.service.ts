@@ -1,12 +1,9 @@
-import User from "../user/user.model";
 import Product from "../product/product.model";
-import IUser from "../types/user.schema";
-import Wallet from "../user/wallet.model";
 import { startSession } from "mongoose";
 import { ChargeSuccessPayload, PayoutSuccessPayload } from "../types/webhook.schema";
 import crypto from "crypto";
 import { AdPayments } from "../types/ad.enums";
-import { PaymentTransaction, ReferralTransaction } from "./transaction.model";
+import { PaymentTransaction } from "./transaction.model";
 
 class WebhookService {
 
@@ -24,57 +21,24 @@ class WebhookService {
     static async handleSuccessfulProductPurchase(payload: ChargeSuccessPayload) {
         const session = await startSession();
         try {
+            session.startTransaction();
             if (payload.data.status === "success") {
-                const { customer_id, product_id } = payload.data.metadata;
+                const { product_id } = payload.data.metadata;
 
-                const product = await Product.findById(product_id).populate("owner").session(session);
+                const product = await Product.findById(product_id).session(session);
                 if (!product) throw new Error("Product not found");
                 product.status = "sold";
                 await product.save({ session });
 
-                // Seller
-                const sellerWallet = await Wallet.findById((product.owner as unknown as IUser).wallet).session(session);
-                if (!sellerWallet) throw new Error("Wallet not found");
-                if (payload.data.amountToSettle > 0) sellerWallet.balance += payload.data.amountToSettle;
-                await sellerWallet.save({ session });
-
-
-                // Customer
-                const customer = await User.findById(customer_id).session(session);
-                if (!customer) throw new Error("Customer not found");
-
-                if (customer.account_status === "dormant") {
-                    customer.account_status = "active";
-
-                    if (customer.referred_by) {
-                        const AMOUNT_TO_REWARD = (0.5 / 100) * payload.data.amountToSettle;
-                        const referrer = await User.findById(customer.referred_by).session(session);
-                        if (!referrer) throw new Error("Referrer not found");
-                        referrer.rewards.balance += AMOUNT_TO_REWARD;
-                        await referrer.save({ session });
-
-                        // CREATE TRANSACTION FOR THIS REFERRAL REWARD
-                        const referralRewardTransaction = new ReferralTransaction({
-                            for: "referral",
-                            bearer: referrer._id,
-                            amount: AMOUNT_TO_REWARD,
-                            status: "success",
-                            reason: `Reward for referral of ${customer.first_name + " " + customer.last_name
-                                }`,
-                            referee: customer._id
-                        });
-                        await referralRewardTransaction.save({ session });
-                    }
-
-                }
-                await customer.save({ session });
-
                 // Transaction
                 const transaction = await PaymentTransaction.findById(payload.data.reference).session(session);
                 if (!transaction) throw new Error("Transaction not found");
-                transaction.status = "success";
-                transaction.external_ref = payload.data.chargeReference
-                await transaction.save({ session });
+                if (payload.data.amountToSettle > 0 && payload.data.metadata.amount_expected === product.price) {
+                    transaction.status = "in_escrow";
+                    transaction.external_ref = payload.data.chargeReference
+                    await transaction.save({ session });
+                }
+                await session.commitTransaction();
             }
         } catch (error) {
             await session.abortTransaction();
@@ -124,15 +88,15 @@ class WebhookService {
 
     static async handleRewardsPayout(payload: PayoutSuccessPayload) {
         try {
-            if(payload.data.status === "successful") {
-                
+            if (payload.data.status === "successful") {
+
             }
         } catch (error) {
             throw error;
         }
     }
 
-    static async handleBalancePayout(payload: any) {}
+    static async handleBalancePayout(payload: any) { }
 }
 
 export default WebhookService;
