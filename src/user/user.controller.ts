@@ -40,7 +40,8 @@ class UserController {
 
     static async getReferralInfo(req: Request, res: Response) {
         try {
-            const user = await User.findById(req.user?._id).populate("referrals", "first_name", "last_name");
+            const user = await User.findById(req.user?._id).populate("referrals");
+            // const user = req.user;
             if (!user) {
                 return res.status(404).json({ error: true, message: "User not found!" });
             }
