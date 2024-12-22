@@ -18,7 +18,7 @@ import IProduct from "../types/product.schema";
 
 class PaymentController {
 
-    private static async getTransactionsAssociatedWithUser(userId: Types.ObjectId) {
+    private static async getTransactionsAssociatedWithUser(userId: Types.ObjectId, status: string) {
         const transactions = await PaymentTransaction.aggregate([
             // First, look up the associated product details
             {
@@ -61,7 +61,8 @@ class PaymentController {
                     $or: [
                         { bearer: new Types.ObjectId(userId) },
                         { "product.owner._id": new Types.ObjectId(userId) }
-                    ]
+                    ],
+                    status
                 }
             },
             // Sort by creation date, most recent first
@@ -71,6 +72,7 @@ class PaymentController {
         ]);
         return transactions;
     }
+
     static async withdrawFromWallet(req: Request, res: Response) {
         const MIN_WITHDRAWAL_VALUE = 500;
         const session = await startSession();
@@ -534,7 +536,7 @@ class PaymentController {
 
     static async getSuccessfulDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!);
+            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!, "success");
             if (!deals || !deals.length) {
                 return res.status(404).json({ error: true, message: "No deals found!" })
             }
@@ -547,7 +549,7 @@ class PaymentController {
 
     static async getDisputedDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!);
+            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!, "in_dispute");
             if (!deals) {
                 return res.status(404).json({ error: true, message: "No deals found" })
             }
@@ -582,7 +584,7 @@ class PaymentController {
 
     static async getOngoingDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!);
+            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!, "in_escrow");
             if (!deals) {
                 return res.status(404).json({ error: true, message: "User has no ongoing transactions" });
             }
