@@ -164,7 +164,7 @@ class FincraService {
                 business: process.env.FINCRA_BUSINESS_ID,
                 sourceCurrency: "NGN",
                 destinationCurrency: "NGN",
-                amount: AMOUNT_TO_WITHDRAW,
+                amount: `${AMOUNT_TO_WITHDRAW}`,
                 description: "Payment",
                 customerReference: ref,
                 beneficiary: {
@@ -173,9 +173,9 @@ class FincraService {
                     email: user.email,
                     type: "individual",
                     accountHolderName: `${user.first_name} ${user.last_name}`,
-                    accountNumber: user.bank_details.account_no,
+                    accountNumber: `${user.bank_details.account_no}`,
                     country: "NG",
-                    bankCode: user.bank_details.bank_code,
+                    bankCode: `${user.bank_details.bank_code}`,
                 },
                 sender: {
                     name: "Customer Name",

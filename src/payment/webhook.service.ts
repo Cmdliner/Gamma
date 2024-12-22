@@ -5,7 +5,6 @@ import crypto from "crypto";
 import { AdPayments } from "../types/ad.enums";
 import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
 import User from "../user/user.model";
-import IWallet from "../types/wallet.schema";
 
 class WebhookService {
 
@@ -94,7 +93,7 @@ class WebhookService {
         try {
             session.startTransaction();
             if (payload.data.status === "successful") {
-                const transactionRef = payload.data.reference;
+                const transactionRef = payload.data.customerReference;
 
                 const withdrawal = await WithdrawalTransaction.findById(transactionRef).session(session);
                 if (!withdrawal) {
@@ -105,7 +104,7 @@ class WebhookService {
 
                 if (withdrawal.from === "wallet" || withdrawal.from === "rewards") {
                     withdrawal.status = "success";
-                    withdrawal.save({ session });
+                    await withdrawal.save({ session });
                 }
                 await session.commitTransaction();
             }

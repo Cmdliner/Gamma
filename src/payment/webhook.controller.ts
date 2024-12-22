@@ -36,7 +36,7 @@ class WebhookController {
                 }
             case "payout.successful":
                 try {
-                    await WebhookService.handlePayout(payload.data);
+                    await WebhookService.handlePayout(payload);
                 } catch (error) {
                     console.error(error);
                     return res.status(500).json({ error: true, message: "Error validationg payout!" });

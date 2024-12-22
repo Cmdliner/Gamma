@@ -67,11 +67,8 @@ class PaymentController {
 
             // Attempt to transfer to user bank acc using fincra
             const withdrawalRes = await FincraService.withdrawFunds(user, transactionRef, amount_to_withdraw);
-            console.log("Withdrawal response");
-            console.dir(withdrawalRes);
-            console.log("End ofWithdrawal response");
             // Update balance and transaction once payout is not failed
-            if (withdrawalRes.data.status !== "failed") {
+            if (withdrawalRes.success) {
                 wallet.balance -= amount_to_withdraw;
                 await wallet.save({ session });
 
@@ -329,9 +326,12 @@ class PaymentController {
             const fincraRes = await FincraService.withdrawRewards(user, payoutTransaction.id);
             // Handle response and service of rewards
 
+            console.log("fincraResponse");
+            console.log(fincraRes.data);
+            console.log("End of fincraResponse");
             if (fincraRes.data.status === "failed") { throw new Error() }
             await WithdrawalTransaction.findByIdAndUpdate(payoutTransaction._id, {
-                status: "success"
+                status: "processing_payment"
             }).session(session);
             await session.commitTransaction();
 
