@@ -6,7 +6,7 @@ import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
 import { ReferralTransaction } from "../payment/transaction.model";
 import { isValidState } from "../lib/main";
 import { GeospatialDataNigeria } from "../lib/location.data";
-import IUser from "src/types/user.schema";
+import IUser from "../types/user.schema";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {

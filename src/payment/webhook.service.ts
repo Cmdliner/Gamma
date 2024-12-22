@@ -3,7 +3,9 @@ import { startSession } from "mongoose";
 import { ChargeSuccessPayload, PayoutSuccessPayload } from "../types/webhook.schema";
 import crypto from "crypto";
 import { AdPayments } from "../types/ad.enums";
-import { PaymentTransaction } from "./transaction.model";
+import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
+import User from "../user/user.model";
+import IWallet from "../types/wallet.schema";
 
 class WebhookService {
 
@@ -86,17 +88,34 @@ class WebhookService {
         }
     }
 
-    static async handleRewardsPayout(payload: PayoutSuccessPayload) {
+    static async handlePayout(payload: PayoutSuccessPayload) {
+        const session = await startSession();
+        console.dir(payload);
         try {
+            session.startTransaction();
             if (payload.data.status === "successful") {
+                const transactionRef = payload.data.reference;
 
+                const withdrawal = await WithdrawalTransaction.findById(transactionRef).session(session);
+                if (!withdrawal) {
+                    throw new Error("Withdrawal transaction not found!")
+                }
+                const user = await User.findById(withdrawal.bearer).session(session);
+                if (!user) throw new Error("User not found!");
+
+                if (withdrawal.from === "wallet" || withdrawal.from === "rewards") {
+                    withdrawal.status = "success";
+                    withdrawal.save({ session });
+                }
+                await session.commitTransaction();
             }
         } catch (error) {
+            await session.abortTransaction();
             throw error;
+        } finally {
+            await session.endSession();
         }
     }
-
-    static async handleBalancePayout(payload: any) { }
 }
 
 export default WebhookService;

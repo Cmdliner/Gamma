@@ -181,9 +181,6 @@ class FincraService {
                     name: "Customer Name",
                     email: "customer@theirmail.com",
                 },
-                metadata: {
-                    withdrawal_from: "balance"
-                },
                 paymentDestination: "bank_account",
             }, { headers });
 
@@ -222,9 +219,6 @@ class FincraService {
                 sender: {
                     name: "Oyeah Escrow",
                     email: "payments@oyeahescrow.com",
-                },
-                metadata: {
-                    withdrawal_from: "rewards"
                 },
                 paymentDestination: "bank_account",
             }, { headers });
@@ -280,7 +274,6 @@ class FincraService {
             const opts: AxiosRequestConfig = {};
             const res = await axios.request(opts);
         } catch (error) {
-            //!TODO => Implement custom error calss that handles internally thrown errors
             throw {
                 message: "An error occured",
                 kind: "external_payment_error",

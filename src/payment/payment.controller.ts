@@ -67,7 +67,9 @@ class PaymentController {
 
             // Attempt to transfer to user bank acc using fincra
             const withdrawalRes = await FincraService.withdrawFunds(user, transactionRef, amount_to_withdraw);
-
+            console.log("Withdrawal response");
+            console.dir(withdrawalRes);
+            console.log("End ofWithdrawal response");
             // Update balance and transaction once payout is not failed
             if (withdrawalRes.data.status !== "failed") {
                 wallet.balance -= amount_to_withdraw;

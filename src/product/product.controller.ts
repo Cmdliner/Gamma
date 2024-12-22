@@ -142,9 +142,7 @@ class ProductController {
             // CHECK THAT NO SIMILAR PROD EXISTS IN DB
             const similarProdInDb = await LandedProperty.findOne({
                 name: landedPropertyData.name,
-                description: landedPropertyData.description,
-                price: landedPropertyData.price,
-                "location.human_readable": landedPropertyData.location.human_readable
+                description: landedPropertyData.description
             });
             if (similarProdInDb) {
                 return res.status(400).json({ error: true, message: "A similar product exists" });

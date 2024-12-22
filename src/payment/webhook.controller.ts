@@ -36,11 +36,7 @@ class WebhookController {
                 }
             case "payout.successful":
                 try {
-                    if(payload.data.metadata.withdrawal_from === "balance") {
-                        // !TODO
-                    } else if(payload.data.metadata.withdrawal_from === "rewards") {
-                        // !TODO
-                    }
+                    await WebhookService.handlePayout(payload.data);
                 } catch (error) {
                     console.error(error);
                     return res.status(500).json({ error: true, message: "Error validationg payout!" });

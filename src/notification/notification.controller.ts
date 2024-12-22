@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import User from "src/user/user.model";
+import User from "../user/user.model";
 
 class NotificationController {
     static async registerDevice(req: Request, res: Response) {
