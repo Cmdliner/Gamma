@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { isValidObjectId } from "mongoose";
 import Product from "../product/product.model";
 import User from "../user/user.model";
 import { compareObjectID } from "../lib/main";
@@ -73,9 +72,12 @@ class DisputeController {
             }
 
             dispute.status = "resolved";
-            // !TODO => CONFIRM THAT THIS WORKS
-            (dispute.transaction as unknown as ITransaction).status = "resolved";
             await dispute.save();
+            // !TODO => CHANGED BUT TEST IN POSTMAN THAT THIS WORKS
+            const disputedTransaction = await Transaction.findById(dispute.transaction);
+            disputedTransaction.status = "resolved";
+            await disputedTransaction.save();
+
 
         } catch (error) {
             console.error(error);
