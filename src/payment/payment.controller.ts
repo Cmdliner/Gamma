@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { startSession } from "mongoose";
+import { Types, startSession } from "mongoose";
 import Wallet from "../user/wallet.model";
 import FincraService from "../lib/fincra.service";
 import Transaction, { ReferralTransaction } from "./transaction.model";
@@ -18,6 +18,59 @@ import IProduct from "../types/product.schema";
 
 class PaymentController {
 
+    private static async getTransactionsAssociatedWithUser(userId: Types.ObjectId) {
+        const transactions = await PaymentTransaction.aggregate([
+            // First, look up the associated product details
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "product",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            // Unwind the product array
+            {
+                $unwind: "$product"
+            },
+            // Look up the product owner's details
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "product.owner",
+                    foreignField: "_id",
+                    pipeline: [
+                        {
+                            $project: {
+                                first_name: 1,
+                                last_name: 1,
+                                display_pic: 1
+                            }
+                        }
+                    ],
+                    as: "product.owner"
+                }
+            },
+            // Unwind the owner array to convert it back to an object
+            {
+                $unwind: "$product.owner"
+            },
+            // Match transactions where user is either bearer or product owner
+            {
+                $match: {
+                    $or: [
+                        { bearer: new Types.ObjectId(userId) },
+                        { "product.owner._id": new Types.ObjectId(userId) }
+                    ]
+                }
+            },
+            // Sort by creation date, most recent first
+            {
+                $sort: { createdAt: -1 }
+            }
+        ]);
+        return transactions;
+    }
     static async withdrawFromWallet(req: Request, res: Response) {
         const MIN_WITHDRAWAL_VALUE = 500;
         const session = await startSession();
@@ -134,7 +187,7 @@ class PaymentController {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
-            
+
             const product = await Product.findById(productID).session(session);
             if (!product || product.status !== "available") {
                 await session.abortTransaction();
@@ -481,16 +534,7 @@ class PaymentController {
 
     static async getSuccessfulDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentTransaction.find({
-                $or: [{ buyer: req.user?._id!, "product.owner": req.user?._id! }],
-                status: { $in: ["success"] },
-            }).populate("bearer").populate({
-                path: "product",
-                populate: {
-                    path: "bearer",
-                    model: "User"
-                }
-            });
+            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!);
             if (!deals || !deals.length) {
                 return res.status(404).json({ error: true, message: "No deals found!" })
             }
@@ -503,17 +547,8 @@ class PaymentController {
 
     static async getDisputedDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentTransaction.find({
-                $or: [{ buyer: req.user?._id!, "product.owner": req.user?._id! }],
-                status: "in_dispute",
-            }).populate("bearer").populate({
-                path: "product",
-                populate: {
-                    path: "bearer",
-                    model: "User"
-                }
-            });
-            if (!deals || !deals.length) {
+            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!);
+            if (!deals) {
                 return res.status(404).json({ error: true, message: "No deals found" })
             }
             return res.status(200).json({ success: true, deals });
@@ -535,7 +570,7 @@ class PaymentController {
                     model: "User",
                 },
             });
-            if (!deals || !deals.length) {
+            if (!deals) {
                 return res.status(404).json({ error: true, message: "No deals found" })
             }
             return res.status(200).json({ success: true, deals });
@@ -547,17 +582,8 @@ class PaymentController {
 
     static async getOngoingDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentTransaction.find({
-                $or: [{ buyer: req.user?._id!, "product.owner": req.user?._id! }],
-                status: "in_escrow",
-            }).populate("bearer").populate({
-                path: "product",
-                populate: {
-                    path: "bearer",
-                    model: "User"
-                }
-            });
-            if (!deals || !deals.length) {
+            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!);
+            if (!deals) {
                 return res.status(404).json({ error: true, message: "User has no ongoing transactions" });
             }
             return res.status(200).json({ success: true, deals });
