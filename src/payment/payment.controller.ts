@@ -343,12 +343,18 @@ class PaymentController {
         const session = await startSession();
         session.startTransaction();
         try {
+            const { amount }: { amount: number } = req.body;
             const userId = req.user?._id;
             const user = await User.findById(userId).session(session);
             if (!user) {
                 await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "User  not found!" });
             }
+
+            if (amount > user.rewards.balance || user.rewards.balance < 100) {
+                return res.status(400).json({ error: true, message: "Insuffecient funds!" });
+            }
+            // !TODO => REGISTER AMOUNT IN API
 
             // Ensure user has made a transaction in the last 30 days
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -378,7 +384,7 @@ class PaymentController {
             });
             await payoutTransaction.save({ session });
 
-            const fincraRes = await FincraService.withdrawRewards(user, payoutTransaction.id);
+            const fincraRes = await FincraService.withdrawRewards(user, amount, payoutTransaction.id);
             // Handle response and service of rewards
 
             console.log("fincraResponse");

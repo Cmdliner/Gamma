@@ -190,7 +190,7 @@ class FincraService {
         }
     }
 
-    static async withdrawRewards(user: IUser, ref: string) {
+    static async withdrawRewards(user: IUser, amount: number, ref: string) {
         //! TODO => Implement payment with oyeah service cut
         try {
             const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
@@ -203,7 +203,7 @@ class FincraService {
                 business: process.env.FINCRA_BUSINESS_ID,
                 sourceCurrency: "NGN",
                 destinationCurrency: "NGN",
-                amount: `${user.rewards.balance}`,
+                amount: `${amount}`,
                 description: "Payment",
                 customerReference: ref,
                 beneficiary: {

@@ -60,7 +60,6 @@ class AuthController {
             const DEFAULT_LOCATION = "lagos";
             const humanReadableLocation = req.body.location ? req.body.location as string : DEFAULT_LOCATION;
             if (humanReadableLocation) {
-                //  Validate the location
                 if (!isValidState(humanReadableLocation)) {
                     await session.abortTransaction();
                     return res.status(422).json({ error: true, message: "Invalid location format" });
@@ -253,7 +252,7 @@ class AuthController {
             }
 
             if (password.trim() !== password) {
-                return res.status(422).json({error: true, message: "Password cannot start or end with whitespace"});
+                return res.status(422).json({ error: true, message: "Password cannot start or end with whitespace" });
             }
 
             const decodedToken = jwt.verify(userToken, ONBOARDING_TOKEN_SECRET) as JwtPayload;
@@ -523,10 +522,12 @@ class AuthController {
             const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "2h");
             const refreshToken = await AuthService.createToken(user._id, REFRESH_TOKEN_SECRET, "30d");
 
-            res.setHeader("x-refresh", `Refresh ${refreshToken}`);
-            res.setHeader("Authorization", `Bearer ${authToken}`);
-
-            return res.status(200).json({ success: true, message: "Login successful" });
+            return res.status(200).json({
+                success: true,
+                message: "Login successful",
+                access_token: authToken,
+                refresh_token: refreshToken,
+            });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error signing in user" });
@@ -552,7 +553,11 @@ class AuthController {
             const accessToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "2h")
             res.setHeader("Authorization", `Bearer ${accessToken}`);
 
-            return res.status(200).json({ success: true, message: "Access refreshed" });
+            return res.status(200).json({
+                success: true,
+                message: "Access refreshed",
+                access_token: accessToken
+            });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Internal server error" });
