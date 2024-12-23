@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
+import { cfg } from "../init";
 
 class DB {
     static async connect() {
-        return mongoose.connect(process.env.MONGO_URI);
+        return mongoose.connect(cfg.DB_URI);
     } 
     static async disconnect() {
         return mongoose.connection.close();

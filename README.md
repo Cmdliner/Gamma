@@ -36,13 +36,16 @@ bun run dev
 
 
 ## TODOS
-
+- Add config to app
+- Refactor email service 
+- -Implement refunds and push notifications
 - Sanitize inputs for all actions (impl max char length, rm whitespace, dont allow special characters)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
 - On buyer payment create transaction receipts with method of payment and transaction id
 
 
 ## REMEMBER
+- !!! change refresh and access token in postman and also the amount in rewards withdrawal
 - Upload can only error due to client-side errors; upload middleware is very stable
 - Implement https
     

@@ -2,7 +2,6 @@ import express, { type Request, type Response, type NextFunction } from "express
 import auth from "./auth/auth.routes";
 import user from "./user/user.routes";
 import DB from "./config/db";
-import Settings from "./config/settings";
 import product from "./product/product.routes";
 import AuthMiddleware from "./middlewares/auth.middlewares";
 import cors, { type CorsOptions } from "cors";
@@ -14,9 +13,11 @@ import WebhookController from "./payment/webhook.controller";
 import dispute from "./dispute/dispute.routes";
 import deals from "./payment/deals.routes";
 import notification from "./notification/notification.routes";
+import { cfg } from "./init";
+
+const API_VERSION = "api/v1";
 
 
-const { PORT, API_VERSION } = Settings;
 const corsOptions: CorsOptions = {
     origin: process.env.CORS_ORIGIN,
     methods: "GET",
@@ -49,7 +50,7 @@ app.use((_req: Request, res: Response, _next: NextFunction) => {
 })
 
 DB.connect()
-    .then(() => app.listen(PORT, () => console.log("Server is up and running on PORT " + PORT)))
+    .then(() => app.listen(cfg.PORT, () => console.log("Server is up and running on PORT " + cfg.PORT)))
     .catch((error) => console.error({ error }));
 
 export default app;

@@ -3,6 +3,7 @@ import { config as envConfig } from "dotenv";
 import nodemailer from "nodemailer";
 import Mail from "nodemailer/lib/mailer";
 import path from "path";
+import { cfg } from "../init";
 
 envConfig();
 
@@ -10,11 +11,11 @@ class EmailService {
 
     private static transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
-        service: process.env.EMAIL_SERVICE,
-        secure: process.env.NODE_ENV === 'PRODUCTION' ? true : false,
+        service: cfg.APP_EMAIL_SERVICE,
+        secure: cfg.NODE_ENV === 'production' ? true : false,
         auth: {
-            user: process.env.EMAIL_ADDRESS,
-            pass: process.env.EMAIL_PASS
+            user: cfg.APP_EMAIL_ADDRESS,
+            pass: cfg.APP_EMAIL_PASS
         }
     });
 
@@ -29,7 +30,7 @@ class EmailService {
     static async sendVerificationEmail(to: string, fullname: string, vToken: string) {
         const pathToEmail = path.resolve(__dirname, "../../templates/verification_email.html")
         const mailOptions: Mail.Options = {
-            from: process.env.EMAIL_ADDRESS,
+            from: cfg.APP_EMAIL_ADDRESS,
             to,
             subject: 'Email Verification',
             html: EmailService.parseMailFile(readFileSync(pathToEmail).toString(), fullname, vToken)
@@ -48,7 +49,7 @@ class EmailService {
     static async sendPasswordResetToken(to: string, username: string, resetPasswordToken: string) {
         const pathToEmail = path.resolve(__dirname, "../../templates/password_reset.html")
         const mailOptions: Mail.Options = {
-            from: process.env.EMAIL_ADDRESS,
+            from: cfg.APP_EMAIL_ADDRESS,
             to,
             subject: 'Reset Password',
             html: EmailService.parseMailFile(readFileSync(pathToEmail).toString(), username, resetPasswordToken)

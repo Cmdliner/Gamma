@@ -5,21 +5,22 @@ import type IProduct from "../types/product.schema";
 import type { SponsorshipDuration } from "../types/product.schema";
 import { decryptBvn } from "./main";
 import { AdPayments } from "../types/ad.enums";
+import { cfg } from "../init";
 
 class FincraService {
 
     private static FINCRA_BASE_URL = "https://sandboxapi.fincra.com";
     private static fincra = new Fincra(
-        process.env.FINCRA_PUBLIC_KEY,
-        process.env.FINCRA_SECRET_KEY,
-        { sandbox: process.env.NODE_ENV === "production" ? false : true }
+        cfg.FINCRA_PUBLIC_KEY,
+        cfg.FINCRA_SECRET_KEY,
+        { sandbox: cfg.NODE_ENV === "production" ? false : true }
     );
 
     private static async getBusinessInfo() {
         try {
             const url = `${this.FINCRA_BASE_URL}/profile/business/me`;
             const headers = {
-                "api-key": process.env.FINCRA_SECRET_KEY,
+                "api-key": cfg.FINCRA_SECRET_KEY,
                 "Accept": "application/json",
                 "Content-Type": "application/json"
 
@@ -42,7 +43,7 @@ class FincraService {
             const headers = {
                 "Content-Type": "application/json",
                 "Accepts": "application/json",
-                "api-key": process.env.FINCRA_SECRET_KEY
+                "api-key": cfg.FINCRA_SECRET_KEY
             }
             const res = await axios.post(url, {
                 bvn,
@@ -63,7 +64,7 @@ class FincraService {
                 url: `${FincraService.FINCRA_BASE_URL}/profile/virtual-accounts/requests`,
                 method: "POST",
                 headers: {
-                    "api-key": process.env.FINCRA_SECRET_KEY,
+                    "api-key": cfg.FINCRA_SECRET_KEY,
                     "Content-Type": "application/json",
                     "Accept": "application/json"
                 },
@@ -97,8 +98,8 @@ class FincraService {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
-                    "api-key": process.env.FINCRA_SECRET_KEY,
-                    "x-pub-key": process.env.FINCRA_PUBLIC_KEY,
+                    "api-key": cfg.FINCRA_SECRET_KEY,
+                    "x-pub-key": cfg.FINCRA_PUBLIC_KEY,
                 },
                 data: {
                     amount: bidPrice ? bidPrice : product.price,
@@ -139,7 +140,7 @@ class FincraService {
             const res = await axios.get(verifyPaymentEndpoint, {
                 headers: {
                     "Accept": "application/json",
-                    "x-business-id": process.env.FINCRA_BUSINESS_ID
+                    "x-business-id": cfg.FINCRA_BUSINESS_ID
                 }
             });
             return res.data;
@@ -156,12 +157,12 @@ class FincraService {
         try {
             const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
-                "api-key": process.env.FINCRA_SECRET_KEY,
+                "api-key": cfg.FINCRA_SECRET_KEY,
                 "Content-Type": "application/json",
                 "Accepts": "application/json"
             }
             const res = await axios.post(payoutUrl, {
-                business: process.env.FINCRA_BUSINESS_ID,
+                business: cfg.FINCRA_BUSINESS_ID,
                 sourceCurrency: "NGN",
                 destinationCurrency: "NGN",
                 amount: `${AMOUNT_TO_WITHDRAW}`,
@@ -195,12 +196,12 @@ class FincraService {
         try {
             const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
-                "api-key": process.env.FINCRA_SECRET_KEY,
+                "api-key": cfg.FINCRA_SECRET_KEY,
                 "Content-Type": "application/json",
                 "Accepts": "application/json"
             }
             const res = await axios.post(payoutUrl, {
-                business: process.env.FINCRA_BUSINESS_ID,
+                business: cfg.FINCRA_BUSINESS_ID,
                 sourceCurrency: "NGN",
                 destinationCurrency: "NGN",
                 amount: `${amount}`,
@@ -237,8 +238,8 @@ class FincraService {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
-                    "api-key": process.env.FINCRA_SECRET_KEY,
-                    "x-pub-key": process.env.FINCRA_PUBLIC_KEY,
+                    "api-key": cfg.FINCRA_SECRET_KEY,
+                    "x-pub-key": cfg.FINCRA_PUBLIC_KEY,
                 },
                 data: {
                     "amount": sponsorshipDuration == "1Week" ? AdPayments.weekly : AdPayments.monthly,

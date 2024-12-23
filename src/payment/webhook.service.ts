@@ -5,12 +5,13 @@ import crypto from "crypto";
 import { AdPayments } from "../types/ad.enums";
 import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
 import User from "../user/user.model";
+import { cfg } from "../init";
 
 class WebhookService {
 
     static async validateWebhook(webhookSignature: string, payload: any) {
         const encryptedData = crypto
-            .createHmac("SHA512", process.env.FINCRA_WEBHOOK_KEY)
+            .createHmac("SHA512", cfg.FINCRA_WEBHOOK_KEY)
             .update(JSON.stringify(payload))
             .digest("hex");
         const signatureFromWebhook = webhookSignature;

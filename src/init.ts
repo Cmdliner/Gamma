@@ -1,0 +1,25 @@
+import { AppConfig } from "./config/app.config";
+
+export const cfg = new AppConfig({
+    PORT: process.env.PORT || 4001,
+    DB_URI: process.env.MONGO_URI,
+    NODE_ENV: process.env.NODE_ENV,
+    APP_EMAIL_ADDRESS: process.env.EMAIL_ADDRESS,
+    APP_EMAIL_SERVICE: process.env.EMAIL_SERVICE,
+    APP_EMAIL_PASS: process.env.EMAIL_PASS,
+    ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
+    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
+    ONBOARDING_TOKEN_SECRET: process.env.ONBOARDING_TOKEN_SECRET,
+    FINCRA_SECRET_KEY: process.env.FINCRA_SECRET_KEY,
+    FINCRA_PUBLIC_KEY: process.env.FINCRA_PUBLIC_KEY,
+    FINCRA_WEBHOOK_KEY: process.env.FINCRA_WEBHOOK_KEY,
+    PAYSTACK_URI: process.env.PAYSTACK_URI,
+    PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
+    PAYSTACK_PUBLIC_KEY: process.env.PAYSTACK_PUBLIC_KEY,
+    BVN_ENCRYPTION_KEY: process.env.BVN_ENCRYPTION_KEY,
+    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET,
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+    FINCRA_BUSINESS_ID: process.env.FINCRA_BUSINESS_ID
+
+});

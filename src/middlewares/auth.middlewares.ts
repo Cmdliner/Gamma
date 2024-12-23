@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../user/user.model";
+import { cfg } from "../init";
 
 class AuthMiddleware {
     static async requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -10,7 +11,7 @@ class AuthMiddleware {
 
             const [_, authToken] = authHeader.split(" ");
 
-            const decoded = jwt.verify(authToken, process.env.ACCESS_TOKEN_SECRET) as JwtPayload;
+            const decoded = jwt.verify(authToken, cfg.ACCESS_TOKEN_SECRET) as JwtPayload;
             if (!decoded) return res.status(403).json({ error: true, message: "Unauthorized!" });
 
             const user = await User.findById(decoded.id).select(["-password"]);

@@ -1,6 +1,7 @@
 import { Types } from "mongoose"
 import crypto, { randomInt } from "crypto";
 import { GeospatialDataNigeria } from "../lib/location.data";
+import { cfg } from "../init";
 
 export function compareObjectID(obj1: Types.ObjectId, obj2: Types.ObjectId): boolean {
     return obj1.toString() === obj2.toString();
@@ -54,7 +55,7 @@ export const encryptBvn = (bvn: string): string => {
         const IV_LENGTH = 16;
 
         // Base 64 encoded key gen using openssl
-        const ENCRYPTION_KEY = Buffer.from(process.env.BVN_ENCRYPTION_KEY, "base64");
+        const ENCRYPTION_KEY = Buffer.from(cfg.BVN_ENCRYPTION_KEY, "base64");
 
 
         // Create a 16 bit init vector (think of this like a unique salt)
@@ -76,7 +77,7 @@ export const encryptBvn = (bvn: string): string => {
 
 export const decryptBvn = (encryptedData: string): string => {
     try {
-        const ENCRYPTION_KEY = Buffer.from(process.env.BVN_ENCRYPTION_KEY, "base64");
+        const ENCRYPTION_KEY = Buffer.from(cfg.BVN_ENCRYPTION_KEY, "base64");
 
         const [ivString, encryptedBvnString] = encryptedData.split(":");
 
@@ -128,7 +129,7 @@ export function matchAccNameInDb(
     }
   
     return true; // All validations passed
-  }
+}
   
 
 export const isValidState = (state: string) => GeospatialDataNigeria[state] ? true : false;

@@ -15,6 +15,7 @@ import PaystackService from "../lib/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../lib/fincra.service";
 import { GeospatialDataNigeria } from "../lib/location.data";
+import { cfg } from "../init";
 
 const { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
@@ -307,7 +308,7 @@ class AuthController {
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
             if (bvnInUse) return res.status(400).json({ error: true, message: "BVN is already in use" })
 
-            const bvnValidationRes = await FincraService.resolveBvn(bvn, process.env.FINCRA_BUSINESS_ID);
+            const bvnValidationRes = await FincraService.resolveBvn(bvn, cfg.FINCRA_BUSINESS_ID);
 
             if (!bvnValidationRes || bvnValidationRes.success !== true) {
                 return res.status(400).json({ error: true, message: "Error validating bvn" });

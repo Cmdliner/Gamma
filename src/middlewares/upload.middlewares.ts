@@ -6,12 +6,13 @@ import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 import { v2 as cloudinary } from "cloudinary";
 import { UploadApiResponse } from "cloudinary";
+import { cfg } from "../init";
 
 // Cloudinary configuration
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET
+    cloud_name: cfg.CLOUDINARY_CLOUD_NAME,
+    api_key: cfg.CLOUDINARY_API_KEY,
+    api_secret: cfg.CLOUDINARY_SECRET
 });
 
 const MAX_FILE_SIZE = 1024 * 1024 * 10;
@@ -19,7 +20,7 @@ const MAX_WIDTH = 2000;
 const MAX_HEIGHT = 2000;
 const QUALITY = 80;
 
-const isProd = process.env.NODE_ENV === "PRODUCTION";
+const isProd = cfg.NODE_ENV === "production";
 
 const storage = multer.memoryStorage();
 const fileFilter = (_: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
