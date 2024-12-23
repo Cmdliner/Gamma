@@ -3,7 +3,6 @@ import Product from "../product/product.model";
 import User from "../user/user.model";
 import { compareObjectID } from "../lib/main";
 import Dispute from "./dispute.model";
-import ITransaction from "../types/transaction.schema";
 import Transaction from "../payment/transaction.model";
 
 class DisputeController {

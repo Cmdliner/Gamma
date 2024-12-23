@@ -37,7 +37,15 @@ class AuthController {
                 phone_no_1, phone_no_2
             }: IRegisterUser = req.body;
 
-            const registerInfo: Partial<IRegisterUser> = { first_name, last_name, dob, email, gender, state_of_origin, interested_categories };
+            const registerInfo: Partial<IRegisterUser> = {
+                first_name,
+                last_name,
+                dob,
+                email: email.trim().toLowerCase(),
+                gender,
+                state_of_origin,
+                interested_categories,
+            };
 
             // Add error that checks that at least we have a phone number 1 field
             if (!phone_no_1) {
@@ -165,7 +173,8 @@ class AuthController {
     // Resend verification email
     static async resendVerificationMail(req: Request, res: Response) {
         try {
-            const { email } = req.body;
+            let { email }: { email: string } = req.body;
+            email = email.toLowerCase();
             const user = await User.findOne({ email });
             if (!user) return res.status(404).json({ error: true, message: "Email not found!" });
 
@@ -203,6 +212,10 @@ class AuthController {
             }
             const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
 
+            if (!unverifiedUserToken) {
+                return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
+            }
+
             const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
@@ -233,8 +246,15 @@ class AuthController {
     // Set password
     static async setPassword(req: Request, res: Response) {
         try {
-            const { password } = req.body;
+            const { password }: { password: string } = req.body;
             const userToken = req.headers?.["x-onboarding-user"] as string;
+            if (!userToken) {
+                return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
+            }
+
+            if (password.trim() !== password) {
+                return res.status(422).json({error: true, message: "Password cannot start or end with whitespace"});
+            }
 
             const decodedToken = jwt.verify(userToken, ONBOARDING_TOKEN_SECRET) as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
@@ -274,6 +294,9 @@ class AuthController {
 
             // Verify onboarding token and check if user is valid
             const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
+            if (!unverifiedUserToken) {
+                return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
+            }
 
             const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
@@ -342,6 +365,9 @@ class AuthController {
 
             // Verify onboarding token and check if user is valid
             const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
+            if (!unverifiedUserToken) {
+                return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
+            }
 
             const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
@@ -398,10 +424,10 @@ class AuthController {
     static async generatePasswordResetToken(req: Request, res: Response) {
         try {
             const { email } = req.body;
-            if (!email) {
+            if (!email || !email.trim()) {
                 return res.status(422).json({ error: true, message: "Email required!" });
             }
-            const user = await User.findOne({ email });
+            const user = await User.findOne({ email: email.toLowerCase() });
             if (!user) {
                 return res.status(404).json({ error: true, message: "Email not found" });
             }
@@ -428,11 +454,11 @@ class AuthController {
         try {
             const { otp, email } = req.body;
 
-            if (!otp || !email) {
+            if (!otp || !email || !email.trim()) {
                 return res.status(422).json({ error: true, message: "Email and otp token required!" });
             }
 
-            const user = await User.findOne({ email });
+            const user = await User.findOne({ email: email.toLowerCase() });
             if (!user) return res.status(422).json({ error: true, message: "Error verifying otp!" });
 
             const otpInDb = await OTP.findOneAndDelete({ owner: user._id, token: otp });
@@ -457,7 +483,7 @@ class AuthController {
     static async resetPassword(req: Request, res: Response) {
         try {
             const { password } = req.body;
-            if (!password) {
+            if (!password.trim()) {
                 return res.status(422).json({ error: true, message: "Password required!" });
             }
             const authToken = req.headers.authorization?.toString().split(" ")[1];
@@ -468,7 +494,7 @@ class AuthController {
 
             const user = await User.findById(decoded.id);
             if (!user) return res.status(404).json({ error: true, message: "User not found" });
-            const hashedPassword = await bcrypt.hash(password, 10);
+            const hashedPassword = await bcrypt.hash(password.trim(), 10);
             user.password = hashedPassword;
             await user.save();
 
@@ -484,7 +510,7 @@ class AuthController {
     static async login(req: Request, res: Response) {
         try {
             const { email, password } = req.body;
-            if (!email || !password) {
+            if (!email.trim() || !password.trim()) {
                 return res.status(422).json({ error: true, message: `${email ? "password" : "email"} required for sign in` });
             }
 
