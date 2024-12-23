@@ -536,20 +536,20 @@ class AuthController {
     // Refresh access token
     static async refresh(req: Request, res: Response) {
         try {
-            const refreshCookie = req.headers["x-refresh"] as string;
-            const [_, refreshToken] = refreshCookie.split(" ");
-            if (!refreshCookie || !refreshToken) {
+            const refreshHeader = req.headers["x-refresh"] as string;
+            const [_, refreshToken] = refreshHeader.split(" ");
+            if (!refreshHeader || !refreshToken) {
                 return res.status(401).json({ error: true, message: "Unauthorized" });
             }
             // Validate refresh token
-            const decoded = jwt.verify(refreshToken, "TEMP_REFRESH_SECRET") as JwtPayload;
+            const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as JwtPayload;
             if (!decoded) return res.status(403).json({ error: true, message: "Refresh token expired" });
 
             const user = await User.exists({ _id: decoded.id });
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
             //Create new access token
-            const accessToken = await AuthService.createToken(user._id, process.env.ACCESS_TOKEN_SECRET, "2h")
+            const accessToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "2h")
             res.setHeader("Authorization", `Bearer ${accessToken}`);
 
             return res.status(200).json({ success: true, message: "Access refreshed" });
