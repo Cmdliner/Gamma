@@ -16,7 +16,7 @@ import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../lib/fincra.service";
 import { GeospatialDataNigeria } from "../lib/location.data";
 
-const { ACCESS_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
+const { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
 
 
 class AuthController {
@@ -467,9 +467,6 @@ class AuthController {
             if (otpInDb.expires.valueOf() < Date.now().valueOf()) {
                 return res.status(400).json({ error: true, message: "OTP expired!" });
             }
-
-            const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
-            res.setHeader("Authorization", `Bearer ${authToken}`);
             return res.status(200).json({ success: true, message: "OTP verification successful!" });
 
 
@@ -523,7 +520,10 @@ class AuthController {
             if (user.bvn?.verification_status !== "verified" || !user.bank_details || !user.email_verified) {
                 return res.status(400).json({ error: true, message: "Cannot skip onboarding process" });
             }
-            const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "30d");
+            const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "2h");
+            const refreshToken = await AuthService.createToken(user._id, REFRESH_TOKEN_SECRET, "30d");
+
+            res.setHeader("x-refresh", `Refresh ${refreshToken}`);
             res.setHeader("Authorization", `Bearer ${authToken}`);
 
             return res.status(200).json({ success: true, message: "Login successful" });
@@ -536,7 +536,7 @@ class AuthController {
     // Refresh access token
     static async refresh(req: Request, res: Response) {
         try {
-            const refreshCookie = req.cookies.refresh as string;
+            const refreshCookie = req.headers["x-refresh"] as string;
             const [_, refreshToken] = refreshCookie.split(" ");
             if (!refreshCookie || !refreshToken) {
                 return res.status(401).json({ error: true, message: "Unauthorized" });
@@ -549,7 +549,7 @@ class AuthController {
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
             //Create new access token
-            const accessToken = await AuthService.createToken(user._id, process.env.ACCESS_TOKEN_SECRET, "30d")
+            const accessToken = await AuthService.createToken(user._id, process.env.ACCESS_TOKEN_SECRET, "2h")
             res.setHeader("Authorization", `Bearer ${accessToken}`);
 
             return res.status(200).json({ success: true, message: "Access refreshed" });
