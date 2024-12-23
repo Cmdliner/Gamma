@@ -6,7 +6,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 import Settings from "../config/settings";
 import EmailService from "../lib/email.service";
 import User from "../user/user.model";
-import OTP from "./auth.model";
+import OTP from "./otp.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";

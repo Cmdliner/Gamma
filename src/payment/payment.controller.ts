@@ -12,7 +12,7 @@ import { AdPayments } from "../types/ad.enums";
 import User from "../user/user.model";
 import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
 import EmailService from "../lib/email.service";
-import OTP from "../auth/auth.model";
+import OTP from "../auth/otp.model";
 import IProduct from "../types/product.schema";
 
 
