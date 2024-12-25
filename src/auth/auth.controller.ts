@@ -17,8 +17,6 @@ import FincraService from "../lib/fincra.service";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import { cfg } from "../init";
 
-const { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, ONBOARDING_TOKEN_SECRET } = Settings;
-
 
 class AuthController {
 
@@ -151,7 +149,7 @@ class AuthController {
             const full_name = `${first_name} ${last_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
 
-            const onboardingToken = await AuthService.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
+            const onboardingToken = await AuthService.createToken(user._id, cfg.ONBOARDING_TOKEN_SECRET, "7d");
 
             res.setHeader("x-onboarding-user", onboardingToken);
 
@@ -194,7 +192,7 @@ class AuthController {
             const full_name = `${user.first_name} ${user.last_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token);
 
-            const onboardingToken = await AuthService.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
+            const onboardingToken = await AuthService.createToken(user._id, cfg.ONBOARDING_TOKEN_SECRET, "7d");
 
             res.setHeader("x-onboarding-user", onboardingToken);
 
@@ -225,7 +223,7 @@ class AuthController {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
             }
 
-            const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
+            const decodedToken = jwt.verify(unverifiedUserToken, cfg.ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
             const user = await User.findById(decodedToken.id);
@@ -265,7 +263,7 @@ class AuthController {
                 return res.status(422).json({ error: true, message: "Password cannot start or end with whitespace" });
             }
 
-            const decodedToken = jwt.verify(userToken, ONBOARDING_TOKEN_SECRET) as JwtPayload;
+            const decodedToken = jwt.verify(userToken, cfg.ONBOARDING_TOKEN_SECRET) as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
             const user = await User.findById(decodedToken.id);
@@ -307,7 +305,7 @@ class AuthController {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
             }
 
-            const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
+            const decodedToken = jwt.verify(unverifiedUserToken, cfg.ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
             const user = await User.findById(decodedToken.id);
@@ -378,7 +376,7 @@ class AuthController {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
             }
 
-            const decodedToken = jwt.verify(unverifiedUserToken, ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
+            const decodedToken = jwt.verify(unverifiedUserToken, cfg.ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
             // Intiate db transaction
@@ -517,7 +515,7 @@ class AuthController {
             const authToken = req.headers.authorization?.toString().split(" ")[1];
             if (!authToken) return res.status(401).json({ error: true, message: "Error authenticating user" });
 
-            const decoded = jwt.verify(authToken, ACCESS_TOKEN_SECRET) as any as JwtPayload;
+            const decoded = jwt.verify(authToken, cfg.ACCESS_TOKEN_SECRET) as any as JwtPayload;
             if (!decoded) return res.status(401).json({ error: true, message: "Error authenticating user!" });
 
             const user = await User.findById(decoded.id);
@@ -552,8 +550,8 @@ class AuthController {
             if (user.bvn?.verification_status !== "verified" || !user.bank_details || !user.email_verified) {
                 return res.status(400).json({ error: true, message: "Cannot skip onboarding process" });
             }
-            const authToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "2h");
-            const refreshToken = await AuthService.createToken(user._id, REFRESH_TOKEN_SECRET, "30d");
+            const authToken = await AuthService.createToken(user._id, cfg.ACCESS_TOKEN_SECRET, "2h");
+            const refreshToken = await AuthService.createToken(user._id, cfg.REFRESH_TOKEN_SECRET, "30d");
 
             return res.status(200).json({
                 success: true,
@@ -577,14 +575,14 @@ class AuthController {
             }
 
             // Validate refresh token
-            const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as JwtPayload;
+            const decoded = jwt.verify(refreshToken, cfg.REFRESH_TOKEN_SECRET) as JwtPayload;
             if (!decoded) return res.status(403).json({ error: true, message: "Refresh token expired" });
 
             const user = await User.exists({ _id: decoded.id });
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
             //Create new access token
-            const accessToken = await AuthService.createToken(user._id, ACCESS_TOKEN_SECRET, "2h")
+            const accessToken = await AuthService.createToken(user._id, cfg.ACCESS_TOKEN_SECRET, "2h")
             res.setHeader("Authorization", `Bearer ${accessToken}`);
 
             return res.status(200).json({
