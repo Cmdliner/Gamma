@@ -11,7 +11,11 @@ import IUser from "../types/user.schema";
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
         try {
-            const user = await User.findById(req.user?._id!).select(["-password", "-bvn"]);
+            const user = await User.findById(req.user?._id!).select([
+                "-password",
+                "-bvn",
+                "-device_push_token"
+            ]);
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
             return res.status(200).json({ success: true, user });
@@ -22,14 +26,14 @@ class UserController {
         }
     }
 
-
     static async getWalletBalance(req: Request, res: Response) {
         try {
             const user = await User.findById(req.user?._id).populate("wallet");
             if (!user) {
                 return res.status(404).json({ error: true, message: "Could not get wallet balance" });
             }
-            const balance = (user.wallet as any as IWallet).balance;
+
+            const balance = (user.wallet as unknown as IWallet).balance;
             return res.status(200).json({ success: true, balance });
 
         } catch (error) {
@@ -51,9 +55,13 @@ class UserController {
                 .filter((referral: IUser) => referral.account_status === "active").length;
             const rewards_balance = user.rewards.balance;
 
-            return res.status(200).json({ success: true, info: { referral_code, total_referrals, active_referrals, rewards_balance } })
+            return res.status(200).json({ 
+                success: true, 
+                info: { referral_code, total_referrals, active_referrals, rewards_balance } 
+            })
         } catch (error) {
-
+            console.error(error);
+            return res.status(500).json({error: true, message: "Error retrieving referral info"})
         }
     }
 
@@ -72,7 +80,10 @@ class UserController {
 
             // Check if 3 months has passed
             if (threeMonthsFromDateAdded > Date.now()) {
-                return res.status(400).json({ error: true, message: "Cannot update bank account details at this moment" })
+                return res.status(400).json({ 
+                    error: true, 
+                    message: "Cannot update bank account details at this moment" 
+                });
             }
 
             // Verify bank account with paystack
@@ -86,9 +97,8 @@ class UserController {
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error updating bank account details" })
+            return res.status(500).json({ error: true, message: "Error updating bank account details" });
         }
-
     }
 
     static async updateDisplayPicture(req: Request, res: Response) {
@@ -119,9 +129,7 @@ class UserController {
 
     static async updateInfo(req: Request, res: Response) {
         const { phone_no_1, phone_no_2 } = req.body;
-
         // !TODO => VALIDATE INPUTS AND HANDLE VERIFICATION DOCS UPLOAD
-
         try {
             const user = await User.findById(req.user?._id!);
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
@@ -151,7 +159,6 @@ class UserController {
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error occured while updating info" });
-
         }
 
     }

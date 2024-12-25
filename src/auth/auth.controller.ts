@@ -3,7 +3,6 @@ import type { IRegisterUser } from "../types/user.dto";
 import { registerValidationSchema } from "../validations/auth.validation";
 import { startSession, Types } from "mongoose";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import Settings from "../config/settings";
 import EmailService from "../lib/email.service";
 import User from "../user/user.model";
 import OTP from "./otp.model";
