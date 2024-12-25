@@ -31,7 +31,7 @@ const ProductSchema = new Schema({
     },
     location: {
         type: { type: String, enum: ["Point"], required: true },
-        coordinates: { type: [Number], required: true },
+        coordinates: { type: [Number, Number], required: true },
         human_readable: { type: String, required: true },
     },
     price: {

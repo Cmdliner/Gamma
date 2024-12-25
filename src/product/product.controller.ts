@@ -27,6 +27,7 @@ import Bid from "../bid/bid.model";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import ProductService from "./product.service";
 import User from "../user/user.model";
+import { ILocation } from "../types/common.type";
 
 
 class ProductController {
@@ -42,11 +43,7 @@ class ProductController {
             }
 
             //!TODO => Try and validate the human readable location
-            const location: {
-                type: string;
-                human_readable: string;
-                coordinates: [number, number];
-            } = {
+            const location: ILocation = {
                 human_readable: humanReadableLocation,
                 coordinates: [
                     GeospatialDataNigeria[humanReadableLocation].lat,
@@ -77,7 +74,6 @@ class ProductController {
                 name: electronicProductData.name,
                 description: electronicProductData.description,
                 price: electronicProductData.price,
-                "location.human_readable": electronicProductData.location.human_readable
             });
             if (similarProdInDb) {
                 return res.status(400).json({ error: true, message: "A similar product exists" });
@@ -88,11 +84,18 @@ class ProductController {
                 return res.status(400).json({ error: true, message: "Error uploading product" });
             }
 
-            return res.status(201).json({ success: true, message: "Electronics uploaded successfully", electronics: newElectronics });
+            return res.status(201).json({
+                success: true,
+                message: "Electronics uploaded successfully",
+                electronics: newElectronics
+            });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "An error occured during electronics product upload" });
+            return res.status(500).json({
+                error: true,
+                message: "An error occured during electronics product upload"
+            });
         }
     }
 
@@ -106,11 +109,7 @@ class ProductController {
                 return res.status(422).json({ error: true, message: "Invalid location format" });
             }
 
-            const location: {
-                type: string;
-                human_readable: string;
-                coordinates: [number, number];
-            } = {
+            const location: ILocation = {
                 human_readable: humanReadableLocation,
                 coordinates: [
                     GeospatialDataNigeria[humanReadableLocation].lat,
@@ -154,11 +153,18 @@ class ProductController {
                 return res.status(400).json({ error: true, message: "Error uploading landed property" });
             }
 
-            return res.status(201).json({ success: true, message: "Property uploaded successfully", landed_property: newLandedProperty })
+            return res.status(201).json({
+                success: true,
+                message: "Property uploaded successfully",
+                landed_property: newLandedProperty
+            });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "An error occured during property upload" })
+            return res.status(500).json({
+                error: true,
+                message: "An error occured during property upload"
+            });
         }
     }
 
@@ -171,11 +177,7 @@ class ProductController {
             if (!isValidState(humanReadableLocation)) {
                 return res.status(422).json({ error: true, message: "Invalid location format" });
             }
-            const location: {
-                type: string;
-                human_readable: string;
-                coordinates: [number, number];
-            } = {
+            const location: ILocation = {
                 human_readable: humanReadableLocation,
                 coordinates: [
                     GeospatialDataNigeria[humanReadableLocation].lat,
@@ -217,13 +219,17 @@ class ProductController {
                 return res.status(400).json({ error: true, message: "A similar product exists" });
             }
 
-            const newGadget = new Gadget(gadgetData);
-            await newGadget.save();
+            const newGadget = await Gadget.create(gadgetData);
+
             if (!newGadget) {
                 return res.status(400).json({ error: true, message: "Error uploading gadget" });
             }
 
-            return res.status(201).json({ success: true, message: "Gadget was uploaded successfully", gadget: newGadget });
+            return res.status(201).json({
+                success: true,
+                message: "Gadget was uploaded successfully",
+                gadget: newGadget
+            });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error uploading gadget" });
@@ -239,11 +245,7 @@ class ProductController {
             if (!isValidState(humanReadableLocation)) {
                 return res.status(422).json({ error: true, message: "Invalid location format" });
             }
-            const location: {
-                type: string;
-                human_readable: string;
-                coordinates: [number, number];
-            } = {
+            const location: ILocation = {
                 human_readable: humanReadableLocation,
                 coordinates: [
                     GeospatialDataNigeria[humanReadableLocation].lat,
@@ -282,7 +284,6 @@ class ProductController {
                 name: vehicleData.name,
                 description: vehicleData.description,
                 price: vehicleData.price,
-                "location.human_readable": vehicleData.location.human_readable
             });
             if (similarProdInDb) {
                 return res.status(400).json({ error: true, message: "A similar product exists" });
@@ -292,10 +293,15 @@ class ProductController {
             if (!newVehicle) {
                 return res.status(400).json({ error: true, message: "Error uploading vehicle" });
             }
-            return res.status(201).json({ success: true, message: "Vehicle uploaded successfully", vehicle: newVehicle });
+
+            return res.status(201).json({
+                success: true,
+                message: "Vehicle uploaded successfully",
+                vehicle: newVehicle
+            });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error uploading vehicle" })
+            return res.status(500).json({ error: true, message: "Error uploading vehicle" });
         }
     }
 
@@ -308,11 +314,7 @@ class ProductController {
             if (!isValidState(humanReadableLocation)) {
                 return res.status(422).json({ error: true, message: "Invalid location format" });
             }
-            const location: {
-                type: string;
-                human_readable: string;
-                coordinates: [number, number];
-            } = {
+            const location: ILocation = {
                 human_readable: humanReadableLocation,
                 coordinates: [
                     GeospatialDataNigeria[humanReadableLocation].lat,
@@ -332,7 +334,9 @@ class ProductController {
                 category: req.body.category,
                 product_images: product_images
             }
+
             if (ownership_documents.length) genericProductData.ownership_documents = ownership_documents;
+
             const { error } = genericValidationSchema.validate(genericProductData);
             if (error) {
                 return res.status(422).json({ error: true, message: error.details[0].message });
@@ -342,8 +346,7 @@ class ProductController {
             const similarProdInDb = await Product.findOne({
                 name: genericProductData.name,
                 description: genericProductData.description,
-                price: genericProductData.price,
-                "location.human_readable": genericProductData.location.human_readable
+                price: genericProductData.price
             });
             if (similarProdInDb) {
                 return res.status(400).json({ error: true, message: "A similar product exists" });
@@ -353,21 +356,37 @@ class ProductController {
                 case "furnitures":
                     const newFurniture = await Furniture.create(genericProductData);
                     if (!newFurniture) throw new Error("Could not create product");
-                    return res.status(201).json({ success: true, message: "Product uploaded succesfully", furniture: newFurniture });
+                    return res.status(201).json({
+                        success: true,
+                        message: "Product uploaded succesfully",
+                        furniture: newFurniture
+                    });
                 case "machineries":
                     const newMachinery = await Machinery.create(genericProductData);
                     if (!newMachinery) throw new Error("Could not create product");
-                    return res.status(201).json({ success: true, message: "Product uploaded succesfully", machinery: newMachinery });
+                    return res.status(201).json({
+                        success: true,
+                        message: "Product uploaded succesfully",
+                        machinery: newMachinery
+                    });
                 case "fashion_wears":
                     const newFashionWear = await FashionProduct.create(genericProductData);
                     if (!newFashionWear) throw new Error("Error creating product");
-                    return res.status(201).json({ success: true, message: "Product created successfully", fashion_wears: newFashionWear });
+                    return res.status(201).json({
+                        success: true,
+                        message: "Product created successfully",
+                        fashion_wears: newFashionWear
+                    });
                 case "others":
                     const otherProduct = await OtherProduct.create(genericProductData);
                     if (!otherProduct) throw new Error("Error creating product");
-                    return res.status(201).json({ success: true, message: "Product created successfully", other_product: otherProduct });
+                    return res.status(201).json({
+                        success: true,
+                        message: "Product created successfully",
+                        other_product: otherProduct
+                    });
                 default:
-                    throw new Error("Invalid product category, how did you get here?")
+                    throw new Error("Invalid product category, how did you get here?");
             }
         } catch (error) {
             console.error(error);
@@ -385,7 +404,10 @@ class ProductController {
             return res.status(200).json({ success: true, message: "Product found", product });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "An error occured while trying to fetch taht product!" });
+            return res.status(500).json({
+                error: true,
+                message: "An error occured while trying to fetch taht product!"
+            });
         }
     }
 
@@ -395,13 +417,15 @@ class ProductController {
             const { productCategory } = req.params;
 
             const user = await User.findById(req.user?._id!);
-            if(!user) {
-                return res.status(404).json({error: true, message: "User not found!" });
+            if (!user) {
+                return res.status(404).json({ error: true, message: "User not found!" });
             }
+
             let page = 1;
             if (!isNaN(parseInt(req.query.page as string))) {
                 page = parseInt(req.query.page as string)
             }
+
             let limit = 10;
             if (!isNaN(parseInt(req.query.limit as string))) {
                 limit = parseInt(req.query.limit as string)
@@ -419,14 +443,11 @@ class ProductController {
                 return res.status(404).json({ error: true, message: "Oops...Could not find that page" })
             }
 
-
-
-            // const products = await Product.find({ category: productCategory }).limit(limit).skip(skips);
             const products = await ProductService.filterAndSortByLocation(
-              user.location?.coordinates,
-              productCategory,
-              limit,
-              skips
+                user.location?.coordinates,
+                productCategory,
+                limit,
+                skips
             );
             if (products) return res.status(200).json({ success: true, message: "Products found!", products });
         } catch (error) {

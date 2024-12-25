@@ -13,5 +13,4 @@ user.put("/bank-details", UserController.editBankAccountDetails);
 user.put("/info", UserController.updateInfo);
 user.put("/display-picture", upload.single("display_pic"), UserController.updateDisplayPicture);
 
-
 export default user;
