@@ -151,15 +151,21 @@ class AuthController {
             const full_name = `${first_name} ${last_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
 
-            const userToken = await AuthService.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
-            const unverified_user = { id: userToken };
+            const onboardingToken = await AuthService.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
 
-            res.setHeader("x-onboarding-user", unverified_user.id);
+            res.setHeader("x-onboarding-user", onboardingToken);
 
             // when all the register operations have successfully completed commit the transactions to the db
             await session.commitTransaction();
 
-            return res.status(201).json({ success: true, message: "User created successfully!", user });
+            const { createdAt, updatedAt, ...userInfo } = user;
+
+            return res.status(201).json({
+                success: true,
+                message: "User created successfully!",
+                onboarding_token: onboardingToken,
+                user: userInfo
+            });
 
         } catch (error) {
             console.error(error);
@@ -188,15 +194,18 @@ class AuthController {
             const full_name = `${user.first_name} ${user.last_name}`;
             await EmailService.sendVerificationEmail(email, full_name, emailVToken.token);
 
-            const userToken = await AuthService.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
-            const unverified_user = { id: userToken };
+            const onboardingToken = await AuthService.createToken(user._id, ONBOARDING_TOKEN_SECRET, "7d");
 
-            res.setHeader("x-onboarding-user", unverified_user.id);
+            res.setHeader("x-onboarding-user", onboardingToken);
 
             await emailVToken.save();
             await user.save();
 
-            return res.status(200).json({ success: true, message: "Verification email sent successfully" });
+            return res.status(200).json({
+                success: true,
+                onboarding_token: onboardingToken,
+                message: "Verification email sent successfully",
+            });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error sending verification email" });
@@ -405,7 +414,11 @@ class AuthController {
 
             // Commit  transactions to the db
             await session.commitTransaction();
-            return res.status(200).json({ success: true, message: "Bank details added successfully", account: validBankAcc });
+            return res.status(200).json({
+                success: true,
+                message: "Bank details added successfully",
+                account: validBankAcc
+            });
 
         } catch (error) {
             await session.abortTransaction();
@@ -422,29 +435,44 @@ class AuthController {
 
     // Forgot password
     static async generatePasswordResetToken(req: Request, res: Response) {
+        const session = await startSession();
         try {
+            session.startTransaction();
+
             const { email } = req.body;
             if (!email || !email.trim()) {
                 return res.status(422).json({ error: true, message: "Email required!" });
             }
-            const user = await User.findOne({ email: email.toLowerCase() });
+            const user = await User.findOne({ email: email.toLowerCase() }).session(session);
             if (!user) {
+                await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "Email not found" });
             }
 
             // Delete any previous reset tokens
-            await OTP.findOneAndDelete({ kind: "password_reset", owner: user._id });
+            await OTP.findOneAndDelete({ kind: "password_reset", owner: user._id }, { session });
             const resetPasswordOTP = new OTP({ kind: "password_reset", owner: user._id, token: generateOTP() });
 
             const full_name = `${user.first_name} ${user.last_name}`
             await EmailService.sendPasswordResetToken(email, full_name, resetPasswordOTP.token);
 
-            await resetPasswordOTP.save();
+            await resetPasswordOTP.save({ session });
 
-            return res.status(200).json({ success: true, message: "A password reset token has been sent to your email" });
+            await session.commitTransaction();
+
+            return res.status(200).json({
+                success: true,
+                message: "A password reset token has been sent to your email"
+            });
         } catch (error) {
+            await session.abortTransaction();
             console.error(error);
-            return res.status(500).json({ error: true, message: "An error occured while trying to reset password" });
+            return res.status(500).json({
+                error: true,
+                message: "An error occured while trying to reset password"
+            });
+        } finally {
+            await session.endSession();
         }
 
     }
@@ -464,9 +492,11 @@ class AuthController {
             const otpInDb = await OTP.findOneAndDelete({ owner: user._id, token: otp });
             if (!otpInDb) return res.status(400).json({ error: true, message: "OTP verification failed!" });
 
-            if (otpInDb.expires.valueOf() < Date.now().valueOf()) {
+            const otpExpired = otpInDb.expires.valueOf() < Date.now().valueOf();
+            if (otpExpired) {
                 return res.status(400).json({ error: true, message: "OTP expired!" });
             }
+
             return res.status(200).json({ success: true, message: "OTP verification successful!" });
 
 
@@ -480,7 +510,8 @@ class AuthController {
     static async resetPassword(req: Request, res: Response) {
         try {
             const { password } = req.body;
-            if (!password.trim()) {
+            // !todo => sanitize pwd (ensure it doesnt contain whiespace and it is properly formatted)
+            if (!password) {
                 return res.status(422).json({ error: true, message: "Password required!" });
             }
             const authToken = req.headers.authorization?.toString().split(" ")[1];
@@ -491,7 +522,8 @@ class AuthController {
 
             const user = await User.findById(decoded.id);
             if (!user) return res.status(404).json({ error: true, message: "User not found" });
-            const hashedPassword = await bcrypt.hash(password.trim(), 10);
+
+            const hashedPassword = await bcrypt.hash(password, 10);
             user.password = hashedPassword;
             await user.save();
 
@@ -543,6 +575,7 @@ class AuthController {
             if (!refreshHeader || !refreshToken) {
                 return res.status(401).json({ error: true, message: "Unauthorized" });
             }
+
             // Validate refresh token
             const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as JwtPayload;
             if (!decoded) return res.status(403).json({ error: true, message: "Refresh token expired" });
