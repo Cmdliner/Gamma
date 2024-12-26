@@ -36,8 +36,9 @@ bun run dev
 
 
 ## TODOS
-- Add config to app
 - Refactor email service 
+- Impl soft delete
+- Impl email for refunds and check refunds transaction
 - -Implement refunds and push notifications
 - Sanitize inputs for all actions (impl max char length, rm whitespace, dont allow special characters)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)

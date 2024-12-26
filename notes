@@ -1,8 +1,0 @@
-- Referral transaction history
-- Deals: pending, successful, failed
-- Inflow and outflow of rewards (how much youve made from referrals_)
-- Outflow how much youve withdrawn
-- How much you made from each referral; active referrals
-- rm sensitive data like balance, bvn, passwords, rewards from all endpoints
-- Especially when a diff user is having access to another person data
-- How do you update push tokens on login

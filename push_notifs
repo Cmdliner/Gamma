@@ -1,0 +1,119 @@
+// first
+import { notificationService } from './services/NotificationService';
+
+// In your route handler
+app.post('/api/funds/approve', async (req, res) => {
+  try {
+    // Your existing funds approval logic
+    const { sellerId, amount } = req.body;
+    
+    // After successful funds approval, send notification
+    await notificationService.sendPushNotification(
+      sellerId,
+      'Funds Approved!',
+      `A payment of $${amount} has been approved for your product.`,
+      {
+        type: 'FUNDS_APPROVAL',
+        amount,
+        timestamp: new Date().toISOString()
+      }
+    );
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error in funds approval:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+
+// second
+
+// 1. You create the message
+const message = {
+  to: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+  title: "Funds Approved!",
+  body: "A payment of $100 has been approved",
+  data: { amount: 100 }
+};
+
+// 2. Expo chunks it (in this case, just one chunk since it's one message)
+const chunks = expo.chunkPushNotifications([message]);
+
+// 3. You send it and get a ticket
+const ticketChunk = await expo.sendPushNotificationsAsync(chunks[0]);
+// ticketChunk might look like: [{ status: "ok", id: "xxxxx" }]
+
+// 4. You check the ticket status
+if (ticketChunk[0].status === "ok") {
+  console.log("Notification sent successfully!");
+} else {
+  console.log("Failed to send notification:", ticketChunk[0].message);
+}
+
+
+// third (prod grade)
+
+import { productionNotificationService } from './services/ProductionNotificationService';
+
+app.post('/api/funds/approve', async (req, res) => {
+  try {
+    // Your existing funds approval logic
+    const { sellerId, amount } = req.body;
+    
+    // Send notification with error handling
+    const notificationSent = await productionNotificationService.sendPushNotification(
+      sellerId,
+      'Funds Approved!',
+      `A payment of $${amount} has been approved for your product.`,
+      {
+        type: 'FUNDS_APPROVAL',
+        amount,
+        timestamp: new Date().toISOString()
+      }
+    );
+
+    if (!notificationSent) {
+      // Log the failure but don't fail the transaction
+      console.warn(`Failed to send notification to seller ${sellerId}`);
+    }
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error in funds approval:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+
+// fourth (prioroity aware)
+
+app.post('/api/funds/approve', async (req, res) => {
+  try {
+    const { sellerId, amount, expiryMinutes = 5 } = req.body;
+    
+    // Calculate expiry time
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + expiryMinutes);
+
+    // Queue immediate notification for seller
+    await priorityNotificationService.queueNotification({
+      userId: sellerId,
+      pushToken: seller.pushToken,
+      title: 'Urgent: Funds Approved',
+      body: `A payment of $${amount} has been approved and requires your immediate attention`,
+      data: {
+        type: 'FUNDS_APPROVAL',
+        amount,
+        expiryTime: expiresAt.toISOString()
+      },
+      priority: NotificationPriority.IMMEDIATE,
+      expiresAt
+    });
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error in funds approval:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});

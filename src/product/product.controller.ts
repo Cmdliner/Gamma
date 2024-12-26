@@ -29,7 +29,6 @@ import ProductService from "./product.service";
 import User from "../user/user.model";
 import { ILocation } from "../types/common.type";
 
-
 class ProductController {
 
     // Add new electronics
