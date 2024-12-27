@@ -1,58 +1,86 @@
-import express, { type Request, type Response, type NextFunction } from "express";
-import auth from "./auth/auth.routes";
-import user from "./user/user.routes";
-import DB from "./config/db";
-import product from "./product/product.routes";
-import AuthMiddleware from "./middlewares/auth.middlewares";
+import express, { type NextFunction, type Express, type Request, type Response } from "express";
 import cors, { type CorsOptions } from "cors";
-import bid from "./bid/bid.routes";
 import helmet from "helmet";
-import ExpressMongoSanitize from "express-mongo-sanitize";
-import payment from "./payment/payment.routes";
 import compression from "compression";
-import WebhookController from "./payment/webhook.controller";
+import ExpressMongoSanitize from "express-mongo-sanitize";
+import { IAppConfig } from "./config/app.config";
+import DB from "./config/db";
+import AuthMiddleware from "./middlewares/auth.middlewares";
+import auth from "./auth/auth.routes";
+import bid from "./bid/bid.routes";
 import dispute from "./dispute/dispute.routes";
-import deals from "./payment/deals.routes";
 import notification from "./notification/notification.routes";
+import deals from "./payment/deals.routes";
+import payment from "./payment/payment.routes";
+import WebhookController from "./payment/webhook.controller";
+import product from "./product/product.routes";
+import user from "./user/user.routes";
 import { cfg } from "./init";
 
 const API_VERSION = "api/v1";
 
+class App {
+    
+    private app: Express;
+    public readonly cfg: IAppConfig;
+    private corsOptions: CorsOptions = {
+        origin: process.env.CORS_ORIGIN,
+        methods: "GET",
+        allowedHeaders: ["Authorization"],
+        credentials: true
+    }
 
-const corsOptions: CorsOptions = {
-    origin: process.env.CORS_ORIGIN,
-    methods: "GET",
-    allowedHeaders: ["Authorization"],
-    credentials: true
+    constructor() {
+        this.app = express();
+        this.cfg = cfg;
+        this.initializeMiddlewares();
+        this.initializeRoutes();
+        this.initializeErrorHandlers();
+    }
+
+    private initializeMiddlewares() {
+        this.app.use(compression());
+        this.app.use(helmet());
+        this.app.use(cors(this.corsOptions));
+        this.app.use(express.json());
+        this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(ExpressMongoSanitize());
+    }
+    private initializeRoutes() {
+        this.app.use(`/${API_VERSION}/auth`, auth);
+        this.app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
+        this.app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
+        this.app.use(`/${API_VERSION}/payments`, AuthMiddleware.requireAuth, payment);
+        this.app.use(`/${API_VERSION}/deals`, AuthMiddleware.requireAuth, deals);
+        this.app.use(`/${API_VERSION}/bids`, AuthMiddleware.requireAuth, bid);
+        this.app.use(`/${API_VERSION}/notifications`, AuthMiddleware.requireAuth, notification);
+        this.app.use(`/${API_VERSION}/disputes`, AuthMiddleware.requireAuth, dispute);
+        this.app.post('/webhooks', WebhookController.confirm);
+        this.app.get("/healthz", (_req: Request, res: Response) => {
+            res.status(200).json({ active: "The hood is up commandliner⚡" });
+        });;
+    }
+    private initializeErrorHandlers() {
+        this.app.use((_req: Request, res: Response, _next: NextFunction) => {
+            console.log("A fatal error occured");
+            return res.status(500).json({ error: true, message: "An  error occured\n" });
+        });
+    }
+
+    public async start() {
+        try {
+
+            await DB.connect();
+
+
+            this.app.listen(cfg.PORT, () => console.log(`Server is up and running on PORT ${cfg.PORT}`));
+        } catch (error) {
+            console.error(error);
+            process.exit(1);
+        }
+    }
+
 }
 
-const app = express();
 
- app.use(compression());
- app.use(helmet());
- app.use(cors(corsOptions));
- app.use(express.json());
- app.use(express.urlencoded({ extended: true }));
- app.use(ExpressMongoSanitize());
- app.use(`/${API_VERSION}/auth`, auth);
- app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
- app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
- app.use(`/${API_VERSION}/payments`, AuthMiddleware.requireAuth, payment);
- app.use(`/${API_VERSION}/deals`, AuthMiddleware.requireAuth, deals);
- app.use(`/${API_VERSION}/bids`, AuthMiddleware.requireAuth, bid);
- app.use(`/${API_VERSION}/notifications`, AuthMiddleware.requireAuth, notification);
- app.use(`/${API_VERSION}/disputes`, AuthMiddleware.requireAuth, dispute);
- app.post('/webhooks', WebhookController.confirm);
- app.get("/healthz", (_req: Request, res: Response) => {
-     res.status(200).json({ active: "The hood is up commandliner⚡" });
-});
-app.use((_req: Request, res: Response, _next: NextFunction) => {
-    console.log("A fatal error occured" );
-    return res.status(500).json({ error: true, message: "An  error occured" });
-})
-
-DB.connect()
-    .then(() => app.listen(cfg.PORT, () => console.log("Server is up and running on PORT " + cfg.PORT)))
-    .catch((error) => console.error({ error }));
-
-export default app;
+export default App;
