@@ -12,4 +12,4 @@ EXPOSE 4000
 
 RUN bun i typescript
 
-CMD ["bun", "run", "--env-file .env", "src/app.ts"]
+CMD ["bun", "run", "--env-file .env", "src/server.ts"]
