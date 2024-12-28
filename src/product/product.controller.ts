@@ -41,7 +41,6 @@ class ProductController {
                 return res.status(422).json({ error: true, message: "Invalid location format" });
             }
 
-            //!TODO => Try and validate the human readable location
             const location: ILocation = {
                 human_readable: humanReadableLocation,
                 coordinates: [
@@ -486,7 +485,10 @@ class ProductController {
         try {
             const { productCategory } = req.params;
 
-            //!TODO => Filter as per user location and check category
+            const isValidProductCategory = allowedCategories.includes(productCategory);
+            if (!isValidProductCategory) {
+                return res.status(422).json({ error: true, message: "Invalid product category" });
+            }
             const now = new Date();
             const sponsoredProds = await Product.find({ category: productCategory, sponsorship: { $exists: true }, "sponsorship.expires": { $gte: now } });
             if (!sponsoredProds || !sponsoredProds.length) {

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import type { IRegisterUser } from "../types/user.dto";
-import { registerValidationSchema } from "../validations/auth.validation";
+import { PasswordValidationSchema, registerValidationSchema } from "../validations/auth.validation";
 import { startSession, Types } from "mongoose";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import EmailService from "../lib/email.service";
@@ -258,8 +258,10 @@ class AuthController {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
             }
 
-            if (password.trim() !== password) {
-                return res.status(422).json({ error: true, message: "Password cannot start or end with whitespace" });
+            // Sanitize pwd (ensure it doesnt contain whitespace and it is properly formatted)
+            const { error } = PasswordValidationSchema.validate(password);
+            if (error) {
+                return res.status(422).json({ error: true, message: error.details[0].message });
             }
 
             const decodedToken = jwt.verify(userToken, cfg.ONBOARDING_TOKEN_SECRET) as JwtPayload;
@@ -507,10 +509,17 @@ class AuthController {
     static async resetPassword(req: Request, res: Response) {
         try {
             const { password } = req.body;
-            // !todo => sanitize pwd (ensure it doesnt contain whiespace and it is properly formatted)
+            
             if (!password) {
                 return res.status(422).json({ error: true, message: "Password required!" });
             }
+
+            // Sanitize pwd (ensure it doesnt contain whitespace and it is properly formatted)
+            const { error } = PasswordValidationSchema.validate(password);
+            if (error) {
+                return res.status(422).json({ error: true, message: error.details[0].message });
+            }
+
             const authToken = req.headers.authorization?.toString().split(" ")[1];
             if (!authToken) return res.status(401).json({ error: true, message: "Error authenticating user" });
 

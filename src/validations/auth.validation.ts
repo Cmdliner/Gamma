@@ -18,3 +18,15 @@ export const registerValidationSchema = Joi.object({
         human_readable: Joi.string().required(),
     }).required(),
 });
+
+
+export const PasswordValidationSchema = Joi.string()
+  .pattern(/^(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]+$/)
+  .min(8) // Optional: Minimum length requirement
+  .max(30) // Optional: Maximum length requirement
+  .required()
+  .messages({
+    "string.pattern.base": "Password must contain at least one special character, and no whitespace is allowed.",
+    "string.empty": "Password cannot be empty.",
+    "any.required": "Password is required.",
+  });

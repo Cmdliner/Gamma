@@ -24,6 +24,17 @@ class ProductService {
             },
             { $match: { category } },
             { $sort: { distance: 1 } },
+            // Begin new
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "owner",
+                    foreignField: "_id",
+                    as: "owner"
+                }
+            },
+            { $unwind: "$owner" },
+            // End new
             { $limit: limit },
             { $skip: skips }
         ]);

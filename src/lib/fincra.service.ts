@@ -192,7 +192,6 @@ class FincraService {
     }
 
     static async withdrawRewards(user: IUser, amount: number, ref: string) {
-        //! TODO => Implement payment with oyeah service cut
         try {
             const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {

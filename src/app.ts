@@ -69,11 +69,8 @@ class App {
 
     public async start() {
         try {
-
             await DB.connect();
-
-
-            this.app.listen(cfg.PORT, () => console.log(`Server is up and running on PORT ${cfg.PORT}`));
+            this.app.listen(this.cfg.PORT, () => console.log(`Server is up and running on PORT ${cfg.PORT}`));
         } catch (error) {
             console.error(error);
             process.exit(1);
@@ -81,6 +78,5 @@ class App {
     }
 
 }
-
 
 export default App;

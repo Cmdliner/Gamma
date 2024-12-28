@@ -354,7 +354,6 @@ class PaymentController {
             if (amount > user.rewards.balance || user.rewards.balance < 100) {
                 return res.status(400).json({ error: true, message: "Insuffecient funds!" });
             }
-            // !TODO => REGISTER AMOUNT IN API
 
             // Ensure user has made a transaction in the last 30 days
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
