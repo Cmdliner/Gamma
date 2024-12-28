@@ -34,9 +34,7 @@
     "nodemailer": "^6.9.15",
     "supertest": "^7.0.0",
     "uuid": "^11.0.3",
-    "winston": "^3.14.2"
-  },
-  "devDependencies": {
+    "winston": "^3.14.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
