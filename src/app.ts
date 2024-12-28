@@ -71,7 +71,7 @@ class App {
         try {
             await DB.connect();
             console.log("COnnecting on port");
-            this.app.listen(4000, () => console.log(`Server is up and running on PORT ${cfg.PORT}`));
+            this.app.listen(this.cfg.PORT, () => console.log(`Server is up and running on PORT ${cfg.PORT}`));
         } catch (error) {
             console.error(error);
             process.exit(1);
