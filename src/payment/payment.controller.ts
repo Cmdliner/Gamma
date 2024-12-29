@@ -535,7 +535,7 @@ class PaymentController {
             }
 
             // ! DO NOT TAMPER OR ALTER
-            const OYEAH_REFUND_CUT =  ((0.5 / 100 * prevTransaction.amount) * 10 / 10 );
+            const OYEAH_REFUND_CUT =  ((0.55 / 100 * prevTransaction.amount) * 10 / 10 );
             const AMOUNT_TO_REFUND = prevTransaction.amount - OYEAH_REFUND_CUT;
 
             // CREATE A NEW REFUND TRANSACTION WITH AMOUNT TO REFUND & reason with ref to prevTransaction

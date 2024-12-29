@@ -30,19 +30,14 @@ bun run dev
 ```
 
 ## BUGS
-- Bvn can be resued (bvn.encrypted_data ????) //encryption gives fdifferent values; only decryption is uniform
 - Timeout for payment (maybe 5 minutes)
-- Referrer doesnt get rewarded
 
 
-## TODOS
-- Refactor email service 
+## TODOS 
 - Impl soft delete
-- Impl email for refunds and check refunds transaction
 - -Implement refunds and push notifications
 - Sanitize inputs for all actions (impl max char length, rm whitespace, dont allow special characters)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
-- On buyer payment create transaction receipts with method of payment and transaction id
 
 
 ## REMEMBER
