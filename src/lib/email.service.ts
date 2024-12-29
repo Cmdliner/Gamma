@@ -39,8 +39,7 @@ class EmailService {
     private static parseMailFile(file: string, fullname: string, code: string | null, tx?: ITransaction) {
         return file.split(" ").map((token) => String(token)
             .replace("${fullname}", fullname)
-            .replace("${vToken}", code)
-            .replace("${passwordResetToken}", code)
+            .replace("${otp}", code)
             .replace("${tx_id}", tx?.id)
             .replace("${tx_amount}", `${tx?.amount}`)
         ).join(" ");
