@@ -6,6 +6,7 @@ import { AdPayments } from "../types/ad.enums";
 import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
 import User from "../user/user.model";
 import { cfg } from "../init";
+import FincraService from "../lib/fincra.service";
 
 class WebhookService {
 
@@ -116,6 +117,56 @@ class WebhookService {
             await session.endSession();
         }
     }
+
+    static async handleRefunds(payload: ChargeSuccessPayload) {
+        try {
+            if (payload.data.status === "success") {
+
+                const { product_id } = payload.data.metadata;
+                const product = await Product.findById(product_id);
+                product.status = "available";
+                product.purchase_lock = undefined;
+                await product.save();
+    
+                if (!product) throw new Error("Product not found");
+    
+                // Payment transaction
+                const transaction = await PaymentTransaction.findById(payload.data.reference);
+                if (!transaction) throw new Error("Transaction not found");
+                if (payload.data.amountToSettle > 0 && payload.data.metadata.amount_expected > product.price) {
+                    transaction.status = "failed";
+                    transaction.external_ref = payload.data.chargeReference
+                    await transaction.save();
+                }
+    
+                // User
+                const user = await User.findById(transaction.bearer);
+                if(!user) throw new Error("User not found");
+    
+    
+                const OYEAH_REFUND_CUT = (0.55 / 100) * payload.data.amountReceived;
+                const AMOUNT_TO_REFUND = payload.data.amountReceived - OYEAH_REFUND_CUT;
+    
+                // Create a new refund transaction
+                const refundTransaction = await PaymentTransaction.create({
+                    for: "payment_refund",
+                    amount: AMOUNT_TO_REFUND,
+                    status: "processing_payment",
+                    bearer: transaction.bearer,
+                    reason: `Refund for ${product.name} purchase due to underpayment`,
+                    payment_method: "bank_transfer",
+                    product: product._id
+                });
+    
+                const result  = await FincraService.handleRefund(user, AMOUNT_TO_REFUND, refundTransaction.id);
+                return result;
+            }
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
 }
 
 export default WebhookService;

@@ -424,7 +424,7 @@ class PaymentController {
             await otp.save();
 
             // Send email
-            await EmailService.sendVerificationEmail(req.user?.email!, fullName, otp.token);
+            await EmailService.sendMail(req.user?.email!, fullName, 'funds_release', otp.token);
 
             return res.status(200).json({ success: true, seller_id: (transaction.product as unknown as IProduct).owner });
         } catch (error) {
@@ -519,7 +519,7 @@ class PaymentController {
     // BUYER REQUESTS REFUND
     static async requestRefund(req: Request, res: Response) {
         try {
-            // SEND NOTIFICATION TO SELLER
+            // !TODO => SEND NOTIFICATION TO SELLER
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Failed to request refund" });

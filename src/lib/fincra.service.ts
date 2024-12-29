@@ -269,16 +269,49 @@ class FincraService {
         }
     }
 
-    static async refundBalance() {
+    static async handleRefund(user: IUser, amount: number, ref: string) {
         try {
-            const opts: AxiosRequestConfig = {};
-            const res = await axios.request(opts);
-        } catch (error) {
-            throw {
-                message: "An error occured",
-                kind: "external_payment_error",
-                ex_code: "EP001",
+            const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
+            const headers = {
+                "api-key": cfg.FINCRA_SECRET_KEY,
+                "Content-Type": "application/json",
+                "Accepts": "application/json"
             };
+
+            const refundData = {
+                business: cfg.FINCRA_BUSINESS_ID,
+                sourceCurrency: "NGN",
+                destinationCurrency: "NGN",
+                amount: `${amount}`,
+                description: "Refund",
+                customerReference: ref,
+                beneficiary: {
+                    firstName: user.first_name,
+                    lastName: user.last_name,
+                    email: user.email,
+                    type: "individual",
+                    accountHolderName: `${user.first_name} ${user.last_name}`,
+                    accountNumber: user.bank_details.account_no.toString(),
+                    country: "NG",
+                    bankCode: user.bank_details.bank_code.toString(),
+                },
+                sender: {
+                    name: "Oyeah Escrow",
+                    email: "refunds@oyeahescrow.com.ng",
+                },
+                paymentDestination: "bank_account",
+            };
+            const res = await fetch(payoutUrl, {
+                method: 'POST',
+                mode: 'cors',
+                headers,
+                body: JSON.stringify(refundData)
+            });
+            const result = await res.json();
+            return result;
+        } catch (error) {
+            console.error(error);
+            throw error;
         }
     }
 }

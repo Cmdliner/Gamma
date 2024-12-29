@@ -146,7 +146,7 @@ class AuthController {
             await emailVToken.save({ session });
 
             const full_name = `${first_name} ${last_name}`;
-            await EmailService.sendVerificationEmail(email, full_name, emailVToken.token!);
+            await EmailService.sendMail(email, full_name, 'verification', emailVToken.token!);
 
             const onboardingToken = await AuthService.createToken(user._id, cfg.ONBOARDING_TOKEN_SECRET, "7d");
 
@@ -189,7 +189,7 @@ class AuthController {
                 return res.status(400).json({ error: true, message: "Error sending verification mail" });
             }
             const full_name = `${user.first_name} ${user.last_name}`;
-            await EmailService.sendVerificationEmail(email, full_name, emailVToken.token);
+            await EmailService.sendMail(email, full_name, 'verification', emailVToken.token);
 
             const onboardingToken = await AuthService.createToken(user._id, cfg.ONBOARDING_TOKEN_SECRET, "7d");
 
@@ -453,7 +453,7 @@ class AuthController {
             const resetPasswordOTP = new OTP({ kind: "password_reset", owner: user._id, token: generateOTP() });
 
             const full_name = `${user.first_name} ${user.last_name}`
-            await EmailService.sendPasswordResetToken(email, full_name, resetPasswordOTP.token);
+            await EmailService.sendMail(email, full_name, 'pwd_reset', resetPasswordOTP.token);
 
             await resetPasswordOTP.save({ session });
 

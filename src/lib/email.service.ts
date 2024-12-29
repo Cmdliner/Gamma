@@ -7,9 +7,26 @@ import { cfg } from "../init";
 
 envConfig();
 
+type EmailKind = "verification" | "pwd_reset" | "funds_release";
+
 class EmailService {
 
-    private static transporter = nodemailer.createTransport({
+    private static readonly emailTemplate = {
+        verification: {
+            subject: "Email Verification",
+            html: path.resolve(__dirname, "../../templates/verification_email.html")
+        },
+        pwd_reset: {
+            subject: "Account Password Reset",
+            html: path.resolve(__dirname, "../../templates/password_reset.html")
+        },
+        funds_release: {
+            subject: "Verification of Release of Funds to Seller",
+            html: path.resolve(__dirname, "../../templates/release_funds.html")
+        }
+    }
+
+    private static readonly transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         service: cfg.APP_EMAIL_SERVICE,
         secure: cfg.NODE_ENV === 'production' ? true : false,
@@ -19,6 +36,7 @@ class EmailService {
         }
     });
 
+
     private static parseMailFile(file: string, fullname: string, code: string) {
         return file.split(' ').map((token) => String(token)
             .replace('${fullname}', fullname)
@@ -27,42 +45,23 @@ class EmailService {
         ).join(' ');
     }
 
-    static async sendVerificationEmail(to: string, fullname: string, vToken: string) {
-        const pathToEmail = path.resolve(__dirname, "../../templates/verification_email.html")
+    static async sendMail(to: string, fullname: string, kind: EmailKind, otp?: string) {
         const mailOptions: Mail.Options = {
             from: cfg.APP_EMAIL_ADDRESS,
             to,
-            subject: 'Email Verification',
-            html: EmailService.parseMailFile(readFileSync(pathToEmail).toString(), fullname, vToken)
+            subject: EmailService.emailTemplate[kind].subject,
+            html: EmailService.parseMailFile(readFileSync(EmailService.emailTemplate[kind].html).toString(), fullname, otp)
         }
 
         try {
             await EmailService.transporter.sendMail(mailOptions);
-            console.log('Verification mail sent successfully');
+            console.log(`Email sent successfully`);
         } catch (error) {
             console.error((error as Error).name, 'error_name');
             throw error;
         }
-
     }
 
-    static async sendPasswordResetToken(to: string, username: string, resetPasswordToken: string) {
-        const pathToEmail = path.resolve(__dirname, "../../templates/password_reset.html")
-        const mailOptions: Mail.Options = {
-            from: cfg.APP_EMAIL_ADDRESS,
-            to,
-            subject: 'Reset Password',
-            html: EmailService.parseMailFile(readFileSync(pathToEmail).toString(), username, resetPasswordToken)
-        }
-
-        try {
-            await EmailService.transporter.sendMail(mailOptions);
-            console.log('Reset Password mail sent successfully');
-        } catch (error) {
-            throw error;
-        }
-
-    }
 }
 
 export default EmailService;
