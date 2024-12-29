@@ -12,6 +12,6 @@ payment.post("/:productID/sponsor", PaymentController.sponsorAd);
 payment.post("/:productID/:bidID/purchase", PaymentController.purchaseItem); //this one uses bid
 payment.post("/:transactionID/initiate-funds-transfer", PaymentController.initiateFundsTransfer);
 payment.post("/:transactionID/refund", PaymentController.requestRefund);
-payment.post("/:transactionID/approve-refund", PaymentController.approveRefund);
+payment.post("/:refundTransactionID/approve-refund", PaymentController.approveRefund);
 
 export default payment;

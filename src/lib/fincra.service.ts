@@ -291,9 +291,9 @@ class FincraService {
                     email: user.email,
                     type: "individual",
                     accountHolderName: `${user.first_name} ${user.last_name}`,
-                    accountNumber: user.bank_details.account_no.toString(),
+                    accountNumber: `${user.bank_details.account_no}`,
                     country: "NG",
-                    bankCode: user.bank_details.bank_code.toString(),
+                    bankCode: `${user.bank_details.bank_code}`,
                 },
                 sender: {
                     name: "Oyeah Escrow",

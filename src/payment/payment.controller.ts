@@ -424,7 +424,7 @@ class PaymentController {
             await otp.save();
 
             // Send email
-            await EmailService.sendMail(req.user?.email!, fullName, 'funds_release', otp.token,  transaction);
+            await EmailService.sendMail(req.user?.email!, fullName, 'funds_release', otp.token, transaction);
 
             return res.status(200).json({ success: true, seller_id: (transaction.product as unknown as IProduct).owner });
         } catch (error) {
@@ -518,24 +518,126 @@ class PaymentController {
 
     // BUYER REQUESTS REFUND
     static async requestRefund(req: Request, res: Response) {
+        const session = await startSession();
         try {
+            const { transactionID } = req.params;
+
+            // Get the previous payment transaction
+            const prevTransaction = await PaymentTransaction.findOne({
+                bearer: req.user?._id,
+                for: "product_payment",
+                _id: transactionID,
+                status: 'in_escrow'
+            }).session(session);
+            if (!prevTransaction) {
+                await session.abortTransaction();
+                return res.status(404).json({ error: true, message: "Transaction not found!" });
+            }
+
+            // ! DO NOT TAMPER OR ALTER
+            const OYEAH_REFUND_CUT =  ((0.5 / 100 * prevTransaction.amount) * 10 / 10 );
+            const AMOUNT_TO_REFUND = prevTransaction.amount - OYEAH_REFUND_CUT;
+
+            // CREATE A NEW REFUND TRANSACTION WITH AMOUNT TO REFUND & reason with ref to prevTransaction
+            const refundTransaction = new PaymentTransaction({
+                payment_method: 'bank_transfer',
+                product: prevTransaction.product,
+                bearer: req.user?._id,
+                amount: AMOUNT_TO_REFUND,
+                for: 'payment_refund',
+                status: 'pending',
+                reason: `Refund of payment made in transaction ${prevTransaction.id}`
+            });
+            await refundTransaction.save({ session });
+
             // !TODO => SEND NOTIFICATION TO SELLER
+            await session.commitTransaction();
+            return res.status(200).json({ success: true, message: "Seller has been notified of request to refund" });
         } catch (error) {
+            await session.abortTransaction();
             console.error(error);
             return res.status(500).json({ error: true, message: "Failed to request refund" });
+        } finally {
+            await session.endSession();
         }
     }
 
     // SELLER APPROVES REFUND
     static async approveRefund(req: Request, res: Response) {
+        const session = await startSession();
         try {
-            // CHANGE PREVIOUS TRANSACTION STATE TO FAILED
-            // UNLOCK PRODUCT
-            // MOVE MONEY FROM ESCROW TO CUSTOMER ACCOUNT
-            // THATS ALL FOR NOW (RETURN RESPONSE)
+            const { refundTransactionID } = req.params;
+
+            session.startTransaction();
+
+            // Get refund transaction from ID
+            const refundTransaction = await PaymentTransaction.findOne({
+                for: 'payment_refund',
+                status: 'pending',
+                _id: refundTransactionID,
+            }).populate(["product", "bearer"]).session(session);
+            if (!refundTransaction) {
+                await session.abortTransaction();
+                return res.status(404).json({ error: true, message: "Refund transaction not found" });
+            }
+
+            // Ensure current user is seller => authorized to make this request
+            const isSeller = compareObjectID(req.user?._id!, (refundTransaction.product as unknown as IProduct).owner);
+            if (!isSeller) {
+                await session.abortTransaction();
+                return res.status(401).json({ error: true, message: "Unauthorized!" });
+            }
+
+            // Update refund transaction status to  success
+            refundTransaction.status = "success";
+            await refundTransaction.save({ session });
+
+            // Get the associated payment transaction id from refund tx reason
+            const associatedPaymentTransactionId = refundTransaction.reason.split(" ")[-1];
+            const associatedPaymentTransaction = await PaymentTransaction.findOne({
+                _id: associatedPaymentTransactionId,
+                status: 'in_escrow',
+                bearer: refundTransaction.bearer,
+                for: 'product_payment',
+            }).populate(["product"]).session(session);
+            if (!associatedPaymentTransaction) {
+                await session.abortTransaction();
+                return res.status(404).json({ error: true, message: "Associated payment transaction not found!" });
+            }
+
+            // Update tx status to refunded
+            associatedPaymentTransaction.status = "refunded";
+            await associatedPaymentTransaction.save();
+
+            // Make product available to other users for purchase again
+            const productId = (associatedPaymentTransaction.product as unknown as IProduct)._id;
+            const product = await Product.findById(productId).session(session);
+            if (!product) {
+                return res.status(404).json({ error: true, message: "Product not found!" });
+            }
+            product.purchase_lock = undefined;
+            product.status = "available";
+            await product.save({ session });
+
+
+            // Send money to user bank using fincra
+            const buyer = refundTransaction.bearer as unknown as IUser;
+            const refundResponse = await FincraService.handleRefund(
+                buyer,
+                refundTransaction.amount,
+                refundTransaction.id
+            );
+            console.log(refundResponse);
+            // ! todo => Send notification to user
+
+            await session.commitTransaction();
+            return res.status(200).json({ success: true, message: "Refund successful!" });
         } catch (error) {
+            await session.abortTransaction();
             console.error(error);
             return res.status(500).json({ error: true, message: "Refund approval failed!" });
+        } finally {
+            await session.endSession();
         }
     }
 
