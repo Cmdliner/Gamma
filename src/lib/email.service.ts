@@ -41,8 +41,8 @@ class EmailService {
             .replace("${fullname}", fullname)
             .replace("${vToken}", code)
             .replace("${passwordResetToken}", code)
-            .replace("${tx_id}", tx.id)
-            .replace("${tx_amount}", `${tx.amount}`)
+            .replace("${tx_id}", tx?.id)
+            .replace("${tx_amount}", `${tx?.amount}`)
         ).join(" ");
     }
 
