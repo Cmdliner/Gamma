@@ -424,7 +424,7 @@ class PaymentController {
             await otp.save();
 
             // Send email
-            await EmailService.sendMail(req.user?.email!, fullName, 'funds_release', otp.token);
+            await EmailService.sendMail(req.user?.email!, fullName, 'funds_release', otp.token,  transaction);
 
             return res.status(200).json({ success: true, seller_id: (transaction.product as unknown as IProduct).owner });
         } catch (error) {

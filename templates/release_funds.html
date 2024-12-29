@@ -1,12 +1,288 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Your request to release funds to seller for the purchase of ${item_name} has been received</h1>
-    <p>Your OTP is ${otp}</p>
-</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fund Release Authorization Code</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    "
+  >
+    <table
+      border="0"
+      cellpadding="0"
+      cellspacing="0"
+      width="100%"
+      style="max-width: 600px; margin: 0 auto"
+    >
+      <!-- Enhanced Banner -->
+      <tr>
+        <td style="background: linear-gradient(to right, #1b5e20, #2e7d32)">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td align="center" style="padding: 40px 0">
+                <img
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Frame%202085661017-MI6XijpikZeaLFB7DK5nHoApFSp8gZ.png"
+                  alt="Oyeah! Escrow"
+                  style="
+                    display: block;
+                    width: 300px;
+                    max-width: 100%;
+                    height: auto;
+                  "
+                />
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 0 20px 30px 20px">
+                <div
+                  style="
+                    width: 80px;
+                    height: 2px;
+                    background-color: #ffffff;
+                    opacity: 0.5;
+                  "
+                ></div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- Content -->
+      <tr>
+        <td bgcolor="#ffffff" style="padding: 40px 30px">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="color: #153643; font-size: 24px; padding-bottom: 20px">
+                Fund Release Authorization Code
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  color: #153643;
+                  font-size: 16px;
+                  line-height: 24px;
+                  padding-bottom: 20px;
+                "
+              >
+                Dear Valued Customer,
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  color: #153643;
+                  font-size: 16px;
+                  line-height: 24px;
+                  padding-bottom: 20px;
+                "
+              >
+                We have received your request to release funds from escrow to
+                the seller. To ensure the security of this transaction and
+                confirm your authorization, please use the following code:
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 20px 0 30px 0">
+                <table
+                  border="0"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="
+                    background-color: #f8f9fa;
+                    border: 1px solid #e9ecef;
+                    border-radius: 8px;
+                  "
+                >
+                  <tr>
+                    <td align="center" style="padding: 20px 40px">
+                      <span
+                        style="
+                          color: #1b5e20;
+                          font-size: 28px;
+                          font-weight: bold;
+                          letter-spacing: 8px;
+                          font-family: 'Courier New', monospace;
+                        "
+                      >
+                        345678
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-bottom: 30px">
+                <table
+                  border="0"
+                  cellpadding="0"
+                  cellspacing="0"
+                  width="100%"
+                  style="
+                    background-color: #f8f9fa;
+                    border-radius: 8px;
+                    border: 1px solid #e9ecef;
+                  "
+                >
+                  <tr>
+                    <td style="padding: 20px">
+                      <table
+                        border="0"
+                        cellpadding="0"
+                        cellspacing="0"
+                        width="100%"
+                      >
+                        <tr>
+                          <td
+                            colspan="2"
+                            style="
+                              color: #153643;
+                              font-size: 18px;
+                              font-weight: bold;
+                              padding-bottom: 15px;
+                            "
+                          >
+                            Transaction Details
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="color: #666666; padding: 8px 0">
+                            Transaction ID:
+                          </td>
+                          <td align="right" style="color: #153643">${tx_id}</td>
+                        </tr>
+                        <tr>
+                          <td style="color: #666666; padding: 8px 0">
+                            Order Amount:
+                          </td>
+                          <td align="right" style="color: #153643">
+                            ₦${tx_amount}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="color: #666666; padding: 8px 0">
+                            Status:
+                          </td>
+                          <td
+                            align="right"
+                            style="color: #1b5e20; font-weight: bold"
+                          >
+                            Pending Your Authorization
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  color: #153643;
+                  font-size: 16px;
+                  line-height: 24px;
+                  padding-bottom: 20px;
+                "
+              >
+                To complete the fund release process:
+                <ol style="margin-top: 10px; padding-left: 20px">
+                  <li>Log in to your Oyeah! Escrow account</li>
+                  <li>Navigate to the transaction details page</li>
+                  <li>Enter the authorization code provided above</li>
+                  <li>Confirm the fund release</li>
+                </ol>
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  color: #153643;
+                  font-size: 16px;
+                  line-height: 24px;
+                  padding-bottom: 20px;
+                "
+              >
+                Please verify all transaction details before authorizing the
+                fund release. This authorization code will expire in 24 hours
+                for security purposes.
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  color: #666666;
+                  font-size: 14px;
+                  line-height: 21px;
+                  border-left: 4px solid #1b5e20;
+                  padding: 10px 15px;
+                  background-color: #f8f9fa;
+                "
+              >
+                For your security: Never share your authorization code with
+                anyone, including Oyeah! Escrow support staff. Our team will
+                never ask for your code. If you did not initiate this fund
+                release request, please contact our support team immediately.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- Enhanced Footer -->
+      <tr>
+        <td bgcolor="#1B5E20" style="padding: 30px">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td align="center" style="padding-bottom: 20px">
+                <table border="0" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td
+                      style="
+                        color: #ffffff;
+                        font-size: 14px;
+                        line-height: 20px;
+                        text-align: center;
+                      "
+                    >
+                      &copy; 2024 Oyeah! Escrow. All rights reserved.<br />
+                      Your No1. Decluttering Platform and Escrow
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td
+                      style="
+                        color: #ffffff;
+                        font-size: 12px;
+                        line-height: 18px;
+                        text-align: center;
+                      "
+                    >
+                      This is a secure transaction email. If you have any
+                      questions or concerns,<br />
+                      please contact our support team immediately.
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>
