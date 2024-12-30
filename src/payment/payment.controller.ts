@@ -522,6 +522,8 @@ class PaymentController {
         try {
             const { transactionID } = req.params;
 
+            session.startTransaction();
+
             // Get the previous payment transaction
             const prevTransaction = await PaymentTransaction.findOne({
                 bearer: req.user?._id,
