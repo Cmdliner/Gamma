@@ -595,7 +595,8 @@ class PaymentController {
             await refundTransaction.save({ session });
 
             // Get the associated payment transaction id from refund tx reason
-            const associatedPaymentTransactionId = refundTransaction.reason.split(" ")[-1];
+            const refundTransactionReason = refundTransaction.reason.split(" ");
+            const associatedPaymentTransactionId = refundTransactionReason[refundTransactionReason.length -1];
             const associatedPaymentTransaction = await PaymentTransaction.findOne({
                 _id: associatedPaymentTransactionId,
                 status: 'in_escrow',
