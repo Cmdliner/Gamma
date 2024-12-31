@@ -55,13 +55,13 @@ class UserController {
                 .filter((referral: IUser) => referral.account_status === "active").length;
             const rewards_balance = user.rewards.balance;
 
-            return res.status(200).json({ 
-                success: true, 
-                info: { referral_code, total_referrals, active_referrals, rewards_balance } 
+            return res.status(200).json({
+                success: true,
+                info: { referral_code, total_referrals, active_referrals, rewards_balance }
             })
         } catch (error) {
             console.error(error);
-            return res.status(500).json({error: true, message: "Error retrieving referral info"})
+            return res.status(500).json({ error: true, message: "Error retrieving referral info" })
         }
     }
 
@@ -80,9 +80,9 @@ class UserController {
 
             // Check if 3 months has passed
             if (threeMonthsFromDateAdded > Date.now()) {
-                return res.status(400).json({ 
-                    error: true, 
-                    message: "Cannot update bank account details at this moment" 
+                return res.status(400).json({
+                    error: true,
+                    message: "Cannot update bank account details at this moment"
                 });
             }
 
@@ -170,6 +170,26 @@ class UserController {
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error getting referral history" });
+        }
+    }
+
+    static async updateDevicePushToken(req: Request, res: Response) {
+        const { device_push_token } = req.body;
+        try {
+            const user = await User.findById(req.user?._id);
+            if (!user) {
+                return res.status(404).json({ error: true, message: "User not found!" });
+            }
+
+            // !todo => Valiadtion: Ensure that the device push token matches expo push token fmt
+            user.device_push_token = device_push_token;
+            await user.save();
+
+            return res.status(200).json({ success: true, message: "Push token updated!" });
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({error: true, message: "Error updating the push token"})
         }
     }
 

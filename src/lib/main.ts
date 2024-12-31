@@ -1,7 +1,9 @@
 import { Types } from "mongoose"
 import crypto, { randomInt } from "crypto";
-import { GeospatialDataNigeria } from "../lib/location.data";
+import { GeospatialDataNigeria } from "./location.data";
 import { cfg } from "../init";
+import { type Request, type Response, type NextFunction } from "express";
+import { Options } from "express-rate-limit";
 
 export function compareObjectID(obj1: Types.ObjectId, obj2: Types.ObjectId): boolean {
     return obj1.toString() === obj2.toString();
@@ -129,6 +131,11 @@ export function matchAccNameInDb(
     }
   
     return true; // All validations passed
+}
+
+export function rateLimitMiddlewareHandler (_req: Request, res: Response, next: NextFunction, _: Options) {
+    res.status(429).json({error: true, message: "Too many requests"});
+    next();
 }
   
 

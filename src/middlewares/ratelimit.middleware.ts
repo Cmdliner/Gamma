@@ -1,5 +1,6 @@
 import { rateLimit } from 'express-rate-limit';
 import { Request, Response } from 'express';
+import { rateLimitMiddlewareHandler } from '../lib/main';
 
 const verifyBvnLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
@@ -9,6 +10,7 @@ const verifyBvnLimiter = rateLimit({
   keyGenerator: (req: Request, res: Response) => req.headers['x-onboarding-user'] as string,
   message: "You have exceeded the daily request limit.",
   headers: true,
+  handler: rateLimitMiddlewareHandler
 });
 
 export default verifyBvnLimiter;
