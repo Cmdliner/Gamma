@@ -150,10 +150,10 @@ class AuthController {
 
             const onboardingToken = await AuthService.createToken(user._id, cfg.ONBOARDING_TOKEN_SECRET, "7d");
 
-            res.setHeader("x-onboarding-user", onboardingToken);
-
+    
             // when all the register operations have successfully completed commit the transactions to the db
             await session.commitTransaction();
+            res.setHeader("x-onboarding-user", onboardingToken);
 
             const { createdAt, updatedAt, ...userInfo } = user;
 
