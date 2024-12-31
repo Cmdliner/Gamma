@@ -3,7 +3,7 @@ import { model, Schema } from "mongoose";
 const DisputeSchema = new Schema({
     transaction: {
         type: Schema.Types.ObjectId,
-        ref: "Transaction",
+        ref: "PaymentTransaction",
         required: true
     },
     raised_by: {
@@ -13,11 +13,7 @@ const DisputeSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["resolved", "ongoing", "pending"]
-    },
-    issue: {
-        type: String,
-        required: true
+        enum: ["resolved", "ongoing"]
     },
     comments: {
         type: String

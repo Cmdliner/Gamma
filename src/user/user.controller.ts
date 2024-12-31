@@ -7,6 +7,7 @@ import { ReferralTransaction } from "../payment/transaction.model";
 import { isValidState } from "../lib/main";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import IUser from "../types/user.schema";
+import Expo from "expo-server-sdk";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -173,7 +174,7 @@ class UserController {
         }
     }
 
-    static async updateDevicePushToken(req: Request, res: Response) {
+    static async updateUsersDevicePushToken(req: Request, res: Response) {
         const { device_push_token } = req.body;
         try {
             const user = await User.findById(req.user?._id);
@@ -181,7 +182,11 @@ class UserController {
                 return res.status(404).json({ error: true, message: "User not found!" });
             }
 
-            // !todo => Valiadtion: Ensure that the device push token matches expo push token fmt
+            // Ensure that the device push token matches expo push token fmt
+            if(!Expo.isExpoPushToken(device_push_token)) {
+                return res.status(422).json({error: true, message: "Invalid push token"})
+            }
+            
             user.device_push_token = device_push_token;
             await user.save();
 

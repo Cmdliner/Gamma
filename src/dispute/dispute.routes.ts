@@ -3,7 +3,7 @@ import DisputeController from "./dispute.controller";
 
 const dispute = Router();
 
-dispute.post("/:productID/:transactionID/intiate", DisputeController.raiseDispute);
+dispute.post("/:transactionID/intiate", DisputeController.raiseDispute);
 dispute.post("/:disputeID/resolve", DisputeController.resolveDispute);
 // dispute.get("/", DisputeController.getAll);
 
