@@ -81,7 +81,7 @@ class AuthController {
             if (phone_no_2) phone_numbers.push(phone_no_2);
 
             // Verify that no user has any of the phone numbers before
-            const phoneNumberInUse = await User.findOne({ phone_numbers: { $in: phone_numbers } });
+            const phoneNumberInUse = await User.findOne({ phone_numbers: { $in: phone_numbers } }).session(session);
             if (phoneNumberInUse) {
                 await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "A user with that phone number exists" });
