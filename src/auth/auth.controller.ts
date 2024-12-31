@@ -160,8 +160,7 @@ class AuthController {
             return res.status(201).json({
                 success: true,
                 message: "User created successfully!",
-                onboarding_token: onboardingToken,
-                user: userInfo
+                onboarding_token: onboardingToken
             });
 
         } catch (error) {
