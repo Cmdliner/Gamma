@@ -30,104 +30,29 @@ bun run dev
 ```
 
 ## BUGS
-- Timeout for payment (maybe 5 minutes)
-
+- Payment links might never expire (check again with fincra)
 
 ## TODOS 
 - Impl soft delete
-- -Implement refunds and push notifications
+- Implement push notifications
 - Sanitize inputs for all actions (impl max char length, rm whitespace, dont allow special characters)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
 
 
 ## REMEMBER
-- !!! change refresh and access token in postman and also the amount in rewards withdrawal
 - Upload can only error due to client-side errors; upload middleware is very stable
 - Implement https
-    
-- change min limit for images in products validation for all from 1 to 10
-- change ref to uppercase collection name when trying to ref sub_docs in a new model
 
 ## Project structure
 
 ```sh
 .
 ├── bun.lockb
-├── dist
-│   ├── app.js
-│   ├── auth
-│   │   ├── auth.controller.js
-│   │   ├── auth.model.js
-│   │   ├── auth.routes.js
-│   │   └── auth.service.js
-│   ├── bid
-│   │   ├── bid.controller.js
-│   │   ├── bid.model.js
-│   │   └── bid.routes.js
-│   ├── config
-│   │   ├── db.js
-│   │   └── settings.js
-│   ├── dispute
-│   │   ├── dispute.controller.js
-│   │   ├── dispute.model.js
-│   │   └── dispute.routes.js
-│   ├── lib
-│   │   ├── bank_codes.js
-│   │   ├── email.service.js
-│   │   ├── fincra.service.js
-│   │   ├── location.data.js
-│   │   ├── main.js
-│   │   └── paystack.service.js
-│   ├── middlewares
-│   │   ├── auth.middlewares.js
-│   │   ├── ratelimit.middleware.js
-│   │   └── upload.middlewares.js
-│   ├── notification
-│   │   └── notification.model.js
-│   ├── payment
-│   │   ├── payment.controller.js
-│   │   ├── payment.routes.js
-│   │   ├── transaction.model.js
-│   │   ├── webhook.controller.js
-│   │   └── webhook.service.js
-│   ├── product
-│   │   ├── product.controller.js
-│   │   ├── product.model.js
-│   │   ├── product.routes.js
-│   │   └── product.service.js
-│   ├── __tests__
-│   │   └── auth.test.js
-│   ├── types
-│   │   ├── ad.enums.js
-│   │   ├── bid.schema.js
-│   │   ├── common.js
-│   │   ├── electronics.schema.js
-│   │   ├── gadget.schema.js
-│   │   ├── generic.schema.js
-│   │   ├── landed_property.schema.js
-│   │   ├── multer_file.js
-│   │   ├── otp.schema.js
-│   │   ├── phone_number.schema.js
-│   │   ├── product.dto.js
-│   │   ├── product.schema.js
-│   │   ├── transaction.schema.js
-│   │   ├── user.dto.js
-│   │   ├── user.schema.js
-│   │   ├── vehicle.schema.js
-│   │   ├── wallet.schema.js
-│   │   └── webhook.schema.js
-│   ├── user
-│   │   ├── user.controller.js
-│   │   ├── user.model.js
-│   │   ├── user.routes.js
-│   │   └── wallet.model.js
-│   └── validations
-│       ├── auth.validation.js
-│       ├── payment.validation.js
-│       └── product.validation.js
 ├── Dockerfile
+├── fincra
 ├── nodemon.json
 ├── package.json
+├── push_notifs
 ├── README.md
 ├── scripts
 │   └── create_env.sh
@@ -135,14 +60,16 @@ bun run dev
 │   ├── app.ts
 │   ├── auth
 │   │   ├── auth.controller.ts
-│   │   ├── auth.model.ts
 │   │   ├── auth.routes.ts
-│   │   └── auth.service.ts
+│   │   ├── auth.service.ts
+│   │   └── otp.model.ts
 │   ├── bid
 │   │   ├── bid.controller.ts
 │   │   ├── bid.model.ts
 │   │   └── bid.routes.ts
+│   ├── change_states.js
 │   ├── config
+│   │   ├── app.config.ts
 │   │   ├── db.ts
 │   │   └── settings.ts
 │   ├── dispute
@@ -151,6 +78,7 @@ bun run dev
 │   │   └── dispute.routes.ts
 │   ├── env.d.ts
 │   ├── express.d.ts
+│   ├── init.ts
 │   ├── lib
 │   │   ├── bank_codes.ts
 │   │   ├── email.service.ts
@@ -163,8 +91,12 @@ bun run dev
 │   │   ├── ratelimit.middleware.ts
 │   │   └── upload.middlewares.ts
 │   ├── notification
-│   │   └── notification.model.ts
+│   │   ├── notification.controller.ts
+│   │   ├── notification.model.ts
+│   │   ├── notification.routes.ts
+│   │   └── notification.service.ts
 │   ├── payment
+│   │   ├── deals.routes.ts
 │   │   ├── payment.controller.ts
 │   │   ├── payment.routes.ts
 │   │   ├── transaction.model.ts
@@ -175,12 +107,15 @@ bun run dev
 │   │   ├── product.model.ts
 │   │   ├── product.routes.ts
 │   │   └── product.service.ts
+│   ├── server.ts
 │   ├── __tests__
-│   │   └── auth.test.ts
+│   │   ├── auth.test.ts
+│   │   └── payment.test.ts
 │   ├── types
 │   │   ├── ad.enums.ts
 │   │   ├── bid.schema.ts
 │   │   ├── common.ts
+│   │   ├── common.type.ts
 │   │   ├── electronics.schema.ts
 │   │   ├── gadget.schema.ts
 │   │   ├── generic.schema.ts
@@ -207,8 +142,9 @@ bun run dev
 │       └── product.validation.ts
 ├── templates
 │   ├── password_reset.html
+│   ├── release_funds.html
 │   └── verification_email.html
 └── tsconfig.json
 
-31 directories, 127 files
+17 directories, 82 files
 ```
