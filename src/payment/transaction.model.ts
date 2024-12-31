@@ -37,12 +37,17 @@ const TransactionSchema = new Schema({
 const PaymentTransactionShema = new Schema({
     payment_method: {
         type: String,
+        enum: ['card', 'bank_transfer'],
         required: true
     },
     product: {
         type: Schema.Types.ObjectId,
         ref: "Product",
         required: true
+    },
+    seller: {
+        type: Schema.Types.ObjectId,
+        ref: "Product"
     },
     external_ref: {
         type: String,
