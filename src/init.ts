@@ -21,5 +21,4 @@ export const cfg = new AppConfig({
     CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET,
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
     FINCRA_BUSINESS_ID: process.env.FINCRA_BUSINESS_ID
-
 });

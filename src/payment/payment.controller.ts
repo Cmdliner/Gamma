@@ -222,7 +222,7 @@ class PaymentController {
             const updatedProduct = await Product.findOneAndUpdate({
                 _id: productID,
                 status: "available",
-                "purchase_lock.is_locked": false
+                "purchase_lock.is_locked": false 
             }, {
                 status: "processing_payment",
                 purchase_lock: {
@@ -618,7 +618,11 @@ class PaymentController {
             if (!product) {
                 return res.status(404).json({ error: true, message: "Product not found!" });
             }
-            product.purchase_lock = undefined;
+            product.purchase_lock = {
+                is_locked: false,
+                locked_by: undefined,
+                locked_at: undefined
+            };
             product.status = "available";
             await product.save({ session });
 
