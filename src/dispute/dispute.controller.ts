@@ -9,7 +9,7 @@ import { startSession } from "mongoose";
 class DisputeController {
     static async raiseDispute(req: Request, res: Response) {
         const { transactionID } = req.params;
-        const { comments } = req.body;
+        const { issues, comments } = req.body;
 
         // VALIDATE REQUEST BODY
         if (!comments.trim()) {
@@ -52,13 +52,14 @@ class DisputeController {
             product.status = "in_dispute";
             await product.save({ session });
             await transaction.save({ session });
-
-            const dispute = new Dispute({
+            const disputeData: any = {
                 status: "ongoing",
                 raised_by: req.user?._id!,
                 transaction: transactionID,
                 comments
-            });
+            }
+            if(issues.trim()) disputeData.issues = issues;
+            const dispute = new Dispute(disputeData);
             await dispute.save({ session });
             await session.commitTransaction();
             return res.status(200).json({ success: true, message: "Dispute registered" });

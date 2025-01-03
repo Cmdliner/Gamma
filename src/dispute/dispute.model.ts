@@ -15,8 +15,12 @@ const DisputeSchema = new Schema({
         type: String,
         enum: ["resolved", "ongoing"]
     },
+    issues: {
+        type: String,
+    },
     comments: {
-        type: String
+        type: String,
+        required: true
     }
 });
 
