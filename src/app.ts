@@ -68,7 +68,7 @@ class App {
     }
     private initializeErrorHandlers() {
         this.app.use((_req: Request, res: Response, _next: NextFunction) => {
-            console.log("A fatal error occured");
+            console.log("An unexpected error occured");
             return res.status(500).json({ error: true, message: "An  error occured\n" });
         });
     }
