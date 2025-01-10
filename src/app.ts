@@ -16,11 +16,12 @@ import WebhookController from "./payment/webhook.controller";
 import product from "./product/product.routes";
 import user from "./user/user.routes";
 import { cfg } from "./init";
+import rateLimit from "express-rate-limit";
 
 const API_VERSION = "api/v1";
 
 class App {
-    
+
     private app: Express;
     public readonly cfg: IAppConfig;
     private corsOptions: CorsOptions = {
@@ -39,6 +40,11 @@ class App {
     }
 
     private initializeMiddlewares() {
+        this.app.set("trust proxy", 1);
+        this.app.use(rateLimit({
+            windowMs: 10 * 60 * 1000,
+            max: 60
+        }));
         this.app.use(compression());
         this.app.use(helmet());
         this.app.use(cors(this.corsOptions));
