@@ -8,3 +8,4 @@ server.cert
 .*.sh
 privatekey.pem
 publickey.cer
+client_assertion
