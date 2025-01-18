@@ -11,6 +11,7 @@ envConfig();
 type EmailKind = "verification" | "pwd_reset" | "funds_release";
 
 class EmailService {
+    
     private static readonly emailTemplate = {
         verification: {
             subject: "Email Verification",

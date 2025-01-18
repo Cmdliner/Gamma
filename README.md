@@ -37,7 +37,7 @@ bun run dev
 - Payment links might never expire (check again with fincra)
 
 ## TODOS 
-- Finish impl app wide rate limiting
+- Rm payment transaction from webhook
 - Impl soft delete
 - Implement push notifications
 - Sanitize inputs for all actions (impl max char length, rm whitespace, dont allow special characters)

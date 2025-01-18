@@ -3,7 +3,7 @@ import { startSession } from "mongoose";
 import { ChargeSuccessPayload, PayoutSuccessPayload } from "../types/webhook.schema";
 import crypto from "crypto";
 import { AdPayments } from "../types/ad.enums";
-import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
+import { AdSponsorshipTransaction, ProductPurchaseTransaction, RefundTransaction, WithdrawalTransaction } from "./transaction.model";
 import User from "../user/user.model";
 import { cfg } from "../init";
 import FincraService from "../lib/fincra.service";
@@ -34,7 +34,7 @@ class WebhookService {
                 await product.save({ session });
 
                 // Transaction
-                const transaction = await PaymentTransaction.findById(payload.data.reference).session(session);
+                const transaction = await ProductPurchaseTransaction.findById(payload.data.reference).session(session);
                 if (!transaction) throw new Error("Transaction not found");
                 if (payload.data.amountToSettle > 0 && payload.data.metadata.amount_expected === product.price) {
                     transaction.status = "in_escrow";
@@ -76,7 +76,7 @@ class WebhookService {
             if (!product) throw new Error();
 
             // Update transaction status
-            await PaymentTransaction.findByIdAndUpdate(payload.data.reference, {
+            await AdSponsorshipTransaction.findByIdAndUpdate(payload.data.reference, {
                 external_ref: payload.data.chargeReference,
                 status: "success"
             }, { new: true, session });
@@ -131,7 +131,7 @@ class WebhookService {
                 if (!product) throw new Error("Product not found");
     
                 // Payment transaction
-                const transaction = await PaymentTransaction.findById(payload.data.reference);
+                const transaction = await ProductPurchaseTransaction.findById(payload.data.reference);
                 if (!transaction) throw new Error("Transaction not found");
                 if (payload.data.amountToSettle > 0 && payload.data.metadata.amount_expected > product.price) {
                     transaction.status = "failed";
@@ -148,9 +148,10 @@ class WebhookService {
                 const AMOUNT_TO_REFUND = payload.data.amountReceived - OYEAH_REFUND_CUT;
     
                 // Create a new refund transaction
-                const refundTransaction = await PaymentTransaction.create({
-                    for: "payment_refund",
+                const refundTransaction = await RefundTransaction.create({
                     amount: AMOUNT_TO_REFUND,
+                    seller: product.owner,
+                    associated_payment_tx: transaction._id,
                     status: "processing_payment",
                     bearer: transaction.bearer,
                     reason: `Refund for ${product.name} purchase due to underpayment`,
@@ -159,7 +160,7 @@ class WebhookService {
                 });
     
                 const result  = await FincraService.handleRefund(user, AMOUNT_TO_REFUND, refundTransaction.id);
-                return result;
+                return result
             }
         } catch (error) {
             console.error(error);
