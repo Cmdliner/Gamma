@@ -1,12 +1,10 @@
 import { readFileSync } from "fs";
-import { config as envConfig } from "dotenv";
 import nodemailer from "nodemailer";
 import Mail from "nodemailer/lib/mailer";
 import path from "path";
 import { cfg } from "../init";
 import ITransaction from "../types/transaction.schema";
 
-envConfig();
 
 type EmailKind = "verification" | "pwd_reset" | "funds_release";
 

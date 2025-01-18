@@ -43,7 +43,7 @@ class App {
         this.app.set("trust proxy", 1);
         this.app.use(rateLimit({
             windowMs: 10 * 60 * 1000,
-            max: 60
+            max: 60,
         }));
         this.app.use(compression());
         this.app.use(helmet());
