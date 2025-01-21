@@ -82,6 +82,9 @@ const ProductSchema = new Schema({
         locked_by: {
             type: Schema.Types.ObjectId,
             ref: "User"
+        },
+        payment_link: {
+            type: String
         }
     }
 }, { timestamps: true, descriminatorKey: "category" });
