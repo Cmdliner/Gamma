@@ -168,6 +168,11 @@ class WebhookService {
         }
     }
 
+    /**
+     * @description Handles Overpayments or underpayments
+     */
+    static async handlePaymentsVariance() {}
+
 }
 
 export default WebhookService;
