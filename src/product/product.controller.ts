@@ -31,6 +31,37 @@ import { ILocation } from "../types/common.type";
 
 class ProductController {
 
+    static async search(req: Request, res: Response) {
+        let { q } = req.query;
+        if (!q) {
+            return res.status(400).json({ error: true, message: "query pattern 'q' required" });
+        }
+        try {
+            q = (q as unknown as string).trim();
+            const pattern = new RegExp(q, "i");
+
+            const products = await Product.find({
+                $or: [
+                    { name: pattern },
+                    { description: pattern }
+                ],
+                $sort: { createdAt: -1 }
+            });
+            if (!products) {
+                return res.status(400).json({ error: true, message: "Error finding products" });
+            }
+            if (!products.length) {
+                return res.status(404).json({ error: true, message: "No products found!" });
+            }
+            
+            return res.status(200).json({ status: true, products });
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error occured during search" })
+        }
+    }
+
     // Add new electronics
     static async addElectronicProduct(req: Request, res: Response) {
         try {
