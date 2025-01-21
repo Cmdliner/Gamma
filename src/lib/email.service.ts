@@ -53,8 +53,8 @@ class EmailService {
         const mailOptions: Mail.Options = {
             from: cfg.APP_EMAIL_ADDRESS,
             to,
-            subject: EmailService.emailTemplate[kind].subject,
-            html: EmailService.parseMailFile(
+            subject: this.emailTemplate[kind].subject,
+            html: this.parseMailFile(
                 readFileSync(EmailService.emailTemplate[kind].html).toString(),
                 fullname,
                 otp,
@@ -63,7 +63,7 @@ class EmailService {
         };
 
         try {
-            await EmailService.transporter.sendMail(mailOptions);
+            await this.transporter.sendMail(mailOptions);
             console.log(`Email sent successfully`);
         } catch (error) {
             console.error((error as Error).name, "error_name");

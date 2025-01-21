@@ -4,7 +4,7 @@ import IUser from "../types/user.schema";
 
 export class SafeHavenService {
 
-    static SAFE_HAVEN_BASE_ENDPOINT = cfg.NODE_ENV === "production" ? "https://api.sandbox.safehavenmfb.com" : "";
+    private static SAFE_HAVEN_BASE_ENDPOINT = cfg.NODE_ENV === "production" ? "https://api.sandbox.safehavenmfb.com" : "";
 
     static async generateAuthToken() {
         const AUTH_ENDPOINT = `${this.SAFE_HAVEN_BASE_ENDPOINT}/oauth2/token`;

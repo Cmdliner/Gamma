@@ -1,4 +1,3 @@
-import { Fincra } from "fincra-node-sdk";
 import type IUser from "../types/user.schema";
 import type IProduct from "../types/product.schema";
 import type { SponsorshipDuration } from "../types/product.schema";
@@ -8,12 +7,6 @@ import { cfg } from "../init";
 class FincraService {
 
     private static FINCRA_BASE_URL = "https://sandboxapi.fincra.com";
-    private static fincra = new Fincra(
-        cfg.FINCRA_PUBLIC_KEY,
-        cfg.FINCRA_SECRET_KEY,
-        { sandbox: cfg.NODE_ENV === "production" ? false : true }
-    );
-
 
     static async resolveBvn(bvn: string, business: string) {
         try {
@@ -42,7 +35,7 @@ class FincraService {
     static async purchaseItem(product: IProduct, customer: IUser, ref: string, paymentMethod: string, bidPrice?: number) {
         try {
             const opts = {
-                url: `${FincraService.FINCRA_BASE_URL}/checkout/payments`,
+                url: `${this.FINCRA_BASE_URL}/checkout/payments`,
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
@@ -90,7 +83,7 @@ class FincraService {
         const PROCESSING_FEE = 200
         const AMOUNT_TO_WITHDRAW = amount - OYEAH_CUT - PROCESSING_FEE;
         try {
-            const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
+            const payoutUrl = `${this.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
                 "api-key": cfg.FINCRA_SECRET_KEY,
                 "Content-Type": "application/json",
@@ -133,7 +126,7 @@ class FincraService {
 
     static async withdrawRewards(user: IUser, amount: number, ref: string) {
         try {
-            const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
+            const payoutUrl = `${this.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
                 "api-key": cfg.FINCRA_SECRET_KEY,
                 "Content-Type": "application/json",
@@ -178,7 +171,7 @@ class FincraService {
     static async sponsorProduct(product: IProduct, owner: IUser, sponsorshipDuration: SponsorshipDuration, ref: string, paymentMethod: string) {
         try {
             const opts = {
-                url: `${FincraService.FINCRA_BASE_URL}/checkout/payments`,
+                url: `${this.FINCRA_BASE_URL}/checkout/payments`,
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -222,7 +215,7 @@ class FincraService {
 
     static async handleRefund(user: IUser, amount: number, ref: string) {
         try {
-            const payoutUrl = `${FincraService.FINCRA_BASE_URL}/disbursements/payouts`;
+            const payoutUrl = `${this.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
                 "api-key": cfg.FINCRA_SECRET_KEY,
                 "Content-Type": "application/json",
