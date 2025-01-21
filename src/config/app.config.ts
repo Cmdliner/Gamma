@@ -25,6 +25,10 @@ export class AppConfig {
     FINCRA_BUSINESS_ID: string;
     SAFE_HAVEN_CLIENT_ASSERTION: string;
     SAFE_HAVEN_CLIENT_ID: string;
+    SAFE_HAVEN_IBS_CLIENT_ID:string;
+    SAFE_HAVEN_IBS_USER_ID: string;
+    SAFE_HAVEN_AUTH_TOKEN: string;
+    SAFE_HAVEN_REFRESH_TOKEN: string;
 
     constructor(cfg: AppConfig) {
 
@@ -50,6 +54,10 @@ export class AppConfig {
         this.FINCRA_BUSINESS_ID = cfg.FINCRA_BUSINESS_ID;
         this.SAFE_HAVEN_CLIENT_ASSERTION = cfg.SAFE_HAVEN_CLIENT_ASSERTION;
         this.SAFE_HAVEN_CLIENT_ID = cfg.SAFE_HAVEN_CLIENT_ID;
+        this.SAFE_HAVEN_IBS_USER_ID = cfg.SAFE_HAVEN_IBS_USER_ID;
+        this.SAFE_HAVEN_IBS_CLIENT_ID = cfg.SAFE_HAVEN_IBS_CLIENT_ID;
+        this.SAFE_HAVEN_REFRESH_TOKEN = cfg.SAFE_HAVEN_REFRESH_TOKEN;
+        this.SAFE_HAVEN_AUTH_TOKEN = cfg.SAFE_HAVEN_AUTH_TOKEN
 
         const missingKeys = [];
         Object.keys(cfg).forEach((key: keyof typeof cfg) => {

@@ -64,7 +64,7 @@ class App {
         this.app.post('/webhooks', WebhookController.confirm);
         this.app.get("/healthz", (_req: Request, res: Response) => {
             res.status(200).json({ active: "The hood is up commandliner⚡" });
-        });;
+        });
     }
     private initializeErrorHandlers() {
         this.app.use((_req: Request, res: Response, _next: NextFunction) => {

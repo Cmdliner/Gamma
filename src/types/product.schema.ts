@@ -20,6 +20,7 @@ interface IProduct extends Document {
         is_locked: boolean;
         locked_at: Date;
         locked_by: Types.ObjectId;
+        payment_link: string;
     };
     ownership_documents: string[];
     category: ProductCategory;

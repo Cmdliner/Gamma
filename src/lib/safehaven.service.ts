@@ -1,9 +1,10 @@
 import { cfg } from "../init";
+import IUser from "../types/user.schema";
 
 
 export class SafeHavenService {
 
-    static SAFE_HAVEN_BASE_ENDPOINT = cfg.NODE_ENV == "production" ? "https://api.sandbox.safehavenmfb.com" : "";
+    static SAFE_HAVEN_BASE_ENDPOINT = cfg.NODE_ENV === "production" ? "https://api.sandbox.safehavenmfb.com" : "";
 
     static async generateAuthToken() {
         const AUTH_ENDPOINT = `${this.SAFE_HAVEN_BASE_ENDPOINT}/oauth2/token`;
@@ -12,11 +13,16 @@ export class SafeHavenService {
             const res = await fetch(AUTH_ENDPOINT, { 
                 method: "POST",
                 headers: {
-                    "grant_type": "client_credentials",
-                    "client_id": "",
-                    "client_assertion": "",
-                    "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-                }
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    grant_type: "client_credentials",
+                    client_id: cfg.SAFE_HAVEN_CLIENT_ID,
+                    client_assertion: cfg.SAFE_HAVEN_CLIENT_ASSERTION,
+                    client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+                    refresh_token: cfg.SAFE_HAVEN_REFRESH_TOKEN
+                })
             });
 
             const data = await res.json();
@@ -33,13 +39,13 @@ export class SafeHavenService {
             const res = await fetch(CREATE_ACCOUNT_ENDPOINT, {
                 method: "POST",
                 headers: {
-                    "Accept": "application/json",
+                    Accept: "application/json",
                     "Content-Type": "application/json",
-                    "ClientID":  "" // ins_client_id returned when you generate a token
+                    ClientID:  cfg.SAFE_HAVEN_IBS_CLIENT_ID // ibs_client_id returned when you generate a token
                 },
                 body: JSON.stringify({
-                    "accountType": "Savings",
-                    "suffix": "" // Suffix to be added to the account name
+                    accountType: "Savings",
+                    suffix: "" // Suffix to be added to the account name
                     // "metadata": {} // Extra metadata you can add
                 })
             });
@@ -51,21 +57,22 @@ export class SafeHavenService {
         }
     }
 
-    static async initiateVerification() {
+    static async initiateVerification(user: IUser) {
         const INIT_VERIFICATION_ENDPOINT = `${this.SAFE_HAVEN_BASE_ENDPOINT}/identity/v2`;
 
         try {
             const res = await fetch(INIT_VERIFICATION_ENDPOINT, {
                 method: "POST",
                 headers: {
-                    "Accept": "application/json",
+                    Accept: "application/json",
                     "Content-Type": "application/json",
-                    "ClientID": "" // Add this
+                    Authorization: `Bearer ${cfg.SAFE_HAVEN_AUTH_TOKEN}`,
+                    ClientID: cfg.SAFE_HAVEN_CLIENT_ID // Add this
                 },
                 body: JSON.stringify({
                     type: "BVN",
-                    number: "", // A no from somewhere
-                    debitAccountNumber: "" // What's this?
+                    number: user.phone_numbers[0], // A no from somewhere
+                    debitAccountNumber: user.bank_details?.account_no // What's this?
                 })
             });
 
@@ -80,26 +87,30 @@ export class SafeHavenService {
         const VALIDATION_ENDPOINT = `${this.SAFE_HAVEN_BASE_ENDPOINT}/identity/v2/validate`;
 
         try {
-            const res = await fetch("POST", {
+            const res = await fetch(VALIDATION_ENDPOINT, {
                 method: "POST",
                 headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "ClientID": "", // add client id
+                    ClientID: "", // add client id
+                    Authorization: `Bearer ${cfg.SAFE_HAVEN_AUTH_TOKEN}`
                 },
                 body: JSON.stringify({
                     identityId: "", // _id from initial verification req
                     type: "BVN",
                     otp: "", // otp sent to user's phone no
                 })
-            })
+            });
+
+            const data = await res.json();
         } catch (error) {
-            
+            console.error(error);
+            throw error;
         }
     }
 
     // Creates a static, virtual acc that doesn't expire (A wallet account)
-    static async createSubAccount() {
+    static async createSubAccount(user: IUser) {
         const SUB_ACC_ENDPOINT = `${this.SAFE_HAVEN_BASE_ENDPOINT}/accounts/v2/subaccount`;
 
         try {
@@ -108,12 +119,13 @@ export class SafeHavenService {
                 headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "ClientID": "", // add this
+                    ClientID: "", // add this
+                    Authorization: `Bearer ${cfg.SAFE_HAVEN_AUTH_TOKEN}`
                 },
                 body: JSON.stringify({
-                    phoneNumber: "", // +234(rest of phone no)
-                    emailAddress: "",
-                    externalReference: "", // Make it user wallet ID
+                    phoneNumber: `+234${user.phone_numbers[0]}`, // +234(rest of phone no)
+                    emailAddress: user.email,
+                    externalReference: user.wallet, // Make it user wallet ID
                     identityType: "BVN",
                     identityNumber: "", // Don't know what this is?
                     identityId: "", // That gotten from verification endpoints
@@ -138,7 +150,8 @@ export class SafeHavenService {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
-                    "ClientID": "" // add this
+                    "ClientID": "", // add this
+                    Authorization: `Bearer ${cfg.SAFE_HAVEN_AUTH_TOKEN}`
                 },
                 body: JSON.stringify({
                     validFor: 0, // Account validity in seconds
@@ -152,7 +165,9 @@ export class SafeHavenService {
                         bankCode: "" // Use safe haven bank code
                     }
                 })
-            })
+            });
+            const data = await res.json();
+            return data;
         } catch (error) {
             throw error;
         }
@@ -184,8 +199,9 @@ export class SafeHavenService {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "ClientID": "" // Add this
+                    Accept: "application/json",
+                    ClientID: "", // Add this
+                    Authorization: `Bearer ${cfg.ACCESS_TOKEN_SECRET}`
                 },
                 body: JSON.stringify({
                     sessionId: ""
@@ -198,6 +214,5 @@ export class SafeHavenService {
             throw error;
         }
     }
-
 
 }

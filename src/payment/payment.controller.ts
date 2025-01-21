@@ -10,13 +10,36 @@ import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/
 import Bid from "../bid/bid.model";
 import { AdPayments } from "../types/ad.enums";
 import User from "../user/user.model";
-import {  WithdrawalTransaction } from "./transaction.model";
+import { WithdrawalTransaction } from "./transaction.model";
 import EmailService from "../lib/email.service";
 import OTP from "../auth/otp.model";
 import IProduct from "../types/product.schema";
+import { SafeHavenService } from "../lib/safehaven.service";
 
 
 class PaymentController {
+
+    static async generateSafeHavenApiToken(req: Request, res: Response) {
+        try {
+            const tokens = await SafeHavenService.generateAuthToken();
+            console.log(tokens);
+            return res.status(200).json({ tokens });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error generating safehaven API token" });
+        }
+    }
+
+    static async initVerification(req: Request, res: Response) {
+        try {
+            const verificationRes = await SafeHavenService.initiateVerification(req.user);
+            console.log(verificationRes);
+            return res.status(200).json({ error: true, message: verificationRes})
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({error: true, message: "An error occured"})
+        }
+    }
 
     static async withdrawFromWallet(req: Request, res: Response) {
         const MIN_WITHDRAWAL_VALUE = 500;
@@ -174,8 +197,9 @@ class PaymentController {
                     is_locked: true,
                     locked_at: Date.now(),
                     locked_by: userId,
+                    payment_link: "" // !todo => Add payment link
                 }
-            }, { new: true, session });
+            }, { new: true, session }); 
             if (!updatedProduct) {
                 await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Product is currently unavaliable for purchase" });
@@ -555,7 +579,8 @@ class PaymentController {
             product.purchase_lock = {
                 is_locked: false,
                 locked_by: undefined,
-                locked_at: undefined
+                locked_at: undefined,
+                payment_link: undefined
             };
             product.status = "available";
             await product.save({ session });
