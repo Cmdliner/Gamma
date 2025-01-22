@@ -34,10 +34,10 @@ class PaymentController {
         try {
             const verificationRes = await SafeHavenService.initiateVerification(req.user);
             console.log(verificationRes);
-            return res.status(200).json({ error: true, message: verificationRes})
+            return res.status(200).json({ error: true, message: verificationRes })
         } catch (error) {
             console.error(error);
-            return res.status(500).json({error: true, message: "An error occured"})
+            return res.status(500).json({ error: true, message: "An error occured" })
         }
     }
 
@@ -158,7 +158,7 @@ class PaymentController {
             }
 
 
-            const product = await Product.findById(productID).session(session);
+            const product = await Product.findOne({ _id: productID, deleted_at: { $exists: false } }).session(session);
             if (!product || product.status !== "available") {
                 await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Product not available!" });
@@ -190,7 +190,8 @@ class PaymentController {
             const updatedProduct = await Product.findOneAndUpdate({
                 _id: productID,
                 status: "available",
-                "purchase_lock.is_locked": false
+                "purchase_lock.is_locked": false,
+                deleted_at: { $exists: false }
             }, {
                 status: "processing_payment",
                 purchase_lock: {
@@ -199,7 +200,7 @@ class PaymentController {
                     locked_by: userId,
                     payment_link: "" // !todo => Add payment link
                 }
-            }, { new: true, session }); 
+            }, { new: true, session });
             if (!updatedProduct) {
                 await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Product is currently unavaliable for purchase" });
@@ -257,7 +258,10 @@ class PaymentController {
             // START TRANSACTION
             session.startTransaction();
 
-            const product = await Product.findById(productID).session(session);
+            const product = await Product.findOne({
+                _id: productID,
+                deleted_at: { $exists: false },
+            }).session(session);
             if (!product) {
                 await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "Product not found!" });
@@ -572,7 +576,10 @@ class PaymentController {
 
             // Make product available to other users for purchase again
             const productId = (associatedPaymentTransaction.product as unknown as IProduct)._id;
-            const product = await Product.findById(productId).session(session);
+            const product = await Product.findOne({
+                _id: productId,
+                deleted_at: { $exists: false },
+            }).session(session);
             if (!product) {
                 return res.status(404).json({ error: true, message: "Product not found!" });
             }

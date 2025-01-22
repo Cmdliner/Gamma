@@ -13,7 +13,11 @@ class BidController {
             const { productID } = req.params;
 
             // CHECK IF USER IS PRODUCT OWNER
-            const isProductOwner = await Product.findOne({ _id: productID, owner: req.user?._id });
+            const isProductOwner = await Product.findOne({
+                _id: productID,
+                owner: req.user?._id,
+                deleted_at: { $exists: false },
+            });
             if (!isProductOwner) {
                 return res.status(400).json({ error: true, message: "Forbidden" });
             }
@@ -47,8 +51,8 @@ class BidController {
     static async getAllAcceptedBids(req: Request, res: Response) {
         try {
             const bids = await Bid.find({ seller: req.user?._id!, status: "accepted" }).populate("buyer");
-            if(!bids) {
-                return res.status(404).json({error: true, message: "Bids not found"});
+            if (!bids) {
+                return res.status(404).json({ error: true, message: "Bids not found" });
             }
             return res.status(200).json({ success: true, bids });
         } catch (error) {

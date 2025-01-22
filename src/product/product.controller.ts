@@ -48,7 +48,7 @@ class ProductController {
             const searchQuery = buildSearchQuery(searchWords);
 
             const products = await Product.find({
-                $not: { deleted_at: { $lte: new Date() } },
+                deleted_at: { $exists: false},
                 searchQuery
             });
 
@@ -484,7 +484,7 @@ class ProductController {
 
             const productsCount = await Product.find({
                 category: productCategory,
-                $not: { deleted_at: { $lte: new Date() } },
+                deleted_at: { $exists: false },
             }).countDocuments();
             const isValidPage = page <= Math.ceil(productsCount / limit);
 
@@ -521,7 +521,7 @@ class ProductController {
                 return res.status(400)
                     .json({ error: true, message: "Product still has pending operations cannot delete at the moment" });
             }
-            const deletedProductListing = await Product.findByIdAndDelete(productID);
+            const deletedProductListing = await Product.findByIdAndUpdate(productID, { deleted_at: new Date() });
             if (!deletedProductListing) throw new Error("An error occured while attempting to delete product");
 
             return res.status(200).json({ success: true, message: "Product listing has been deleted successfully" });
@@ -541,7 +541,12 @@ class ProductController {
                 return res.status(422).json({ error: true, message: "Invalid product category" });
             }
             const now = new Date();
-            const sponsoredProds = await Product.find({ category: productCategory, sponsorship: { $exists: true }, "sponsorship.expires": { $gte: now } });
+            const sponsoredProds = await Product.find({
+                deleted_at: { $exists: false },
+                category: productCategory,
+                sponsorship: { $exists: true },
+                "sponsorship.expires": { $gte: now },
+            });
             if (!sponsoredProds || !sponsoredProds.length) {
                 return res.status(404).json({ error: true, message: "No sponsored products found" })
             }
@@ -560,7 +565,7 @@ class ProductController {
 
             // FIND PRODUCT AND MAKE SURE THERE ARE NO PENDING OPERATIONS LIKE
             // TRANSACTION, BIDS ON IT TO AVOID FRAUDULENT ACTIVITY
-            const product = await Product.findOne({ _id: productID });
+            const product = await Product.findOne({ _id: productID, deleted_at: { $exists: false } });
             if (!product) {
                 return res.status(404).json({ error: true, message: "Product not found" });
             }
