@@ -5,7 +5,7 @@ import FincraService from "../lib/fincra.service";
 import Transaction, { AdSponsorshipTransaction, ProductPurchaseTransaction, ReferralTransaction, RefundTransaction } from "./transaction.model";
 import IUser from "../types/user.schema";
 import Product from "../product/product.model";
-import { compareObjectID, generateOTP } from "../lib/main";
+import { compareObjectID, generateOTP } from "../lib/utils";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../bid/bid.model";
 import { AdPayments } from "../types/ad.enums";

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Product from "../product/product.model";
 import User from "../user/user.model";
-import { compareObjectID } from "../lib/main";
+import { compareObjectID } from "../lib/utils";
 import Dispute from "./dispute.model";
 import { ProductPurchaseTransaction } from "../payment/transaction.model";
 import { startSession } from "mongoose";

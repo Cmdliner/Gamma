@@ -9,7 +9,7 @@ import OTP from "./otp.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "./auth.service";
 import Wallet from "../user/wallet.model";
-import { encryptBvn, generateOTP, hashBvn, isValidState, matchAccNameInDb } from "../lib/main";
+import { encryptBvn, generateOTP, hashBvn, isValidState, matchAccNameInDb } from "../lib/utils";
 import PaystackService from "../lib/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../lib/fincra.service";

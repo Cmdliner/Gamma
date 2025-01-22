@@ -3,7 +3,7 @@ import Product from "../product/product.model";
 import Bid from "./bid.model";
 import type IBid from "../types/bid.schema";
 import { Types } from "mongoose";
-import { compareObjectID, Next5Mins } from "../lib/main";
+import { compareObjectID, Next5Mins } from "../lib/utils";
 import IProduct from "../types/product.schema";
 
 class BidController {

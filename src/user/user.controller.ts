@@ -4,7 +4,7 @@ import IWallet from "../types/wallet.schema";
 import PaystackService from "../lib/paystack.service";
 import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
 import { ReferralTransaction } from "../payment/transaction.model";
-import { isValidState } from "../lib/main";
+import { isValidState } from "../lib/utils";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import IUser from "../types/user.schema";
 import Expo from "expo-server-sdk";
