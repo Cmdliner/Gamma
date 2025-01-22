@@ -73,6 +73,9 @@ const ProductSchema = new Schema({
         sponsored_at: { type: Date },
         expires: { type: Date },
     },
+    deleted_at: {
+        type: Schema.Types.ObjectId
+    },
     purchase_lock: {
         is_locked: {
             type: Boolean,
