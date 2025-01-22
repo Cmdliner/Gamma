@@ -4,6 +4,7 @@ import { GeospatialDataNigeria } from "./location.data";
 import { cfg } from "../init";
 import { type Request, type Response, type NextFunction } from "express";
 import { Options } from "express-rate-limit";
+import IProduct from "../types/product.schema";
 
 export function compareObjectID(obj1: Types.ObjectId, obj2: Types.ObjectId): boolean {
     return obj1.toString() === obj2.toString();
@@ -15,6 +16,9 @@ export const Next5Mins = (): Date => {
     return new Date(nowInMs + fiveMinsInMs);
 }
 
+/**
+ * @deprecated
+ */
 export const validateBankCardUsingLuhnsAlgo = (cardNo: string): boolean => {
     // Return false if cardNo is not 11 digits long or an invalid number
     if (cardNo.length !== 11 || isNaN(parseInt(cardNo))) return false;
@@ -52,6 +56,7 @@ export function generateOTP(): string {
 export const hashBvn = (bvn: string) => {
     return crypto.createHash("sha256").update(bvn).digest("hex");
 }
+
 export const encryptBvn = (bvn: string): string => {
     try {
         const IV_LENGTH = 16;
@@ -103,41 +108,84 @@ export function matchAccNameInDb(
     db_last_name: string,
     db_middle_name: string | null,
     external_account_name: string
-  ): boolean {
+): boolean {
     // Helper: Normalize and split a name into an array of words
     const normalize_name = (name: string) => name.toLowerCase().trim();
     const account_name_parts = external_account_name.split(" ").map(normalize_name);
-  
+
     // Normalize database names
     const normalized_first_name = normalize_name(db_first_name);
     const normalized_last_name = normalize_name(db_last_name);
     const normalized_middle_name = db_middle_name ? normalize_name(db_middle_name) : null;
-  
+
     // Find positions of the first and last names in the account name parts
     const first_name_index = account_name_parts.indexOf(normalized_first_name);
     const last_name_index = account_name_parts.indexOf(normalized_last_name);
-  
+
     // Validate that first and last names exist and are in distinct positions
     if (first_name_index === -1 || last_name_index === -1 || first_name_index === last_name_index) {
-      return false;
+        return false;
     }
-  
+
     // If middle name is provided, validate it does not overlap with first or last names
     if (normalized_middle_name && account_name_parts.includes(normalized_middle_name)) {
-      const middle_name_index = account_name_parts.indexOf(normalized_middle_name);
-      if (middle_name_index === first_name_index || middle_name_index === last_name_index) {
-        return false;
-      }
+        const middle_name_index = account_name_parts.indexOf(normalized_middle_name);
+        if (middle_name_index === first_name_index || middle_name_index === last_name_index) {
+            return false;
+        }
     }
-  
+
     return true; // All validations passed
 }
 
-export function rateLimitMiddlewareHandler (_req: Request, res: Response, next: NextFunction, _: Options) {
-    res.status(429).json({error: true, message: "Too many requests"});
+export function rateLimitMiddlewareHandler(_req: Request, res: Response, next: NextFunction, _: Options) {
+    res.status(429).json({ error: true, message: "Too many requests" });
     next();
 }
-  
+
+// Helper functions for products sarch can be found here
+
+export const PRODUCT_SEARCH_WEIGHTS = {
+    NAME: 3,
+    DESCRIPTION: 2,
+    CATEGORY: 1
+}
+
+export const SEARCH_LIMITS = 100;
+
+function createSearchRegex(word) {
+    return ({
+        $regex: `(\\b${word}\\b|${word})`,
+        $options: 'i'
+    });
+}
+
+export function buildSearchQuery(words: string[]) {
+    return ({
+        $and: words.map(word => ({
+            $or: [
+                { title: createSearchRegex(word) },
+                { description: createSearchRegex(word) },
+                { category: createSearchRegex(word) }
+            ]
+        }))
+    })
+}
+
+export function calculateRelevanceScore(product: IProduct, searchWords: string[]) { 
+    return searchWords.reduce((score: number, word: string) => {
+        const wordRegex = new RegExp(word, 'i');
+
+        // Calculate position based relevance for name and description
+        const nameMatch = product.name.match(wordRegex);
+        const descriptionMatch = product.description.match(wordRegex);
+        const positionBonus = (match) => match ? 1 / (match.index + 1) : 0;
+
+        return score + 
+        (nameMatch ? PRODUCT_SEARCH_WEIGHTS.NAME + positionBonus(nameMatch) : 0) +
+        (descriptionMatch ? PRODUCT_SEARCH_WEIGHTS.DESCRIPTION + positionBonus(descriptionMatch) : 0)
+    }, 0);
+}
 
 export const isValidState = (state: string) => GeospatialDataNigeria[state] ? true : false;
 

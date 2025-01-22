@@ -1,6 +1,6 @@
 import { rateLimit } from 'express-rate-limit';
 import { Request, Response } from 'express';
-import { rateLimitMiddlewareHandler } from '../lib/main';
+import { rateLimitMiddlewareHandler } from '../lib/utils';
 
 const verifyBvnLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
