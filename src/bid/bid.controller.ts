@@ -50,7 +50,7 @@ class BidController {
 
     static async getAllAcceptedBids(req: Request, res: Response) {
         try {
-            const bids = await Bid.find({ seller: req.user?._id!, status: "accepted" }).populate("buyer");
+            const bids = await Bid.find({ seller: req.user?._id, status: "accepted" }).populate("buyer");
             if (!bids) {
                 return res.status(404).json({ error: true, message: "Bids not found" });
             }
@@ -64,7 +64,7 @@ class BidController {
 
     static async getRejectedBids(req: Request, res: Response) {
         try {
-            const bids = await Bid.find({ "product.owner": req.user?._id!, status: "rejected" }).populate(["product"])
+            const bids = await Bid.find({ "product.owner": req.user?._id, status: "rejected" }).populate(["product"])
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error fetching rejected bids" })
@@ -86,11 +86,11 @@ class BidController {
             if (!product.is_negotiable) return res.status(404).json({ error: true, message: "Product not found!" });
 
             // Ensure seller does not bid for their own item
-            const canBidForItem = !compareObjectID(req.user?._id!, product.owner);
+            const canBidForItem = !compareObjectID(req.user?._id, product.owner);
             if (!canBidForItem) return res.status(400).json({ error: true, message: "Cannot bid for your own item!" });
 
             const bidData: Pick<IBid, "buyer" | "negotiating_price" | "product"> = {
-                buyer: req.user?._id!,
+                buyer: req.user?._id,
                 negotiating_price,
                 product: new Types.ObjectId(productID)
             };
@@ -164,7 +164,7 @@ class BidController {
     static async deleteBid(req: Request, res: Response) {
         try {
             const { bidID } = req.params;
-            const bid = await Bid.findOneAndDelete({ _id: bidID, buyer: req.user?._id! });
+            const bid = await Bid.findOneAndDelete({ _id: bidID, buyer: req.user?._id });
             if (!bid) throw new Error("Could not delete that bid");
             return res.status(200).json({ success: true, message: "Bid deleted successfuly" })
         } catch (error) {

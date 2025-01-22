@@ -7,7 +7,7 @@ class NotificationController {
             const { push_token } = req.body;
 
             // !TODO => VALIDATE PUSH TOKENS
-            const user = await User.findById(req.user?._id!);
+            const user = await User.findById(req.user?._id);
             if (!user) {
                 return res.status(404).json({ error: true, message: "User not found!" });
             }

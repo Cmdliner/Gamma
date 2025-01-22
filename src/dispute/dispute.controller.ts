@@ -41,7 +41,7 @@ class DisputeController {
 
             // Check if current user is the buyer or seller
             const seller = transaction.seller;
-            const isBuyerOrSeller = compareObjectID(buyer._id, req.user?._id!) || compareObjectID(seller, req.user?._id!);
+            const isBuyerOrSeller = compareObjectID(buyer._id, req.user?._id) || compareObjectID(seller, req.user?._id);
             if (!isBuyerOrSeller) {
                 await session.abortTransaction();
                 return res.status(403).json({ error: true, message: "Forbidden!" });
@@ -54,7 +54,7 @@ class DisputeController {
             await transaction.save({ session });
             const disputeData: any = {
                 status: "ongoing",
-                raised_by: req.user?._id!,
+                raised_by: req.user?._id,
                 transaction: transactionID,
                 comments
             }

@@ -22,7 +22,7 @@ import type ILandedProperty from "../types/landed_property.schema";
 import type IGadget from "../types/gadget.schema";
 import type IVehicle from "../types/vehicle.schema";
 import type { IFurniture } from "../types/generic.schema";
-import { buildSearchQuery, calculateRelevanceScore, compareObjectID, isValidState } from "../lib/utils";
+import { compareObjectID, isValidState } from "../lib/utils";
 import Bid from "../bid/bid.model";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import ProductService from "./product.service";
@@ -45,12 +45,12 @@ class ProductController {
             if (!searchWords.length) {
                 return res.status(400).json({ error: true, message: "Invalid search query" });
             }
-            const searchQuery = buildSearchQuery(searchWords);
+            const searchQuery = ProductService.buildSearchQuery(searchWords);
 
             const products = await Product.find({
-                deleted_at: { $exists: false},
+                deleted_at: { $exists: false },
                 searchQuery
-            });
+            }).limit(ProductService.SEARCH_LIMITS);
 
             if (!products) {
                 return res.status(400).json({ error: true, message: "Error finding products" });
@@ -63,7 +63,7 @@ class ProductController {
             const sortedProducts = products
                 .map((product: IProduct) => ({
                     ...product,
-                    relevanceScore: calculateRelevanceScore(product, searchWords),
+                    relevanceScore: ProductService.calculateRelevanceScore(product, searchWords),
                 }))
                 .sort((a, b) => b.relevanceScore - a.relevanceScore);
 
@@ -462,7 +462,7 @@ class ProductController {
         try {
             const { productCategory } = req.params;
 
-            const user = await User.findById(req.user?._id!);
+            const user = await User.findById(req.user?._id);
             if (!user) {
                 return res.status(404).json({ error: true, message: "User not found!" });
             }

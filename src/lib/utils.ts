@@ -143,49 +143,4 @@ export function rateLimitMiddlewareHandler(_req: Request, res: Response, next: N
     next();
 }
 
-// Helper functions for products sarch can be found here
-
-export const PRODUCT_SEARCH_WEIGHTS = {
-    NAME: 3,
-    DESCRIPTION: 2,
-    CATEGORY: 1
-}
-
-export const SEARCH_LIMITS = 100;
-
-function createSearchRegex(word) {
-    return ({
-        $regex: `(\\b${word}\\b|${word})`,
-        $options: 'i'
-    });
-}
-
-export function buildSearchQuery(words: string[]) {
-    return ({
-        $and: words.map(word => ({
-            $or: [
-                { title: createSearchRegex(word) },
-                { description: createSearchRegex(word) },
-                { category: createSearchRegex(word) }
-            ]
-        }))
-    })
-}
-
-export function calculateRelevanceScore(product: IProduct, searchWords: string[]) { 
-    return searchWords.reduce((score: number, word: string) => {
-        const wordRegex = new RegExp(word, 'i');
-
-        // Calculate position based relevance for name and description
-        const nameMatch = product.name.match(wordRegex);
-        const descriptionMatch = product.description.match(wordRegex);
-        const positionBonus = (match) => match ? 1 / (match.index + 1) : 0;
-
-        return score + 
-        (nameMatch ? PRODUCT_SEARCH_WEIGHTS.NAME + positionBonus(nameMatch) : 0) +
-        (descriptionMatch ? PRODUCT_SEARCH_WEIGHTS.DESCRIPTION + positionBonus(descriptionMatch) : 0)
-    }, 0);
-}
-
 export const isValidState = (state: string) => GeospatialDataNigeria[state] ? true : false;
-

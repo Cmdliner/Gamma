@@ -490,7 +490,7 @@ class AuthController {
             const otpInDb = await OTP.findOneAndDelete({ owner: user._id, token: otp });
             if (!otpInDb) return res.status(400).json({ error: true, message: "OTP verification failed!" });
 
-            const otpExpired = otpInDb.expires.valueOf() < Date.now().valueOf();
+            const otpExpired = otpInDb.expires.valueOf() < Date.now();
             if (otpExpired) {
                 return res.status(400).json({ error: true, message: "OTP expired!" });
             }
