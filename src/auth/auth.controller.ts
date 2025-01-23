@@ -138,7 +138,12 @@ class AuthController {
 
             await user.save({ session });
 
-            const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
+            const emailVToken = new OTP({
+                kind: "verification",
+                owner: user._id,
+                token: generateOTP(),
+                expires: new Date(Date.now() + 10 * 60 * 1000), // Expires in the next 10 mins
+            });
             if (!emailVToken) {
                 await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Error sending verification mail" });
@@ -150,7 +155,7 @@ class AuthController {
 
             const onboardingToken = await AuthService.createToken(user._id, cfg.ONBOARDING_TOKEN_SECRET, "7d");
 
-    
+
             // when all the register operations have successfully completed commit the transactions to the db
             await session.commitTransaction();
             res.setHeader("x-onboarding-user", onboardingToken);
@@ -183,7 +188,12 @@ class AuthController {
             // Find and delete previous otp
             await OTP.findOneAndDelete({ kind: "verification", owner: user._id });
 
-            const emailVToken = new OTP({ kind: "verification", owner: user._id, token: generateOTP() });
+            const emailVToken = new OTP({
+                kind: "verification",
+                owner: user._id,
+                token: generateOTP(),
+                expires: new Date(Date.now() + 10 * 60 * 1000) // Expires in the next 10 mins
+            });
             if (!emailVToken) {
                 return res.status(400).json({ error: true, message: "Error sending verification mail" });
             }
@@ -216,7 +226,6 @@ class AuthController {
                 return res.status(422).json({ error: true, message: "OTP required!" });
             }
             const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
-
             if (!unverifiedUserToken) {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
             }
@@ -508,7 +517,7 @@ class AuthController {
     static async resetPassword(req: Request, res: Response) {
         try {
             const { password } = req.body;
-            
+
             if (!password) {
                 return res.status(422).json({ error: true, message: "Password required!" });
             }
@@ -588,7 +597,7 @@ class AuthController {
             const user = await User.exists({ _id: decoded.id });
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
-            //Create new access token
+            // Create new access token
             const accessToken = await AuthService.createToken(user._id, cfg.ACCESS_TOKEN_SECRET, "2h")
             res.setHeader("Authorization", `Bearer ${accessToken}`);
 
