@@ -4,7 +4,6 @@ import { GeospatialDataNigeria } from "./location.data";
 import { cfg } from "../init";
 import { type Request, type Response, type NextFunction } from "express";
 import { Options } from "express-rate-limit";
-import IProduct from "../types/product.schema";
 
 export function compareObjectID(obj1: Types.ObjectId, obj2: Types.ObjectId): boolean {
     return obj1.toString() === obj2.toString();

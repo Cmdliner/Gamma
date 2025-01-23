@@ -41,6 +41,7 @@ class EmailService {
             .replace("${otp}", code)
             .replace("${tx_id}", tx?.id)
             .replace("${tx_amount}", `${tx?.amount}`)
+            .replace("${current_year}", `${new Date().getFullYear()}`)
         ).join(" ");
     }
 
@@ -51,7 +52,7 @@ class EmailService {
         otp: string | null,
         tx?: ITransaction) {
         const mailOptions: Mail.Options = {
-            from: cfg.APP_EMAIL_ADDRESS,
+            from: ' "Oyeah" <escrow@oyeah.com.ng>',
             to,
             subject: this.emailTemplate[kind].subject,
             html: this.parseMailFile(
