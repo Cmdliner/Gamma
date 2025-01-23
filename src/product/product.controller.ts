@@ -49,7 +49,7 @@ class ProductController {
 
             const products = await Product.find({
                 deleted_at: { $exists: false },
-                searchQuery
+                ...searchQuery
             }).limit(ProductService.SEARCH_LIMITS);
 
             if (!products) {
