@@ -58,8 +58,7 @@ class ProductService {
         });
     }
     
-    static buildSearchQuery(words: string[]) {
-        return ({
+    static buildSearchQuery = (words: string[])  => ({
             $and: words.map(word => ({
                 $or: [
                     { title: this.createSearchRegex(word) },
@@ -68,7 +67,6 @@ class ProductService {
                 ]
             }))
         })
-    }
     
     static calculateRelevanceScore(product: IProduct, searchWords: string[]) { 
         return searchWords.reduce((score: number, word: string) => {
