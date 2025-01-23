@@ -13,7 +13,7 @@ export const allowedCategories = [
 
 
 export const electronicsValidationSchema = Joi.object({
-    product_images: Joi.array().min(1).max(10).required(),
+    product_images: Joi.array().min(6).max(10).required(),
     name: Joi.string().required(),
     description: Joi.string(),
     owner: Joi.object().required(),
@@ -41,7 +41,7 @@ const validPropertyConditions = [
 ];
 
 export const landedPropertyValidationSchema = Joi.object({
-    product_images: Joi.array().min(10).max(10).required(),
+    product_images: Joi.array().min(6).max(10).required(),
     name: Joi.string().required(),
     description: Joi.string().required(),
     owner: Joi.object().required(),
@@ -52,7 +52,7 @@ export const landedPropertyValidationSchema = Joi.object({
     }).required(),
     price: Joi.number().min(10).required(),
     is_negotiable: Joi.boolean().required(),
-    ownership_documents: Joi.array().min(1).max(5).required(),
+    ownership_documents: Joi.array().min(2).max(5).required(),
     localty: Joi.string().required(),
     dimensions: Joi.string().required(),
     category: Joi.valid(...allowedCategories).required(),
@@ -63,7 +63,7 @@ export const gadgetValidationSchema = Joi.object({
     name: Joi.string().required(),
     description: Joi.string().required(),
     price: Joi.number().min(10).required(),
-    product_images: Joi.array().min(10).max(10).required(),
+    product_images: Joi.array().min(6).max(10).required(),
     owner: Joi.object().required(),
     location: Joi.object({
         type: Joi.string().valid("Point").required(),
@@ -83,7 +83,7 @@ export const vehiclevalidationSchema = Joi.object({
     name: Joi.string().required(),
     description: Joi.string().required(),
     price: Joi.number().min(10).required(),
-    product_images: Joi.array().min(10).max(10).required(),
+    product_images: Joi.array().min(6).max(10).required(),
     owner: Joi.object().required(),
     location: Joi.object({
         type: Joi.string().valid("Point").required(),
@@ -115,6 +115,6 @@ export const genericValidationSchema = Joi.object({
     is_negotiable: Joi.boolean().required(),
     condition: Joi.string().valid("used", "new").required(),
     category: Joi.valid(...allowedCategories).required(),
-    product_images: Joi.array().min(10).max(10).required(),
+    product_images: Joi.array().min(6).max(10).required(),
     ownership_documents: Joi.array()
 });
