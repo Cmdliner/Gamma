@@ -4,6 +4,7 @@ import ProductController from "./product.controller";
 
 const product = Router();
 
+product.get("/search", ProductController.search);
 product.get("/:productID", ProductController.getProductInfo);
 product.get("/categories/:productCategory",ProductController.getAllProductsInCategory);
 product.post("/upload-gadget", UploadMiddleware, ValidateAndProcessUpload,ProductController.uploadGadget);

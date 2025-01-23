@@ -2,75 +2,43 @@ import { Request, Response } from "express";
 import { Types, startSession } from "mongoose";
 import Wallet from "../user/wallet.model";
 import FincraService from "../lib/fincra.service";
-import Transaction, { ReferralTransaction } from "./transaction.model";
+import Transaction, { AdSponsorshipTransaction, ProductPurchaseTransaction, ReferralTransaction, RefundTransaction } from "./transaction.model";
 import IUser from "../types/user.schema";
 import Product from "../product/product.model";
-import { compareObjectID, generateOTP } from "../lib/main";
+import { compareObjectID, generateOTP } from "../lib/utils";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../bid/bid.model";
 import { AdPayments } from "../types/ad.enums";
 import User from "../user/user.model";
-import { PaymentTransaction, WithdrawalTransaction } from "./transaction.model";
+import { WithdrawalTransaction } from "./transaction.model";
 import EmailService from "../lib/email.service";
 import OTP from "../auth/otp.model";
 import IProduct from "../types/product.schema";
+import { SafeHavenService } from "../lib/safehaven.service";
 
 
 class PaymentController {
 
-    private static async getTransactionsAssociatedWithUser(userId: Types.ObjectId, status: string) {
-        const transactions = await PaymentTransaction.aggregate([
-            // First, look up the associated product details
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "product",
-                    foreignField: "_id",
-                    as: "product"
-                }
-            },
-            // Unwind the product array
-            {
-                $unwind: "$product"
-            },
-            // Look up the product owner's details
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "product.owner",
-                    foreignField: "_id",
-                    pipeline: [
-                        {
-                            $project: {
-                                first_name: 1,
-                                last_name: 1,
-                                display_pic: 1
-                            }
-                        }
-                    ],
-                    as: "product.owner"
-                }
-            },
-            // Unwind the owner array to convert it back to an object
-            {
-                $unwind: "$product.owner"
-            },
-            // Match transactions where user is either bearer or product owner
-            {
-                $match: {
-                    $or: [
-                        { bearer: new Types.ObjectId(userId) },
-                        { "product.owner._id": new Types.ObjectId(userId) }
-                    ],
-                    status
-                }
-            },
-            // Sort by creation date, most recent first
-            {
-                $sort: { createdAt: -1 }
-            }
-        ]);
-        return transactions;
+    static async generateSafeHavenApiToken(req: Request, res: Response) {
+        try {
+            const tokens = await SafeHavenService.generateAuthToken();
+            console.log(tokens);
+            return res.status(200).json({ tokens });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error generating safehaven API token" });
+        }
+    }
+
+    static async initVerification(req: Request, res: Response) {
+        try {
+            const verificationRes = await SafeHavenService.initiateVerification(req.user);
+            console.log(verificationRes);
+            return res.status(200).json({ error: true, message: verificationRes })
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "An error occured" })
+        }
     }
 
     static async withdrawFromWallet(req: Request, res: Response) {
@@ -108,10 +76,10 @@ class PaymentController {
             // Generate a new transaction for the payout
             const payoutTransaction = new WithdrawalTransaction({
                 for: "withdrawal",
-                bearer: req.user?._id!,
+                bearer: req.user?._id,
                 amount: amount_to_withdraw,
                 status: "pending",
-                reason: `Payout: From Oyeah wallet to bank account`,
+                reason: `Payout: From Oyeah wallet to bank account: ${user.bank_details.account_no}`,
                 payment_method: "bank_transfer",
                 from: "wallet"
             });
@@ -190,7 +158,7 @@ class PaymentController {
             }
 
 
-            const product = await Product.findById(productID).session(session);
+            const product = await Product.findOne({ _id: productID, deleted_at: { $exists: false } }).session(session);
             if (!product || product.status !== "available") {
                 await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Product not available!" });
@@ -212,7 +180,7 @@ class PaymentController {
                     return res.status(400).json({ error: true, message: "Bid expired!" })
                 }
 
-                const isBidder = compareObjectID(bid.buyer, req.user?._id!);
+                const isBidder = compareObjectID(bid.buyer, req.user?._id);
                 if (!isBidder) return res.status(400).json({ error: true, message: "Action Forbidden!" });
 
                 // Set bid Price to that negotiated
@@ -222,13 +190,15 @@ class PaymentController {
             const updatedProduct = await Product.findOneAndUpdate({
                 _id: productID,
                 status: "available",
-                "purchase_lock.is_locked": false 
+                "purchase_lock.is_locked": false,
+                deleted_at: { $exists: false }
             }, {
                 status: "processing_payment",
                 purchase_lock: {
                     is_locked: true,
                     locked_at: Date.now(),
                     locked_by: userId,
+                    payment_link: "" // !todo => Add payment link
                 }
             }, { new: true, session });
             if (!updatedProduct) {
@@ -237,15 +207,15 @@ class PaymentController {
             }
 
             // CREATE TRANSACTION FOR PRODUCT PURCHASE
-            const itemPurchaseTransaction = new PaymentTransaction({
+            const itemPurchaseTransaction = new ProductPurchaseTransaction({
                 bearer: userId,
                 // set to negotiated price or actual price based on whether it's a bid or not
                 amount: bidPrice ? bidPrice : product.price,
+                seller: updatedProduct.owner,
                 status: "pending",
                 product: productID,
-                reason: `Product purchase: \nFor the purchase of ${product.name}`,
-                payment_method,
-                for: "product_payment"
+                reason: `For the purchase of ${product.name}`,
+                payment_method
             });
             await itemPurchaseTransaction.save({ session });
             const transactionRef = itemPurchaseTransaction.id;
@@ -288,22 +258,25 @@ class PaymentController {
             // START TRANSACTION
             session.startTransaction();
 
-            const product = await Product.findById(productID).session(session);
+            const product = await Product.findOne({
+                _id: productID,
+                deleted_at: { $exists: false },
+            }).session(session);
             if (!product) {
                 await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "Product not found!" });
             }
 
-            const isProductOwner = compareObjectID(product.owner, req.user?._id!);
+            const isProductOwner = compareObjectID(product.owner, req.user?._id);
             if (!isProductOwner) {
                 await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Forbidden!!!" });
             }
 
             // CHECK IF AD SPONOSRHIP IS NOT YET EXPIRED
-            if ((product.sponsorship?.expires?.valueOf() || 1) > Date.now()) {
+            if (product.sponsorship?.expires?.valueOf() > Date.now()) {
                 await session.abortTransaction();
-                return res.status(400).json({ error: true, message: "" });
+                return res.status(400).json({ error: true, message: "Previous ad sponsorhip is yet to expire" });
             }
 
             // CHECK IF PRODUCT IS SOLD
@@ -314,13 +287,12 @@ class PaymentController {
 
             // Create Transaction for ad sponsorhsip
             const adsDurationFmt = sponsorship_duration == "1Week" ? "one week" : "one month";
-            const transaction = new PaymentTransaction({
-                for: "ad_sponsorship",
+            const transaction = new AdSponsorshipTransaction({
                 bearer: req.user?._id,
                 product: product._id,
                 status: "pending",
                 payment_method: payment_method,
-                reason: `Product sponsorship:\n To run ads for ${product.name} for a duration of ${adsDurationFmt}`,
+                reason: `To run ads for ${product.name} for a duration of ${adsDurationFmt}`,
                 amount: sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly
             })
             await transaction.save({ session });
@@ -357,23 +329,22 @@ class PaymentController {
 
             // Ensure user has made a transaction in the last 30 days
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-            const transactionsInThePast30Days = await PaymentTransaction.find({
+            const transactionsInThePast30Days = await Transaction.find({
+                bearer: req.user?._id,
+                kind: { $or: ["ProductPurchaseTransaction", "AdSponsorhipTransaction"] },
                 createdAt: { $gte: thirtyDaysAgo }
             }).session(session);
-            const canWithdrawRewards = transactionsInThePast30Days.length ? true : false;
-            // /* !REMOVE IN PROD */ const canWithdrawRewards = true;
+            const canWithdrawRewards = !!transactionsInThePast30Days.length;
 
             if (!canWithdrawRewards) {
                 await session.abortTransaction();
-                return res.status(400)
-                    .json({
-                        error: true,
-                        message: "Cannot claim rewards. No 'transactions' in the past 30 days",
-                    });
+                return res.status(400).json({
+                    error: true,
+                    message: "Cannot claim rewards. No 'transactions' in the past 30 days",
+                });
             }
             // Create transaction
             const payoutTransaction = new WithdrawalTransaction({
-                for: "withdrawal",
                 bearer: userId,
                 amount: user.rewards.balance,
                 status: "pending",
@@ -384,11 +355,8 @@ class PaymentController {
             await payoutTransaction.save({ session });
 
             const fincraRes = await FincraService.withdrawRewards(user, amount, payoutTransaction.id);
-            // Handle response and service of rewards
 
-            console.log("fincraResponse");
-            console.log(fincraRes.data);
-            console.log("End of fincraResponse");
+            // Handle response and service of rewards
             if (fincraRes.data.status === "failed") { throw new Error() }
             await WithdrawalTransaction.findByIdAndUpdate(payoutTransaction._id, {
                 status: "processing_payment"
@@ -409,18 +377,18 @@ class PaymentController {
     static async initiateFundsTransfer(req: Request, res: Response) {
         try {
             const { transactionID } = req.params;
-            const transaction = await PaymentTransaction.findOne({
+            const transaction = await ProductPurchaseTransaction.findOne({
                 status: "in_escrow",
-                for: "product_payment",
-                bearer: req.user?._id!,
+                bearer: req.user?._id,
                 _id: transactionID,
             }).populate("product");
             if (!transaction) {
                 return res.status(404).json({ error: true, message: "Transaction not found!" });
             }
+
             // Send otp to user to confirm transaction
             const fullName = `${req.user?.first_name} ${req.user?.last_name}`;
-            const otp = new OTP({ kind: "funds_approval", owner: req.user!, token: generateOTP() });
+            const otp = new OTP({ kind: "funds_approval", owner: req.user?._id, token: generateOTP() });
             await otp.save();
 
             // Send email
@@ -443,7 +411,7 @@ class PaymentController {
             const now = new Date();
             const otpMatch = await OTP.findOneAndDelete({
                 kind: "funds_approval",
-                owner: req.user?._id!,
+                owner: req.user?._id,
                 token: otp,
                 expires: { $gte: now },
             }).session(session);
@@ -453,9 +421,8 @@ class PaymentController {
             }
 
             // Find transaction and update its status
-            const transaction = await PaymentTransaction.findOne({
+            const transaction = await ProductPurchaseTransaction.findOne({
                 _id: transaction_id,
-                for: "product_payment",
                 status: "in_escrow"
             }).session(session);
             if (!transaction) {
@@ -525,9 +492,8 @@ class PaymentController {
             session.startTransaction();
 
             // Get the previous payment transaction
-            const prevTransaction = await PaymentTransaction.findOne({
+            const prevTransaction = await ProductPurchaseTransaction.findOne({
                 bearer: req.user?._id,
-                for: "product_payment",
                 _id: transactionID,
                 status: 'in_escrow'
             }).session(session);
@@ -537,16 +503,16 @@ class PaymentController {
             }
 
             // ! DO NOT TAMPER OR ALTER
-            const OYEAH_REFUND_CUT =  ((0.55 / 100 * prevTransaction.amount) * 10 / 10 );
+            const OYEAH_REFUND_CUT = ((0.55 / 100 * prevTransaction.amount) * 10 / 10);
             const AMOUNT_TO_REFUND = prevTransaction.amount - OYEAH_REFUND_CUT;
 
             // CREATE A NEW REFUND TRANSACTION WITH AMOUNT TO REFUND & reason with ref to prevTransaction
-            const refundTransaction = new PaymentTransaction({
+            const refundTransaction = new RefundTransaction({
                 payment_method: 'bank_transfer',
+                associated_payment_tx: prevTransaction._id,
                 product: prevTransaction.product,
                 bearer: req.user?._id,
                 amount: AMOUNT_TO_REFUND,
-                for: 'payment_refund',
                 status: 'pending',
                 reason: `Refund of payment made in transaction ${prevTransaction.id}`
             });
@@ -573,8 +539,7 @@ class PaymentController {
             session.startTransaction();
 
             // Get refund transaction from ID
-            const refundTransaction = await PaymentTransaction.findOne({
-                for: 'payment_refund',
+            const refundTransaction = await RefundTransaction.findOne({
                 status: 'pending',
                 _id: refundTransactionID,
             }).populate(["product", "bearer"]).session(session);
@@ -584,7 +549,7 @@ class PaymentController {
             }
 
             // Ensure current user is seller => authorized to make this request
-            const isSeller = compareObjectID(req.user?._id!, (refundTransaction.product as unknown as IProduct).owner);
+            const isSeller = compareObjectID(req.user?._id, refundTransaction.seller);
             if (!isSeller) {
                 await session.abortTransaction();
                 return res.status(401).json({ error: true, message: "Unauthorized!" });
@@ -595,13 +560,10 @@ class PaymentController {
             await refundTransaction.save({ session });
 
             // Get the associated payment transaction id from refund tx reason
-            const refundTransactionReason = refundTransaction.reason.split(" ");
-            const associatedPaymentTransactionId = refundTransactionReason[refundTransactionReason.length -1];
-            const associatedPaymentTransaction = await PaymentTransaction.findOne({
-                _id: associatedPaymentTransactionId,
+            const associatedPaymentTransaction = await ProductPurchaseTransaction.findOne({
+                _id: refundTransaction.associated_payment_tx,
                 status: 'in_escrow',
                 bearer: refundTransaction.bearer,
-                for: 'product_payment',
             }).populate(["product"]).session(session);
             if (!associatedPaymentTransaction) {
                 await session.abortTransaction();
@@ -614,14 +576,18 @@ class PaymentController {
 
             // Make product available to other users for purchase again
             const productId = (associatedPaymentTransaction.product as unknown as IProduct)._id;
-            const product = await Product.findById(productId).session(session);
+            const product = await Product.findOne({
+                _id: productId,
+                deleted_at: { $exists: false },
+            }).session(session);
             if (!product) {
                 return res.status(404).json({ error: true, message: "Product not found!" });
             }
             product.purchase_lock = {
                 is_locked: false,
                 locked_by: undefined,
-                locked_at: undefined
+                locked_at: undefined,
+                payment_link: undefined
             };
             product.status = "available";
             await product.save({ session });
@@ -634,7 +600,6 @@ class PaymentController {
                 refundTransaction.amount,
                 refundTransaction.id
             );
-            console.log(refundResponse);
             // ! todo => Send notification to user
 
             await session.commitTransaction();
@@ -650,9 +615,12 @@ class PaymentController {
 
     static async getSuccessfulDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!, "success");
+            const deals = await ProductPurchaseTransaction.find({
+                $or: [{ seller: req.user?._id, bearer: req.user?._id }],
+                status: "success"
+            });
             if (!deals || !deals.length) {
-                return res.status(404).json({ error: true, message: "No deals found!" })
+                return res.status(404).json({ error: true, message: "No deals found!" });
             }
             return res.status(200).json({ success: true, deals });
         } catch (error) {
@@ -663,7 +631,10 @@ class PaymentController {
 
     static async getDisputedDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!, "in_dispute");
+            const deals = await ProductPurchaseTransaction.find({
+                $or: [{ seller: req.user?._id, bearer: req.user?._id }],
+                status: "in_dispute"
+            });
             if (!deals) {
                 return res.status(404).json({ error: true, message: "No deals found" })
             }
@@ -676,8 +647,8 @@ class PaymentController {
 
     static async getFailedDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentTransaction.find({
-                $or: [{ "product.owner": req.user?._id!, bearer: req.user?._id! }],
+            const deals = await ProductPurchaseTransaction.find({
+                $or: [{ seller: req.user?._id, bearer: req.user?._id }],
                 status: "failed",
             }).populate("bearer").populate({
                 path: "product",
@@ -698,7 +669,10 @@ class PaymentController {
 
     static async getOngoingDeals(req: Request, res: Response) {
         try {
-            const deals = await PaymentController.getTransactionsAssociatedWithUser(req.user?._id!, "in_escrow");
+            const deals = await ProductPurchaseTransaction.find({
+                bearer: req.user?._id,
+                status: "in_escrow"
+            });
             if (!deals) {
                 return res.status(404).json({ error: true, message: "User has no ongoing transactions" });
             }

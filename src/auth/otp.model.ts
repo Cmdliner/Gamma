@@ -2,7 +2,7 @@ import { model, Schema } from "mongoose";
 
 const nextHour = () => {
     let oneHourInMs = (1000 * 60 * 60);
-    let nowInMs = new Date().valueOf()
+    let nowInMs = Date.now();
     return new Date(nowInMs + oneHourInMs);
 }
 

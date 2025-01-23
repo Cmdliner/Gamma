@@ -3,6 +3,11 @@ import PaymentController from "./payment.controller";
 
 const payment = Router();
 
+// Safehaven test routes
+payment.post("/safehaven-token", PaymentController.generateSafeHavenApiToken);
+payment.post("/verify-safehaven", PaymentController.initVerification);
+
+// Actual payment routes
 payment.get("/history", PaymentController.getTransactionHistory);
 payment.post("/transfer-funds", PaymentController.transferfunds);
 payment.post("/withdraw", PaymentController.withdrawFromWallet)

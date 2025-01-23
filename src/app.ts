@@ -3,7 +3,6 @@ import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import ExpressMongoSanitize from "express-mongo-sanitize";
-import { IAppConfig } from "./config/app.config";
 import DB from "./config/db";
 import AuthMiddleware from "./middlewares/auth.middlewares";
 import auth from "./auth/auth.routes";
@@ -17,13 +16,14 @@ import product from "./product/product.routes";
 import user from "./user/user.routes";
 import { cfg } from "./init";
 import rateLimit from "express-rate-limit";
+import { AppConfig } from "./config/app.config";
 
 const API_VERSION = "api/v1";
 
 class App {
 
     private app: Express;
-    public readonly cfg: IAppConfig;
+    public readonly cfg: AppConfig;
     private corsOptions: CorsOptions = {
         origin: process.env.CORS_ORIGIN,
         methods: "GET",
@@ -43,7 +43,7 @@ class App {
         this.app.set("trust proxy", 1);
         this.app.use(rateLimit({
             windowMs: 10 * 60 * 1000,
-            max: 60
+            max: 60,
         }));
         this.app.use(compression());
         this.app.use(helmet());
@@ -64,7 +64,7 @@ class App {
         this.app.post('/webhooks', WebhookController.confirm);
         this.app.get("/healthz", (_req: Request, res: Response) => {
             res.status(200).json({ active: "The hood is up commandliner⚡" });
-        });;
+        });
     }
     private initializeErrorHandlers() {
         this.app.use((_req: Request, res: Response, _next: NextFunction) => {

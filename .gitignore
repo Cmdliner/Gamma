@@ -6,3 +6,6 @@ uploads
 server.cert
 *.js
 .*.sh
+privatekey.pem
+publickey.cer
+client_assertion

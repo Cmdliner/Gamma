@@ -1,16 +1,15 @@
 import { readFileSync } from "fs";
-import { config as envConfig } from "dotenv";
 import nodemailer from "nodemailer";
 import Mail from "nodemailer/lib/mailer";
 import path from "path";
 import { cfg } from "../init";
 import ITransaction from "../types/transaction.schema";
 
-envConfig();
 
 type EmailKind = "verification" | "pwd_reset" | "funds_release";
 
 class EmailService {
+    
     private static readonly emailTemplate = {
         verification: {
             subject: "Email Verification",
@@ -42,6 +41,7 @@ class EmailService {
             .replace("${otp}", code)
             .replace("${tx_id}", tx?.id)
             .replace("${tx_amount}", `${tx?.amount}`)
+            .replace("${current_year}", `${new Date().getFullYear()}`)
         ).join(" ");
     }
 
@@ -52,10 +52,10 @@ class EmailService {
         otp: string | null,
         tx?: ITransaction) {
         const mailOptions: Mail.Options = {
-            from: cfg.APP_EMAIL_ADDRESS,
+            from: ' "Oyeah" <escrow@oyeah.com.ng>',
             to,
-            subject: EmailService.emailTemplate[kind].subject,
-            html: EmailService.parseMailFile(
+            subject: this.emailTemplate[kind].subject,
+            html: this.parseMailFile(
                 readFileSync(EmailService.emailTemplate[kind].html).toString(),
                 fullname,
                 otp,
@@ -64,7 +64,7 @@ class EmailService {
         };
 
         try {
-            await EmailService.transporter.sendMail(mailOptions);
+            await this.transporter.sendMail(mailOptions);
             console.log(`Email sent successfully`);
         } catch (error) {
             console.error((error as Error).name, "error_name");

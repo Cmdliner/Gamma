@@ -4,7 +4,7 @@ import IWallet from "../types/wallet.schema";
 import PaystackService from "../lib/paystack.service";
 import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
 import { ReferralTransaction } from "../payment/transaction.model";
-import { isValidState } from "../lib/main";
+import { isValidState } from "../lib/utils";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import IUser from "../types/user.schema";
 import Expo from "expo-server-sdk";
@@ -12,7 +12,7 @@ import Expo from "expo-server-sdk";
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
         try {
-            const user = await User.findById(req.user?._id!).select([
+            const user = await User.findById(req.user?._id).select([
                 "-password",
                 "-bvn",
                 "-device_push_token"
@@ -93,7 +93,7 @@ class UserController {
                 return res.status(400).json({ error: true, message: "Invalid bank details" });
             }
 
-            await User.findByIdAndUpdate(req.user?._id!, { "bank_details.account_no": account_no }, { new: true });
+            await User.findByIdAndUpdate(req.user?._id, { "bank_details.account_no": account_no }, { new: true });
             return res.status(200).json({ success: true, message: "Bank details updated successfully!" });
 
         } catch (error) {
@@ -132,7 +132,7 @@ class UserController {
         const { phone_no_1, phone_no_2 } = req.body;
         // !TODO => VALIDATE INPUTS AND HANDLE VERIFICATION DOCS UPLOAD
         try {
-            const user = await User.findById(req.user?._id!);
+            const user = await User.findById(req.user?._id);
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
 
@@ -166,7 +166,7 @@ class UserController {
 
     static async getReferralHistory(req: Request, res: Response) {
         try {
-            const transactions = await ReferralTransaction.find({ bearer: req.user?._id! }).populate(["referee"]);
+            const transactions = await ReferralTransaction.find({ bearer: req.user?._id }).populate(["referee"]);
             return res.status(200).json({ success: true, transactions });
         } catch (error) {
             console.error(error);

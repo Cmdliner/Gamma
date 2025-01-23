@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import Product from "../product/product.model";
 import User from "../user/user.model";
-import { compareObjectID } from "../lib/main";
+import { compareObjectID } from "../lib/utils";
 import Dispute from "./dispute.model";
-import { PaymentTransaction } from "../payment/transaction.model";
+import { ProductPurchaseTransaction } from "../payment/transaction.model";
 import { startSession } from "mongoose";
 
 class DisputeController {
@@ -19,7 +19,7 @@ class DisputeController {
         try {
             session.startTransaction();
 
-            const transaction = await PaymentTransaction.findById(transactionID).session(session);
+            const transaction = await ProductPurchaseTransaction.findById(transactionID).session(session);
             if (!transaction) {
                 await session.abortTransaction();
                 return res.status(400).json({ error: true, message: "Transaction not found!" })
@@ -31,7 +31,6 @@ class DisputeController {
                 await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "Product not found!" });
             }
-            const seller = product.owner;
 
             // Find the buyer
             const buyer = await User.findById(product.purchase_lock.locked_by);
@@ -41,7 +40,8 @@ class DisputeController {
             }
 
             // Check if current user is the buyer or seller
-            const isBuyerOrSeller = compareObjectID(buyer._id, req.user?._id!) || compareObjectID(seller, req.user?._id!);
+            const seller = transaction.seller;
+            const isBuyerOrSeller = compareObjectID(buyer._id, req.user?._id) || compareObjectID(seller, req.user?._id);
             if (!isBuyerOrSeller) {
                 await session.abortTransaction();
                 return res.status(403).json({ error: true, message: "Forbidden!" });
@@ -54,7 +54,7 @@ class DisputeController {
             await transaction.save({ session });
             const disputeData: any = {
                 status: "ongoing",
-                raised_by: req.user?._id!,
+                raised_by: req.user?._id,
                 transaction: transactionID,
                 comments
             }
@@ -85,8 +85,7 @@ class DisputeController {
             dispute.status = "resolved";
             await dispute.save();
 
-            // !TODO => CHANGED BUT TEST IN POSTMAN THAT THIS WORKS
-            const disputedTransaction = await PaymentTransaction.findById(dispute.transaction);
+            const disputedTransaction = await ProductPurchaseTransaction.findById(dispute.transaction);
             disputedTransaction.status = "resolved";
             await disputedTransaction.save();
 

@@ -6,6 +6,9 @@ const WalletSchema = new Schema({
         type: Number,
         default: 0,
         min: 0
+    },
+    virtual_account_id: {
+        type: String
     }
 });
 

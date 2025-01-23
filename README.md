@@ -37,9 +37,10 @@ bun run dev
 - Payment links might never expire (check again with fincra)
 
 ## TODOS 
-- Finish impl app wide rate limiting
-- Impl soft delete
+- Impl logger with winston
+- Write tests for auth, product and payment
 - Implement push notifications
+- Secure media uploads
 - Sanitize inputs for all actions (impl max char length, rm whitespace, dont allow special characters)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
 

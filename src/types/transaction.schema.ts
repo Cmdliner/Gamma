@@ -1,17 +1,44 @@
 import { Document, Types } from "mongoose";
 
 interface ITransaction extends Document {
-    kind: "PaymentTransaction" | "ReferralTransaction" | "WithdrawalTransaction";
-    for: "ad_sponsorship" | "product_payment" | "payment_refund" | "withdrawal" | "referral";
+    kind:
+    | "ReferralTransaction"
+    | "WithdrawalTransaction"
+    | "ProductPurchaseTransaction"
+    | "AdSponsorhipTransaction"
+    | "RefundTransaction";
     bearer: Types.ObjectId;
     amount: number;
-    status: "success" | "failed" | "pending" | "processing_payment" | "in_dispute" | "in_escrow" | "resolved" | "refunded";
+    status:
+    | "success"
+    | "failed"
+    | "pending"
+    | "processing_payment"
+    | "in_dispute"
+    | "in_escrow"
+    | "resolved"
+    | "refunded";
     reason: string;
 }
 
-export interface IPaymentTransaction extends ITransaction {
-    payment_method: "bank_transfer" | "card";
-    seller?: Types.ObjectId;
+
+export interface IProductPurchaseTransaction extends ITransaction {
+    payment_method: "card" | "bank_transfer";
+    product: Types.ObjectId;
+    seller: Types.ObjectId;
+    external_ref: string;
+}
+
+export interface IRefundTransaction extends ITransaction {
+    payment_method: string;
+    product: Types.ObjectId;
+    seller: Types.ObjectId;
+    associated_payment_tx: Types.ObjectId;
+    external_ref: string;
+}
+
+export interface IAdSponsorshipTransaction extends ITransaction {
+    payment_method: "card" | "bank_transfer";
     product: Types.ObjectId;
     external_ref: string;
 }

@@ -22,14 +22,60 @@ import type ILandedProperty from "../types/landed_property.schema";
 import type IGadget from "../types/gadget.schema";
 import type IVehicle from "../types/vehicle.schema";
 import type { IFurniture } from "../types/generic.schema";
-import { compareObjectID, isValidState } from "../lib/main";
+import { compareObjectID, isValidState } from "../lib/utils";
 import Bid from "../bid/bid.model";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import ProductService from "./product.service";
 import User from "../user/user.model";
 import { ILocation } from "../types/common.type";
+import IProduct from "../types/product.schema";
 
 class ProductController {
+
+    static async search(req: Request, res: Response) {
+        let { q } = req.query;
+        if (!q) {
+            return res.status(400).json({ error: true, message: "query pattern 'q' required" });
+        }
+        try {
+            const searchWords = (q as unknown as string)
+                .trim()
+                .split(/\s/)
+                .filter((word) => word.length > 0);
+            if (!searchWords.length) {
+                return res.status(400).json({ error: true, message: "Invalid search query" });
+            }
+            const searchQuery = ProductService.buildSearchQuery(searchWords);
+
+            const products = await Product.find({
+                deleted_at: { $exists: false },
+                searchQuery
+            }).limit(ProductService.SEARCH_LIMITS);
+
+            if (!products) {
+                return res.status(400).json({ error: true, message: "Error finding products" });
+            }
+            if (!products.length) {
+                return res.status(404).json({ error: true, message: "No products found!" });
+            }
+
+            // Sort products by relevance
+            const sortedProducts = products
+                .map((product: IProduct) => ({
+                    ...product,
+                    relevanceScore: ProductService.calculateRelevanceScore(product, searchWords),
+                }))
+                .sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+            const finalSortedProducts = sortedProducts.map(({ relevanceScore, ...product }) => product);
+
+            return res.status(200).json({ status: true, products: finalSortedProducts });
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true, message: "Error occured during search" })
+        }
+    }
 
     // Add new electronics
     static async addElectronicProduct(req: Request, res: Response) {
@@ -398,7 +444,9 @@ class ProductController {
             const { productID } = req.params;
 
             const product = await Product.findById(productID);
-            if (!product) throw new Error("Error getting that product");
+            if (!product) {
+                return res.status(404).json({ error: true, message: "Product not found!" });
+            };
             return res.status(200).json({ success: true, message: "Product found", product });
         } catch (error) {
             console.error(error);
@@ -414,7 +462,7 @@ class ProductController {
         try {
             const { productCategory } = req.params;
 
-            const user = await User.findById(req.user?._id!);
+            const user = await User.findById(req.user?._id);
             if (!user) {
                 return res.status(404).json({ error: true, message: "User not found!" });
             }
@@ -434,7 +482,10 @@ class ProductController {
             const isValidCategory = allowedCategories.includes(productCategory);
             if (!isValidCategory) return res.status(400).json({ error: true, message: "Invalid product category!" });
 
-            const productsCount = await Product.find({ category: productCategory }).countDocuments();
+            const productsCount = await Product.find({
+                category: productCategory,
+                deleted_at: { $exists: false },
+            }).countDocuments();
             const isValidPage = page <= Math.ceil(productsCount / limit);
 
             if (!isValidPage) {
@@ -470,7 +521,7 @@ class ProductController {
                 return res.status(400)
                     .json({ error: true, message: "Product still has pending operations cannot delete at the moment" });
             }
-            const deletedProductListing = await Product.findByIdAndDelete(productID);
+            const deletedProductListing = await Product.findByIdAndUpdate(productID, { deleted_at: new Date() });
             if (!deletedProductListing) throw new Error("An error occured while attempting to delete product");
 
             return res.status(200).json({ success: true, message: "Product listing has been deleted successfully" });
@@ -490,7 +541,12 @@ class ProductController {
                 return res.status(422).json({ error: true, message: "Invalid product category" });
             }
             const now = new Date();
-            const sponsoredProds = await Product.find({ category: productCategory, sponsorship: { $exists: true }, "sponsorship.expires": { $gte: now } });
+            const sponsoredProds = await Product.find({
+                deleted_at: { $exists: false },
+                category: productCategory,
+                sponsorship: { $exists: true },
+                "sponsorship.expires": { $gte: now },
+            });
             if (!sponsoredProds || !sponsoredProds.length) {
                 return res.status(404).json({ error: true, message: "No sponsored products found" })
             }
@@ -509,7 +565,7 @@ class ProductController {
 
             // FIND PRODUCT AND MAKE SURE THERE ARE NO PENDING OPERATIONS LIKE
             // TRANSACTION, BIDS ON IT TO AVOID FRAUDULENT ACTIVITY
-            const product = await Product.findOne({ _id: productID });
+            const product = await Product.findOne({ _id: productID, deleted_at: { $exists: false } });
             if (!product) {
                 return res.status(404).json({ error: true, message: "Product not found" });
             }

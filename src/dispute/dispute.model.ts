@@ -3,7 +3,7 @@ import { model, Schema } from "mongoose";
 const DisputeSchema = new Schema({
     transaction: {
         type: Schema.Types.ObjectId,
-        ref: "PaymentTransaction",
+        ref: "ProductPurchaseTransaction",
         required: true
     },
     raised_by: {
