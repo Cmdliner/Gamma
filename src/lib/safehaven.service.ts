@@ -21,7 +21,7 @@ export class SafeHavenService {
                     client_id: cfg.SAFE_HAVEN_CLIENT_ID,
                     client_assertion: cfg.SAFE_HAVEN_CLIENT_ASSERTION,
                     client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-                    refresh_token: cfg.SAFE_HAVEN_REFRESH_TOKEN
+                    // refresh_token: cfg.SAFE_HAVEN_REFRESH_TOKEN
                 })
             });
 
