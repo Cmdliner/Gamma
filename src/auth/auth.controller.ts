@@ -225,6 +225,7 @@ class AuthController {
             if (!otp) {
                 return res.status(422).json({ error: true, message: "OTP required!" });
             }
+            console.log({`OTP received: '${otp}`})
             const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
             if (!unverifiedUserToken) {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
