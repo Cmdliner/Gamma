@@ -234,19 +234,23 @@ class AuthController {
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
             const user = await User.findById(decodedToken.id);
+            console.log({user_email: user.email});
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
             const otpInDb = await OTP.findOne({ token: otp });
+            console.log({otp_in_db: otpInDb});
             if (!otpInDb) return res.status(404).json({ error: true, message: "OTP not found!" });
-
+0.
             // ensure otp is not expired
             if (otpInDb.expires.valueOf() < new Date().valueOf()) {
                 return res.status(400).json({ error: true, message: "OTP expired!" });
             }
+
             const userVerificationOTP = await OTP.findOneAndDelete({ kind: "verification", owner: user._id, token: otp });
             if (!userVerificationOTP) return res.status(400).json({ error: true, message: "Invalid OTP!" });
             if (!user.email_verified) {
                 user.email_verified = true;
+                console.log('Email verified');
                 await user.save();
             }
             return res.status(200).json({ success: true, message: "User verification successful" });
