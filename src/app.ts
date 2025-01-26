@@ -67,8 +67,8 @@ class App {
         });
     }
     private initializeErrorHandlers() {
-        this.app.use((_req: Request, res: Response, _next: NextFunction) => {
-            console.log("An unexpected error occured");
+        this.app.use((req: Request, res: Response, _next: NextFunction) => {
+            console.log("An error occured @ path: " + req.path);
             return res.status(500).json({ error: true, message: "An  error occured\n" });
         });
     }
