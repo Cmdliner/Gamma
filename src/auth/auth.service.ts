@@ -37,7 +37,7 @@ class AuthService {
             return { error: false, id: decodedToken.id }
 
         } catch (error) {
-            if ((error as Error).name === 'JWTExpired') {
+            if ((error as Error).name === 'TokenExpiredError') {
                 return { error: true, reason: "ONBOARDING_TOKEN_EXPIRED" }
             }
         }

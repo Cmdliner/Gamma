@@ -640,7 +640,7 @@ class AuthController {
             });
         } catch (error) {
             console.error(error);
-            if ((error as Error).name === 'JWTExpired') {
+            if ((error as Error).name === 'TokenExpiredError') {
                 return res.status(403).json({ error: true, reason: "REFRESH_TOKEN_EXPIRED" })
             }
             return res.status(500).json({ error: true, message: "Internal server error" });
