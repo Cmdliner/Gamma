@@ -138,8 +138,7 @@ export function matchAccNameInDb(
 }
 
 export function rateLimitMiddlewareHandler(_req: Request, res: Response, next: NextFunction, _: Options) {
-    res.status(429).json({ error: true, message: "Too many requests" });
-    next();
+    return res.status(429).json({ error: true, message: "Too many requests" });
 }
 
 export const isValidState = (state: string) => GeospatialDataNigeria[state] ? true : false;

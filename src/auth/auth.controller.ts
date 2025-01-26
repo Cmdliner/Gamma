@@ -225,7 +225,6 @@ class AuthController {
             if (!otp) {
                 return res.status(422).json({ error: true, message: "OTP required!" });
             }
-            console.log({"OTP received": `"${otp}"`});
             const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
             if (!unverifiedUserToken) {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
@@ -235,13 +234,11 @@ class AuthController {
             if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
 
             const user = await User.findById(decodedToken.id);
-            console.log({user_email: user.email});
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
-            const otpInDb = await OTP.findOne({ token: otp });
-            console.log({otp_in_db: otpInDb});
+            const otpInDb = await OTP.findOne({ owner: user._id, token: otp });
             if (!otpInDb) return res.status(404).json({ error: true, message: "OTP not found!" });
-0.
+
             // ensure otp is not expired
             if (otpInDb.expires.valueOf() < new Date().valueOf()) {
                 return res.status(400).json({ error: true, message: "OTP expired!" });
@@ -251,7 +248,6 @@ class AuthController {
             if (!userVerificationOTP) return res.status(400).json({ error: true, message: "Invalid OTP!" });
             if (!user.email_verified) {
                 user.email_verified = true;
-                console.log('Email verified');
                 await user.save();
             }
             return res.status(200).json({ success: true, message: "User verification successful" });
@@ -521,7 +517,7 @@ class AuthController {
     // Reset password
     static async resetPassword(req: Request, res: Response) {
         try {
-            const { password } = req.body;
+            const { email, password } = req.body;
 
             if (!password) {
                 return res.status(422).json({ error: true, message: "Password required!" });
@@ -532,14 +528,7 @@ class AuthController {
             if (error) {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
-
-            const authToken = req.headers.authorization?.toString().split(" ")[1];
-            if (!authToken) return res.status(401).json({ error: true, message: "Error authenticating user" });
-
-            const decoded = jwt.verify(authToken, cfg.ACCESS_TOKEN_SECRET) as any as JwtPayload;
-            if (!decoded) return res.status(401).json({ error: true, message: "Error authenticating user!" });
-
-            const user = await User.findById(decoded.id);
+            const user = await User.findOne({ email: email.trim() });
             if (!user) return res.status(404).json({ error: true, message: "User not found" });
 
             const hashedPassword = await bcrypt.hash(password, 10);

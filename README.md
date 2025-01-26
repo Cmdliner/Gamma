@@ -36,7 +36,11 @@ bun run dev
 ## BUGS
 - Payment links might never expire (check again with fincra)
 
-## TODOS 
+## TODOS
+- On refund send email
+- Seller reject refund enter dispute
+- Seller fails to accept refund after 48h auto refund
+- Send receipts on transaction receipt
 - Impl logger with winston
 - Write tests for auth, product and payment
 - Implement push notifications
