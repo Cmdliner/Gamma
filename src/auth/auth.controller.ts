@@ -238,7 +238,7 @@ class AuthController {
 
             const otpInDb = await OTP.findOne({ owner: user._id, token: otp });
             if (!otpInDb) return res.status(404).json({ error: true, message: "OTP not found!" });
-            
+
             // ensure otp is not expired
             if (otpInDb.expires.valueOf() < new Date().valueOf()) {
                 return res.status(400).json({ error: true, message: "OTP expired!" });
@@ -517,7 +517,7 @@ class AuthController {
     // Reset password
     static async resetPassword(req: Request, res: Response) {
         try {
-            const { password } = req.body;
+            const { email, password } = req.body;
 
             if (!password) {
                 return res.status(422).json({ error: true, message: "Password required!" });
@@ -528,14 +528,7 @@ class AuthController {
             if (error) {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
-
-            const authToken = req.headers.authorization?.toString().split(" ")[1];
-            if (!authToken) return res.status(401).json({ error: true, message: "Error authenticating user" });
-
-            const decoded = jwt.verify(authToken, cfg.ACCESS_TOKEN_SECRET) as any as JwtPayload;
-            if (!decoded) return res.status(401).json({ error: true, message: "Error authenticating user!" });
-
-            const user = await User.findById(decoded.id);
+            const user = await User.findOne({ email: email.trim() });
             if (!user) return res.status(404).json({ error: true, message: "User not found" });
 
             const hashedPassword = await bcrypt.hash(password, 10);
