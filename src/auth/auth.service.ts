@@ -1,8 +1,15 @@
 import { v4 as uuidV4 } from "uuid";
 import User from "../user/user.model";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { Types } from "mongoose";
+import { cfg } from "../init";
 
+export type DecodeTokenResponse = {
+    error: boolean;
+    reason?: "ONBOARDING_TOKEN_EXPIRED";
+    message?: string
+    id?: string;
+}
 class AuthService {
 
     static async generateUniqueReferralCode(): Promise<string | null> {
@@ -16,6 +23,24 @@ class AuthService {
 
     static async createToken(payload: Types.ObjectId, secret: string, expiry: string | number): Promise<string> {
         return jwt.sign({ id: payload }, secret, { expiresIn: expiry });
+    }
+
+    static decodeOnboardingToken(token: string): DecodeTokenResponse {
+        try {
+            if (!token.trim()) {
+                return { error: true, message: "x-onboarding-user header is not set" }
+            }
+
+            const decodedToken = jwt.verify(token, cfg.ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
+            if (!decodedToken) return { error: true, message: "Error authenticating user!" };
+
+            return { error: false, id: decodedToken.id }
+
+        } catch (error) {
+            if ((error as Error).name === 'JWTExpired') {
+                return { error: true, reason: "ONBOARDING_TOKEN_EXPIRED" }
+            }
+        }
     }
 }
 

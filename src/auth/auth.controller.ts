@@ -160,7 +160,7 @@ class AuthController {
             await session.commitTransaction();
             res.setHeader("x-onboarding-user", onboardingToken);
 
-            const { createdAt, updatedAt, ...userInfo } = user;
+            // const { createdAt, updatedAt, ...userInfo } = user;
 
             return res.status(201).json({
                 success: true,
@@ -230,10 +230,18 @@ class AuthController {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
             }
 
-            const decodedToken = jwt.verify(unverifiedUserToken, cfg.ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
-            if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
+            // Decode onboarding header
+            const { error, id, reason, message } = AuthService.decodeOnboardingToken(unverifiedUserToken);
+            if (error) {
+                const errResponse = {};
+                errResponse["error"] = true;
+                if (message) errResponse["message"] = message;
+                if (reason) errResponse["reason"] = reason;
+                return res.status(403).json(errResponse)
+            }
 
-            const user = await User.findById(decodedToken.id);
+            // get user
+            const user = await User.findById(id);
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
             const otpInDb = await OTP.findOne({ owner: user._id, token: otp });
@@ -262,21 +270,30 @@ class AuthController {
     static async setPassword(req: Request, res: Response) {
         try {
             const { password }: { password: string } = req.body;
-            const userToken = req.headers?.["x-onboarding-user"] as string;
-            if (!userToken) {
+
+            const unverifiedUserToken = req.headers?.["x-onboarding-user"] as string;
+            if (!unverifiedUserToken) {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
             }
 
-            // Sanitize pwd (ensure it doesnt contain whitespace and it is properly formatted)
-            const { error } = PasswordValidationSchema.validate(password);
+            // Decode onboarding header
+            const { error, id, reason, message } = AuthService.decodeOnboardingToken(unverifiedUserToken);
             if (error) {
-                return res.status(422).json({ error: true, message: error.details[0].message });
+                const errResponse = {};
+                errResponse["error"] = true;
+                if (message) errResponse["message"] = message;
+                if (reason) errResponse["reason"] = reason;
+                return res.status(403).json(errResponse)
             }
 
-            const decodedToken = jwt.verify(userToken, cfg.ONBOARDING_TOKEN_SECRET) as JwtPayload;
-            if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
+            // Sanitize pwd (ensure it doesnt contain whitespace and it is properly formatted)
+            let validationRes = PasswordValidationSchema.validate(password);
+            if (validationRes.error) {
+                return res.status(422).json({ error: true, message: validationRes.error.details[0].message });
+            }
 
-            const user = await User.findById(decodedToken.id);
+
+            const user = await User.findById(id);
             if (!user) return res.status(404).json({ error: true, message: "User not found!" });
 
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -315,10 +332,17 @@ class AuthController {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
             }
 
-            const decodedToken = jwt.verify(unverifiedUserToken, cfg.ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
-            if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
+            // Decode onboarding header
+            const { error, id, reason, message } = AuthService.decodeOnboardingToken(unverifiedUserToken);
+            if (error) {
+                const errResponse = {};
+                errResponse["error"] = true;
+                if (message) errResponse["message"] = message;
+                if (reason) errResponse["reason"] = reason;
+                return res.status(403).json(errResponse)
+            }
 
-            const user = await User.findById(decodedToken.id);
+            const user = await User.findById(id);
             const bvnInUse = await User.findOne({ "bvn.hash": hashBvn(bvn) });
 
             // Check that bvn recors do not exist in db
@@ -386,13 +410,20 @@ class AuthController {
                 return res.status(422).json({ error: true, message: "x-onboarding-user header is not set" })
             }
 
-            const decodedToken = jwt.verify(unverifiedUserToken, cfg.ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
-            if (!decodedToken) return res.status(403).json({ error: true, message: "Error authenticating user!" });
+             // Decode onboarding header
+             const { error, id, reason, message } = AuthService.decodeOnboardingToken(unverifiedUserToken);
+             if (error) {
+                 const errResponse = {};
+                 errResponse["error"] = true;
+                 if (message) errResponse["message"] = message;
+                 if (reason) errResponse["reason"] = reason;
+                 return res.status(403).json(errResponse)
+             }
 
             // Intiate db transaction
             session.startTransaction();
 
-            const user = await User.findById(decodedToken.id).session(session);
+            const user = await User.findById(id).session(session);
             if (!user) {
                 await session.abortTransaction();
                 return res.status(404).json({ error: true, message: "User not found!" });
@@ -524,15 +555,7 @@ class AuthController {
     static async resetPassword(req: Request, res: Response) {
         try {
 
-            const authHeader = req.headers?.authorization;
-            if (!authHeader) return res.status(401).json({ error: true, message: "Unauthorized!" });
-
-            const [_, authToken] = authHeader.split(" ");
-
-            const decoded = jwt.verify(authToken, cfg.ACCESS_TOKEN_SECRET) as JwtPayload;
-            if (!decoded) return res.status(403).json({ error: true, message: "Unauthorized!" });
-
-            const {  password } = req.body;
+            const { password } = req.body;
 
             if (!password) {
                 return res.status(422).json({ error: true, message: "Password required!" });
@@ -543,7 +566,7 @@ class AuthController {
             if (error) {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
-            const user = await User.findById(decoded.id);
+            const user = await User.findById(req.user?.id);
             if (!user) return res.status(404).json({ error: true, message: "User not found" });
 
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -617,6 +640,9 @@ class AuthController {
             });
         } catch (error) {
             console.error(error);
+            if ((error as Error).name === 'JWTExpired') {
+                return res.status(403).json({ error: true, reason: "REFRESH_TOKEN_EXPIRED" })
+            }
             return res.status(500).json({ error: true, message: "Internal server error" });
         }
     }

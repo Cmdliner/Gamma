@@ -25,6 +25,9 @@ class AuthMiddleware {
             next();
         } catch (error) {
             console.error(error);
+            if ((error as Error).name === 'JWTExpired') {
+                return res.status(403).json({ error: true, reason: "AUTH_TOKEN_EXPIRED" });
+            }
             return res.status(403).json({ error: true, message: "An error occured while verifying authorization" });
         }
     }
