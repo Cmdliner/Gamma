@@ -62,6 +62,7 @@ const ProductSchema = new Schema({
             "fashion_wears",
             "others"
         ],
+        index: true,
         required: true,
     },
     status: {

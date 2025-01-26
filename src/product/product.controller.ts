@@ -33,47 +33,45 @@ import IProduct from "../types/product.schema";
 class ProductController {
 
     static async search(req: Request, res: Response) {
-        let { q } = req.query;
+        const { q, page = 1, limit = 10 } = req.query;
+
         if (!q) {
-            return res.status(400).json({ error: true, message: "query pattern 'q' required" });
+            return res.status(400).json({ error: true, message: "Query parameter 'q' is required" });
         }
+
         try {
-            const searchWords = (q as unknown as string)
-                .trim()
-                .split(/\s/)
-                .filter((word) => word.length > 0);
+            const searchWords = (q as string).trim().split(/\s+/).filter(Boolean);
             if (!searchWords.length) {
                 return res.status(400).json({ error: true, message: "Invalid search query" });
             }
+
+            // Build query
             const searchQuery = ProductService.buildSearchQuery(searchWords);
+            const offset = (Number(page) - 1) * Number(limit);
 
-            const products = await Product.find({
-                deleted_at: { $exists: false },
-                ...searchQuery
-            }).limit(ProductService.SEARCH_LIMITS);
+            // Fetch products
+            const products = await Product.find({ deleted_at: { $exists: false }, ...searchQuery })
+                .limit(Number(limit))
+                .skip(offset);
 
-            if (!products) {
-                return res.status(400).json({ error: true, message: "Error finding products" });
-            }
             if (!products.length) {
-                return res.status(404).json({ error: true, message: "No products found!" });
+                return res.status(404).json({ error: true, message: "No products found" });
             }
 
             // Sort products by relevance
             const sortedProducts = products
                 .map((product: IProduct) => ({
-                    ...product,
+                    ...product.toObject(),
                     relevanceScore: ProductService.calculateRelevanceScore(product, searchWords),
                 }))
-                .sort((a, b) => b.relevanceScore - a.relevanceScore);
+                .sort((a, b) => b.relevanceScore - a.relevanceScore)
+                .map(({ relevanceScore, ...product }) => product);
 
-            const finalSortedProducts = sortedProducts.map(({ relevanceScore, ...product }) => product);
-
-            return res.status(200).json({ status: true, products: finalSortedProducts });
+            return res.status(200).json({ status: true, products: sortedProducts });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error occured during search" })
+            return res.status(500).json({ error: true, message: "Internal server error" });
         }
     }
 

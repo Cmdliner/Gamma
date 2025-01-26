@@ -43,47 +43,39 @@ class ProductService {
         return products;
     }
 
-    static readonly PRODUCT_SEARCH_WEIGHTS = {
-        NAME: 3,
-        DESCRIPTION: 2,
-        CATEGORY: 1
-    }
-
     static readonly SEARCH_LIMITS = 100;
+    static readonly PRODUCT_SEARCH_WEIGHTS = { NAME: 3, DESCRIPTION: 2, CATEGORY: 1 };
 
-    private static createSearchRegex(word) {
-        return ({
-            $regex: `(\\b${word}\\b|${word})`,
-            $options: 'i'
-        });
+    private static escapeStringRegexp(string: string): string {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escapes special characters
+    }
+    private static createSearchRegex(word: string) {
+        const escapedWord = this.escapeStringRegexp(word);
+        return { $regex: new RegExp(`\\b${escapedWord}\\b`, 'i') };
     }
 
-    static buildSearchQuery = (words: string[]) => ({
-        $and: words.map(word => ({
-            $or: [
-                { title: this.createSearchRegex(word) },
-                { description: this.createSearchRegex(word) },
-                { category: this.createSearchRegex(word) }
-            ]
-        }))
-    })
+    static buildSearchQuery(words: string[]) {
+        return {
+            $and: words.map((word) => ({
+                $or: [
+                    { title: this.createSearchRegex(word) },
+                    { description: this.createSearchRegex(word) },
+                    { category: this.createSearchRegex(word) },
+                ],
+            })),
+        };
+    }
 
     static calculateRelevanceScore(product: IProduct, searchWords: string[]) {
-        return searchWords.reduce((score: number, word: string) => {
-            const wordRegex = new RegExp(word, 'i');
-
-            // Calculate position based relevance for name and description
-            const nameMatch = product.name.match(wordRegex);
-            const descriptionMatch = product.description.match(wordRegex);
-            const positionBonus = (match: RegExpMatchArray) => match ? 1 / (match.index + 1) : 0;
-
-            return score +
-                (nameMatch ? this.PRODUCT_SEARCH_WEIGHTS.NAME + positionBonus(nameMatch) : 0) +
-                (descriptionMatch ? this.PRODUCT_SEARCH_WEIGHTS.DESCRIPTION + positionBonus(descriptionMatch) : 0)
+        return searchWords.reduce((score, word) => {
+            const regex = new RegExp(word, 'i');
+            const nameBonus = regex.test(product.name) ? this.PRODUCT_SEARCH_WEIGHTS.NAME : 0;
+            const descriptionBonus = regex.test(product.description)
+                ? this.PRODUCT_SEARCH_WEIGHTS.DESCRIPTION
+                : 0;
+            return score + nameBonus + descriptionBonus;
         }, 0);
     }
-
-
 
 }
 
