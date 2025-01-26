@@ -53,6 +53,7 @@ class App {
         this.app.use(ExpressMongoSanitize());
     }
     private initializeRoutes() {
+        this.app.use('/', (_req: Request, res: Response) => res.redirect("/helthz"));
         this.app.use(`/${API_VERSION}/auth`, auth);
         this.app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
         this.app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
