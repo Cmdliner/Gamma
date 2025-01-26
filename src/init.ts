@@ -26,4 +26,4 @@ export const cfg = new AppConfig({
     SAFE_HAVEN_IBS_CLIENT_ID: process.env.SAFE_HAVEN_IBS_CLIENT_ID,
     SAFE_HAVEN_IBS_USER_ID: process.env.SAFE_HAVEN_IBS_USER_ID
 
-});
+} as AppConfig);

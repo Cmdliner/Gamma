@@ -6,7 +6,7 @@ import { cfg } from "../init";
 import ITransaction from "../types/transaction.schema";
 
 
-type EmailKind = "verification" | "pwd_reset" | "funds_release";
+type EmailKind = "verification" | "pwd_reset" | "funds_release" | "payment_refund";
 
 class EmailService {
     
@@ -23,6 +23,10 @@ class EmailService {
             subject: "Verification of Release of Funds to Seller",
             html: path.resolve(__dirname, "../../templates/release_funds.html"),
         },
+        payment_refund: {
+            subject: "Notification of Refund",
+            html: path.resolve(__dirname, "../../templates/payment_refund.html")
+        }
     };
 
     private static readonly transporter = nodemailer.createTransport({

@@ -600,7 +600,10 @@ class PaymentController {
                 refundTransaction.amount,
                 refundTransaction.id
             );
+            
             // ! todo => Send notification to user
+
+            await EmailService.sendMail(buyer.email, "", "payment_refund", null, refundTransaction.id)
 
             await session.commitTransaction();
             return res.status(200).json({ success: true, message: "Refund successful!" });
