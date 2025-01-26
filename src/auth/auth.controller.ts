@@ -505,7 +505,13 @@ class AuthController {
                 return res.status(400).json({ error: true, message: "OTP expired!" });
             }
 
-            return res.status(200).json({ success: true, message: "OTP verification successful!" });
+            const authToken = await AuthService.createToken(user._id, cfg.ACCESS_TOKEN_SECRET, "2h");
+
+            return res.status(200).json({
+                success: true,
+                message: "OTP verification successful!",
+                access_token: authToken,
+            });
 
 
         } catch (error) {
@@ -517,7 +523,16 @@ class AuthController {
     // Reset password
     static async resetPassword(req: Request, res: Response) {
         try {
-            const { email, password } = req.body;
+
+            const authHeader = req.headers?.authorization;
+            if (!authHeader) return res.status(401).json({ error: true, message: "Unauthorized!" });
+
+            const [_, authToken] = authHeader.split(" ");
+
+            const decoded = jwt.verify(authToken, cfg.ACCESS_TOKEN_SECRET) as JwtPayload;
+            if (!decoded) return res.status(403).json({ error: true, message: "Unauthorized!" });
+
+            const {  password } = req.body;
 
             if (!password) {
                 return res.status(422).json({ error: true, message: "Password required!" });
@@ -528,7 +543,7 @@ class AuthController {
             if (error) {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
-            const user = await User.findOne({ email: email.trim() });
+            const user = await User.findById(decoded.id);
             if (!user) return res.status(404).json({ error: true, message: "User not found" });
 
             const hashedPassword = await bcrypt.hash(password, 10);
