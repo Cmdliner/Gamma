@@ -524,14 +524,6 @@ class AuthController {
     static async resetPassword(req: Request, res: Response) {
         try {
 
-            const authHeader = req.headers?.authorization;
-            if (!authHeader) return res.status(401).json({ error: true, message: "Unauthorized!" });
-
-            const [_, authToken] = authHeader.split(" ");
-
-            const decoded = jwt.verify(authToken, cfg.ACCESS_TOKEN_SECRET) as JwtPayload;
-            if (!decoded) return res.status(403).json({ error: true, message: "Unauthorized!" });
-
             const {  password } = req.body;
 
             if (!password) {
@@ -543,7 +535,7 @@ class AuthController {
             if (error) {
                 return res.status(422).json({ error: true, message: error.details[0].message });
             }
-            const user = await User.findById(decoded.id);
+            const user = await User.findById(req.user?.id);
             if (!user) return res.status(404).json({ error: true, message: "User not found" });
 
             const hashedPassword = await bcrypt.hash(password, 10);

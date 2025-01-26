@@ -1,6 +1,7 @@
 import { Router } from "express";
 import AuthController from "./auth.controller";
 import verifyBvnLimiter from "../middlewares/ratelimit.middleware";
+import AuthMiddleware from "../middlewares/auth.middlewares";
 
 const auth = Router();
 
@@ -13,7 +14,7 @@ auth.post("/verify-bvn", verifyBvnLimiter, AuthController.verifyBVN);
 auth.post("/create-password", AuthController.setPassword);
 auth.post("/forgot-password", AuthController.generatePasswordResetToken);
 auth.post("/verify-reset-password", AuthController.verifyResetPwdOTP);
-auth.post("/reset-password", AuthController.resetPassword);
+auth.post("/reset-password", AuthMiddleware.requireAuth, AuthController.resetPassword);
 auth.post("/login", AuthController.login);
 auth.post("/refresh", AuthController.refresh);
 
