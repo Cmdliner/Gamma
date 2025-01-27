@@ -37,7 +37,9 @@ bun run dev
 - Payment links might never expire (check again with fincra)
 
 ## TODOS
-- On refund send email
+- Make cron jobs atomic, use retry mechanism
+- Handle actual refund logic in cron job
+- Index lookup fields in cron jobs
 - Seller reject refund enter dispute
 - Seller fails to accept refund after 48h auto refund
 - Send receipts on transaction receipt

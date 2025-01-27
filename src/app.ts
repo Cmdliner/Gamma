@@ -17,6 +17,7 @@ import user from "./user/user.routes";
 import { cfg } from "./init";
 import rateLimit from "express-rate-limit";
 import { AppConfig } from "./config/app.config";
+import { CronScheduler } from "./jobs/cron.scheduler";
 
 const API_VERSION = "api/v1";
 
@@ -37,6 +38,9 @@ class App {
         this.initializeMiddlewares();
         this.initializeRoutes();
         this.initializeErrorHandlers();
+        
+        CronScheduler.testCron();
+        CronScheduler.runDailyAtMidnight();
     }
 
     private initializeMiddlewares() {
@@ -52,8 +56,9 @@ class App {
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(ExpressMongoSanitize());
     }
+
     private initializeRoutes() {
-        this.app.use('/', (_req: Request, res: Response) => res.redirect("/helthz"));
+        this.app.use('/', (_req: Request, res: Response) => res.redirect("/healthz"));
         this.app.use(`/${API_VERSION}/auth`, auth);
         this.app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
         this.app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
@@ -67,6 +72,7 @@ class App {
             res.status(200).json({ active: "The hood is up commandliner⚡" });
         });
     }
+    
     private initializeErrorHandlers() {
         this.app.use((req: Request, res: Response, _next: NextFunction) => {
             console.log("An error occured @ path: " + req.path);
