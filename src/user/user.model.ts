@@ -105,7 +105,7 @@ const UserSchema = new Schema({
     }]
 }, { timestamps: true });
 
-UserSchema.index({ location: "2dsphere" });
+UserSchema.index({ location: "2dsphere", createdAt: -1 });
 const User = model<IUser>("User", UserSchema);
 
 export default User;

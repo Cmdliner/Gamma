@@ -7,7 +7,7 @@ export class CronScheduler {
      * @description This job runs everyday at midnight
      */
     static async runDailyAtMidnight() {
-        cron.schedule("0 0 * *", () => {
+        cron.schedule("0 * * *", () => {
             JobsService.handleOverdueRefunds()
             JobsService.deactivatePartiallyOnboardedUsers();
         })

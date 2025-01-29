@@ -35,12 +35,10 @@ class App {
     constructor() {
         this.app = express();
         this.cfg = cfg;
+        this.scheduleCronJobs();
         this.initializeMiddlewares();
         this.initializeRoutes();
         this.initializeErrorHandlers();
-        
-        CronScheduler.testCron();
-        CronScheduler.runDailyAtMidnight();
     }
 
     private initializeMiddlewares() {
@@ -78,6 +76,11 @@ class App {
             console.log("An error occured @ path: " + req.path);
             return res.status(500).json({ error: true, message: "An  error occured\n" });
         });
+    }
+
+    private scheduleCronJobs() {
+        CronScheduler.testCron();
+        CronScheduler.runDailyAtMidnight();
     }
 
     public async start() {

@@ -37,16 +37,13 @@ bun run dev
 - Payment links might never expire (check again with fincra)
 
 ## TODOS
-- Make cron jobs atomic, use retry mechanism
 - Handle actual refund logic in cron job
 - Index lookup fields in cron jobs
 - Seller reject refund enter dispute
-- Seller fails to accept refund after 48h auto refund
 - Send receipts on transaction receipt
 - Impl logger with winston
 - Write tests for auth, product and payment
 - Implement push notifications
-- Secure media uploads
 - Sanitize inputs for all actions (impl max char length, rm whitespace, dont allow special characters)
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
 

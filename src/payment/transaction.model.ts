@@ -35,6 +35,7 @@ const TransactionSchema = new Schema({
             "in_escrow",
             "refunded",
         ],
+        index: true,
         required: true,
     },
     reason: {
@@ -156,6 +157,10 @@ const WithdrawalTransactionSchema = new Schema({
         required: true
     }
 });
+
+
+// Index certain lookup fields on transaction schema
+TransactionSchema.index({ createdAt: -1, status: -1 });
 
 const Transaction = model<ITransaction>("Transaction", TransactionSchema);
 
