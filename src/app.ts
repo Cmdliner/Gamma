@@ -79,6 +79,7 @@ class App {
     }
 
     private scheduleCronJobs() {
+        CronScheduler.testCron();
         CronScheduler.runDailyAtMidnight();
     }
 
