@@ -29,6 +29,7 @@ export class AppConfig {
     SAFE_HAVEN_IBS_USER_ID: string;
     SAFE_HAVEN_AUTH_TOKEN: string;
     SAFE_HAVEN_REFRESH_TOKEN: string;
+    LOG_LEVEL: string;
 
     constructor(cfg: AppConfig) {
 
@@ -57,7 +58,8 @@ export class AppConfig {
         this.SAFE_HAVEN_IBS_USER_ID = cfg.SAFE_HAVEN_IBS_USER_ID;
         this.SAFE_HAVEN_IBS_CLIENT_ID = cfg.SAFE_HAVEN_IBS_CLIENT_ID;
         this.SAFE_HAVEN_REFRESH_TOKEN = cfg.SAFE_HAVEN_REFRESH_TOKEN;
-        this.SAFE_HAVEN_AUTH_TOKEN = cfg.SAFE_HAVEN_AUTH_TOKEN
+        this.SAFE_HAVEN_AUTH_TOKEN = cfg.SAFE_HAVEN_AUTH_TOKEN;
+        this.LOG_LEVEL = cfg.LOG_LEVEL;
 
         const missingKeys = [];
         Object.keys(cfg).forEach((key: keyof typeof cfg) => {

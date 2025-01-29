@@ -1,6 +1,7 @@
 import express, { type NextFunction, type Express, type Request, type Response } from "express";
 import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
+import morgan from "morgan";
 import compression from "compression";
 import ExpressMongoSanitize from "express-mongo-sanitize";
 import DB from "./config/db";
@@ -18,6 +19,7 @@ import { cfg } from "./init";
 import rateLimit from "express-rate-limit";
 import { AppConfig } from "./config/app.config";
 import { CronScheduler } from "./jobs/cron.scheduler";
+import { logger } from "./config/logger.config";
 
 const API_VERSION = "api/v1";
 
@@ -53,10 +55,17 @@ class App {
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(ExpressMongoSanitize());
+        this.app.use(morgan(
+            ':method :url :status :res[content-length] - :response-time ms',
+            {
+                stream: {
+                    write: (message) => logger.http(message.trim())
+                }
+            }));
     }
 
     private initializeRoutes() {
-        this.app.use('/', (_req: Request, res: Response) => res.redirect("/healthz"));
+        this.app.get('/', (_req: Request, res: Response) => res.redirect("/healthz"));
         this.app.use(`/${API_VERSION}/auth`, auth);
         this.app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
         this.app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
@@ -70,10 +79,10 @@ class App {
             res.status(200).json({ active: "The hood is up commandliner⚡" });
         });
     }
-    
+
     private initializeErrorHandlers() {
         this.app.use((req: Request, res: Response, _next: NextFunction) => {
-            console.log("An error occured @ path: " + req.path);
+            logger.error("An error occured @ path");
             return res.status(500).json({ error: true, message: "An  error occured\n" });
         });
     }
