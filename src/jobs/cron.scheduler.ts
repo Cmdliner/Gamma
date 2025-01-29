@@ -13,9 +13,4 @@ export class CronScheduler {
         })
     }
 
-    static async testCron() {
-        cron.schedule("* * * * *", () => {
-            console.log(`Running @ ${new Date().toISOString()}`)
-        })
-    }
 }
