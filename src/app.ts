@@ -63,9 +63,7 @@ class App {
                 }
             }));
     }
-
     private initializeRoutes() {
-        this.app.get('/', (_req: Request, res: Response) => res.redirect("/healthz"));
         this.app.use(`/${API_VERSION}/auth`, auth);
         this.app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
         this.app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
@@ -78,11 +76,12 @@ class App {
         this.app.get("/healthz", (_req: Request, res: Response) => {
             res.status(200).json({ active: "The hood is up commandliner⚡" });
         });
+        this.app.get('/', (_req: Request, res: Response) => res.redirect("/healthz"));
     }
 
     private initializeErrorHandlers() {
         this.app.use((req: Request, res: Response, _next: NextFunction) => {
-            logger.error("An error occured @ path");
+            logger.error("An error occured");
             return res.status(500).json({ error: true, message: "An  error occured\n" });
         });
     }
