@@ -55,13 +55,11 @@ class App {
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(ExpressMongoSanitize());
-        this.app.use(morgan(
-            ':method :url :status :res[content-length] - :response-time ms',
-            {
-                stream: {
-                    write: (message) => logger.http(message.trim())
-                }
-            }));
+        this.app.use(morgan(':method :url :status :res[content-length] - :response-time ms', {
+            stream: {
+                write: (message) => logger.http(message.trim())
+            }
+        }));
     }
     private initializeRoutes() {
         this.app.use(`/${API_VERSION}/auth`, auth);
@@ -80,14 +78,13 @@ class App {
     }
 
     private initializeErrorHandlers() {
-        this.app.use((req: Request, res: Response, _next: NextFunction) => {
+        this.app.use((_: Request, res: Response, _next: NextFunction) => {
             logger.error("An error occured");
             return res.status(500).json({ error: true, message: "An  error occured\n" });
         });
     }
 
     private scheduleCronJobs() {
-        CronScheduler.testCron();
         CronScheduler.runDailyAtMidnight();
     }
 

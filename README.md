@@ -35,8 +35,11 @@ bun run dev
 
 ## BUGS
 - Payment links might never expire (check again with fincra)
+- Decoded token cannot be destructured error
 
 ## TODOS
+- Add auto sign-in after last phase of onboarding
+- Indempotency key on payment
 - Handle actual refund logic in cron job
 - Index lookup fields in cron jobs
 - Seller reject refund enter dispute
