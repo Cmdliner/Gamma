@@ -6,10 +6,11 @@ import { cfg } from "../init";
 
 export type DecodeTokenResponse = {
     error: boolean;
-    reason?: "ONBOARDING_TOKEN_EXPIRED";
+    reason?: "ONBOARDING_TOKEN_EXPIRED" | "MALFORMED_ONBOARDING_TOKEN";
     message?: string
     id?: string;
 }
+
 class AuthService {
 
     static async generateUniqueReferralCode(): Promise<string | null> {
@@ -40,6 +41,7 @@ class AuthService {
             if ((error as Error).name === 'TokenExpiredError') {
                 return { error: true, reason: "ONBOARDING_TOKEN_EXPIRED" }
             }
+            return { error: true, reason: "MALFORMED_ONBOARDING_TOKEN" }
         }
     }
 }
