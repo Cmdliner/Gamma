@@ -48,6 +48,7 @@ bun run dev
 ## REMEMBER
 - Upload can only error due to client-side errors; upload middleware is very stable
 - Notifications -> bid info, payment, updates (Any product / transaction related event)
+- On launch mv to safehaven actual endpoint for payments not sandbox
 
 ## Project structure
 

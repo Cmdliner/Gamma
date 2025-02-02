@@ -101,13 +101,13 @@ export class SafeHavenService {
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json",
-                    ClientID: "", // add client id
+                    ClientID: cfg.SAFE_HAVEN_CLIENT_ID,
                     Authorization: `Bearer ${cfg.SAFE_HAVEN_AUTH_TOKEN}`,
                 },
                 body: JSON.stringify({
                     identityId: "", // _id from initial verification req
                     type: "BVN",
-                    otp: "", // otp sent to user's phone no
+                    otp: "" // otp sent to user's phone no
                 }),
             });
 
