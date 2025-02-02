@@ -6,7 +6,7 @@ import { cfg } from "../init";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import { isValidState } from "../lib/utils";
 import { StatusCodes } from "http-status-codes";
-import { AppError } from "../lib/apperror";
+import { AppError } from "../lib/error.handler";
 
 export type DecodeTokenResponse = {
     error: boolean;

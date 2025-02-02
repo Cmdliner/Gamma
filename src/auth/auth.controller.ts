@@ -15,7 +15,7 @@ import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../lib/fincra.service";
 import { cfg } from "../init";
 import { StatusCodes } from "http-status-codes";
-import { AppError } from "../lib/apperror";
+import { AppError } from "../lib/error.handler";
 
 
 class AuthController {
@@ -323,7 +323,7 @@ class AuthController {
             const firstName = bvnValidationRes.data.response.firstName.toLowerCase();
             const lastName = bvnValidationRes.data.response.lastName.toLowerCase();
             if (user.first_name.toLowerCase() !== firstName || lastName !== user.last_name.toLowerCase()) {
-                // throw { is_custom: true, status: StatusCodes.BAD_REQUEST, message: "BVN data mismatch!" };
+                // throw new AppError(StatusCodes.BAD_REQUEST, "BVN data mismatch!");
             }
 
             const encryptedData = encryptBvn(bvn);

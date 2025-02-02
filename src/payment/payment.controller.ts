@@ -19,25 +19,39 @@ import { SafeHavenService } from "../lib/safehaven.service";
 
 class PaymentController {
 
-    static async generateSafeHavenApiToken(req: Request, res: Response) {
-        try {
-            const tokens = await SafeHavenService.generateAuthToken();
-            console.log(tokens);
-            return res.status(200).json({ tokens });
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: true, message: "Error generating safehaven API token" });
-        }
-    }
-
     static async initVerification(req: Request, res: Response) {
         try {
             const verificationRes = await SafeHavenService.initiateVerification(req.user);
+            if (verificationRes.custom_error) {
+                throw { error: verificationRes, message: verificationRes.message }
+            }
             console.log(verificationRes);
             return res.status(200).json({ error: true, message: verificationRes })
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "An error occured" })
+        }
+    }
+
+    static async createAccount(req: Request, res: Response) {
+        try {
+            const response = await SafeHavenService.createAccount(req.user);
+            console.log({ response });
+            return res.status(201).json({ success: true })
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: true })
+        }
+    }
+
+    static async createUserWallet(req: Request, res: Response) {
+        try {
+            const result = await SafeHavenService.createSubAccount(req.user);
+            console.log({ result });
+            return res.status(200).json({ success: true });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({error: true })
         }
     }
 
@@ -600,7 +614,7 @@ class PaymentController {
                 refundTransaction.amount,
                 refundTransaction.id
             );
-            
+
             // ! todo => Send notification to user
 
             await EmailService.sendMail(buyer.email, "", "payment_refund", null, refundTransaction.id)

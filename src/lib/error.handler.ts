@@ -7,7 +7,7 @@ type AppErrorResponse = {
 }
 
 export class AppError {
-    is_custom = true;
+    name = "APP_ERROR";
     message: string;
     status: StatusCodes;
     reason: string;
@@ -19,11 +19,10 @@ export class AppError {
     }
 
     static handle(error: any, default_message: string) {
-        let status = StatusCodes.INTERNAL_SERVER_ERROR;
+        let status = error.status || StatusCodes.INTERNAL_SERVER_ERROR;
         const errResponse: AppErrorResponse = { error: true, message: default_message };
 
-        if (error.is_custom) {
-            status = error.status;
+        if (error.name === "APP_ERROR") {
             errResponse.message = error.message;
             if (error.reason) errResponse.reason = error.reason;
         }

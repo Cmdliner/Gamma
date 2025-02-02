@@ -4,13 +4,14 @@ import PaymentController from "./payment.controller";
 const payment = Router();
 
 // Safehaven test routes
-payment.post("/safehaven-token", PaymentController.generateSafeHavenApiToken);
+payment.post("/create-wallet", PaymentController.createUserWallet);
 payment.post("/verify-safehaven", PaymentController.initVerification);
+payment.post("/create-acc", PaymentController.createAccount);
 
 // Actual payment routes
 payment.get("/history", PaymentController.getTransactionHistory);
 payment.post("/transfer-funds", PaymentController.transferfunds);
-payment.post("/withdraw", PaymentController.withdrawFromWallet)
+payment.post("/withdraw", PaymentController.withdrawFromWallet);
 payment.post("/rewards", PaymentController.withdrawRewards);
 payment.post("/:productID/purchase", PaymentController.purchaseItem);
 payment.post("/:productID/sponsor", PaymentController.sponsorAd);
