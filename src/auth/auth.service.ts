@@ -3,6 +3,10 @@ import User from "../user/user.model";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Types } from "mongoose";
 import { cfg } from "../init";
+import { GeospatialDataNigeria } from "../lib/location.data";
+import { isValidState } from "../lib/utils";
+import { StatusCodes } from "http-status-codes";
+import { AppError } from "../lib/apperror";
 
 export type DecodeTokenResponse = {
     error: boolean;
@@ -10,6 +14,8 @@ export type DecodeTokenResponse = {
     message?: string
     id?: string;
 }
+
+type LocationType = { type: "Point", human_readable: string, coordinates: [number, number] };
 
 class AuthService {
 
@@ -22,16 +28,31 @@ class AuthService {
         return null;
     }
 
+    static async resolveLocation(location: string): Promise<LocationType> {
+        const DEFAULT_LOCATION = "lagos";
+
+        const humanReadableLocation = location || DEFAULT_LOCATION;
+
+        if (!isValidState(humanReadableLocation)) {
+            throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format");
+        }
+
+        return {
+            type: "Point",
+            human_readable: humanReadableLocation,
+            coordinates: [
+                GeospatialDataNigeria[humanReadableLocation].lat,
+                GeospatialDataNigeria[humanReadableLocation].long
+            ]
+        };
+    }
+
     static async createToken(payload: Types.ObjectId, secret: string, expiry: string | number): Promise<string> {
         return jwt.sign({ id: payload }, secret, { expiresIn: expiry });
     }
 
     static decodeOnboardingToken(token: string): DecodeTokenResponse {
         try {
-            if (!token.trim()) {
-                return { error: true, message: "x-onboarding-user header is not set" }
-            }
-
             const decodedToken = jwt.verify(token, cfg.ONBOARDING_TOKEN_SECRET) as any as JwtPayload;
             if (!decodedToken) return { error: true, message: "Error authenticating user!" };
 

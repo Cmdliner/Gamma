@@ -41,30 +41,26 @@ bun run dev
 - Add auto sign-in after last phase of onboarding
 - Indempotency key on payment
 - Handle actual refund logic in cron job
-- Index lookup fields in cron jobs
 - Seller reject refund enter dispute
 - Send receipts on transaction receipt
-- Impl logger with winston
 - Write tests for auth, product and payment
-- Implement push notifications
-- Sanitize inputs for all actions (impl max char length, rm whitespace, dont allow special characters)
-- Notifications -> bid info, payment, updates (Any product / transaction related event)
-
 
 ## REMEMBER
 - Upload can only error due to client-side errors; upload middleware is very stable
-- Implement https
+- Notifications -> bid info, payment, updates (Any product / transaction related event)
 
 ## Project structure
 
 ```sh
 .
 ├── bun.lockb
+├── client_assertion
 ├── Dockerfile
-├── fincra
-├── nodemon.json
+├── logs
+│   └── app-error.log
 ├── package.json
-├── push_notifs
+├── privatekey.pem
+├── publickey.cer
 ├── README.md
 ├── scripts
 │   └── create_env.sh
@@ -79,11 +75,10 @@ bun run dev
 │   │   ├── bid.controller.ts
 │   │   ├── bid.model.ts
 │   │   └── bid.routes.ts
-│   ├── change_states.js
 │   ├── config
 │   │   ├── app.config.ts
 │   │   ├── db.ts
-│   │   └── settings.ts
+│   │   └── logger.config.ts
 │   ├── dispute
 │   │   ├── dispute.controller.ts
 │   │   ├── dispute.model.ts
@@ -91,13 +86,18 @@ bun run dev
 │   ├── env.d.ts
 │   ├── express.d.ts
 │   ├── init.ts
+│   ├── jobs
+│   │   ├── cron.scheduler.ts
+│   │   └── jobs.service.ts
 │   ├── lib
+│   │   ├── apperror.ts
 │   │   ├── bank_codes.ts
 │   │   ├── email.service.ts
 │   │   ├── fincra.service.ts
 │   │   ├── location.data.ts
-│   │   ├── main.ts
-│   │   └── paystack.service.ts
+│   │   ├── paystack.service.ts
+│   │   ├── safehaven.service.ts
+│   │   └── utils.ts
 │   ├── middlewares
 │   │   ├── auth.middlewares.ts
 │   │   ├── ratelimit.middleware.ts
@@ -154,9 +154,10 @@ bun run dev
 │       └── product.validation.ts
 ├── templates
 │   ├── password_reset.html
+│   ├── payment_refund.html
 │   ├── release_funds.html
 │   └── verification_email.html
 └── tsconfig.json
 
-17 directories, 82 files
-```
+19 directories, 88 files
+``

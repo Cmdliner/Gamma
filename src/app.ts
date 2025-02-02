@@ -61,6 +61,7 @@ class App {
             }
         }));
     }
+    
     private initializeRoutes() {
         this.app.use(`/${API_VERSION}/auth`, auth);
         this.app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
