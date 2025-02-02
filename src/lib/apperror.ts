@@ -7,7 +7,7 @@ type AppErrorResponse = {
 }
 
 export class AppError {
-    is_custom: true;
+    is_custom = true;
     message: string;
     status: StatusCodes;
     reason: string;
