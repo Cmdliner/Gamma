@@ -11,36 +11,41 @@ class ProductService {
         limit: number,
         skips: number
     ) {
-        //! todo => Populate owner field of product
-        const products = await Product.aggregate([
-            {
-                $geoNear: {
-                    near: {
-                        type: "Point",
-                        coordinates,
-                    },
-                    distanceField: "distance",
-                    spherical: true,
-                },
-            },
-            { $match: { category } },
-            { $sort: { distance: 1 } },
-            // Begin new
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "owner",
-                    foreignField: "_id",
-                    as: "owner"
-                }
-            },
-            { $unwind: "$owner" },
-            // End new
-            { $limit: limit },
-            { $skip: skips }
-        ]);
 
-        return products;
+        try {
+            //! todo => Populate owner field of product
+            const products = await Product.aggregate([
+                {
+                    $geoNear: {
+                        near: {
+                            type: "Point",
+                            coordinates,
+                        },
+                        distanceField: "distance",
+                        spherical: true,
+                    },
+                },
+                { $match: { category } },
+                { $sort: { distance: 1 } },
+                // Begin new
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "owner",
+                        foreignField: "_id",
+                        as: "owner"
+                    }
+                },
+                { $unwind: "$owner" },
+                // End new
+                { $limit: limit },
+                { $skip: skips }
+            ]);
+
+            return products;
+        } catch (error) {
+            throw error;
+        }
     }
 
     static readonly SEARCH_LIMITS = 100;

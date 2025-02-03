@@ -29,20 +29,20 @@ import ProductService from "./product.service";
 import User from "../user/user.model";
 import { ILocation } from "../types/common.type";
 import IProduct from "../types/product.schema";
+import { AppError } from "../lib/error.handler";
+import { StatusCodes } from "http-status-codes";
 
 class ProductController {
 
     static async search(req: Request, res: Response) {
         const { q, page = 1, limit = 10 } = req.query;
-
-        if (!q) {
-            return res.status(400).json({ error: true, message: "Query parameter 'q' is required" });
-        }
-
         try {
+            if (!q) {
+                throw new AppError(StatusCodes.BAD_REQUEST, "Query parameter 'q' is required")
+            }
             const searchWords = (q as string).trim().split(/\s+/).filter(Boolean);
             if (!searchWords.length) {
-                return res.status(400).json({ error: true, message: "Invalid search query" });
+                throw new AppError(StatusCodes.BAD_REQUEST, "Invalid search query");
             }
 
             // Build query
@@ -54,9 +54,7 @@ class ProductController {
                 .limit(Number(limit))
                 .skip(offset);
 
-            if (!products.length) {
-                return res.status(404).json({ error: true, message: "No products found" });
-            }
+            if (!products.length) throw new AppError(StatusCodes.NOT_FOUND, "No products found");
 
             // Sort products by relevance
             const sortedProducts = products
@@ -67,11 +65,12 @@ class ProductController {
                 .sort((a, b) => b.relevanceScore - a.relevanceScore)
                 .map(({ relevanceScore, ...product }) => product);
 
-            return res.status(200).json({ status: true, products: sortedProducts });
+            return res.status(StatusCodes.OK).json({ status: true, products: sortedProducts });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Internal server error" });
+            const [status, errResponse] = AppError.handle(error, "Internal server error");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -82,7 +81,7 @@ class ProductController {
 
             const humanReadableLocation = req.body.location as string;
             if (!isValidState(humanReadableLocation)) {
-                return res.status(422).json({ error: true, message: "Invalid location format" });
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format");
             }
 
             const location: ILocation = {
@@ -109,7 +108,7 @@ class ProductController {
             if (ownership_documents.length) electronicProductData.ownership_documents = ownership_documents;
 
             const { error } = electronicsValidationSchema.validate(electronicProductData);
-            if (error) return res.status(422).json({ error: true, message: error.details[0] });
+            if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
             // check that no similar product exists in db
             const similarProdInDb = await Electronics.findOne({
@@ -117,16 +116,12 @@ class ProductController {
                 description: electronicProductData.description,
                 price: electronicProductData.price,
             });
-            if (similarProdInDb) {
-                return res.status(400).json({ error: true, message: "A similar product exists" });
-            }
+            if (similarProdInDb) throw new AppError(StatusCodes.BAD_REQUEST, "A similar product exists");
 
             const newElectronics = await Electronics.create(electronicProductData);
-            if (!newElectronics) {
-                return res.status(400).json({ error: true, message: "Error uploading product" });
-            }
+            if (!newElectronics) throw new AppError(StatusCodes.BAD_REQUEST, "Error uploading product");
 
-            return res.status(201).json({
+            return res.status(StatusCodes.CREATED).json({
                 success: true,
                 message: "Electronics uploaded successfully",
                 electronics: newElectronics
@@ -134,10 +129,8 @@ class ProductController {
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({
-                error: true,
-                message: "An error occured during electronics product upload"
-            });
+            const [status, errResponse] = AppError.handle(error, "An error occured during electronics product upload")
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -148,7 +141,7 @@ class ProductController {
 
             const humanReadableLocation = req.body.location as string;
             if (!isValidState(humanReadableLocation)) {
-                return res.status(422).json({ error: true, message: "Invalid location format" });
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format");
             }
 
             const location: ILocation = {
@@ -176,26 +169,20 @@ class ProductController {
             };
 
             const { error } = landedPropertyValidationSchema.validate(landedPropertyData);
-            if (error) {
-                return res.status(422).json({ error: true, message: error.details[0].message });
-            }
+            if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
             // CHECK THAT NO SIMILAR PROD EXISTS IN DB
             const similarProdInDb = await LandedProperty.findOne({
                 name: landedPropertyData.name,
                 description: landedPropertyData.description
             });
-            if (similarProdInDb) {
-                return res.status(400).json({ error: true, message: "A similar product exists" });
-            }
+            if (similarProdInDb) throw new AppError(StatusCodes.BAD_REQUEST, "A similar product exists");
 
 
             const newLandedProperty = await LandedProperty.create(landedPropertyData);
-            if (!newLandedProperty) {
-                return res.status(400).json({ error: true, message: "Error uploading landed property" });
-            }
+            if (!newLandedProperty) throw new AppError(StatusCodes.BAD_REQUEST, "Error uploading landed property");
 
-            return res.status(201).json({
+            return res.status(StatusCodes.CREATED).json({
                 success: true,
                 message: "Property uploaded successfully",
                 landed_property: newLandedProperty
@@ -203,10 +190,8 @@ class ProductController {
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({
-                error: true,
-                message: "An error occured during property upload"
-            });
+            const [status, errResponse] = AppError.handle(error, "An error occured during property upload");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -217,7 +202,7 @@ class ProductController {
 
             const humanReadableLocation = req.body.location as string;
             if (!isValidState(humanReadableLocation)) {
-                return res.status(422).json({ error: true, message: "Invalid location format" });
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format");
             }
             const location: ILocation = {
                 human_readable: humanReadableLocation,
@@ -247,9 +232,7 @@ class ProductController {
 
             // validate data
             const { error } = gadgetValidationSchema.validate(gadgetData);
-            if (error) {
-                return res.status(422).json({ error: true, message: error.details[0].message });
-            }
+            if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
             // CHECK THAT NO SIMILAR PROD EXISTS IN DB
             const similarProdInDb = await Gadget.findOne({
@@ -257,24 +240,20 @@ class ProductController {
                 description: gadgetData.description,
                 price: gadgetData.price
             });
-            if (similarProdInDb) {
-                return res.status(400).json({ error: true, message: "A similar product exists" });
-            }
+            if (similarProdInDb) throw new AppError(StatusCodes.BAD_REQUEST, "A similar product exists");
 
             const newGadget = await Gadget.create(gadgetData);
+            if (!newGadget) throw new AppError(StatusCodes.BAD_REQUEST, "Error uploading gadget");
 
-            if (!newGadget) {
-                return res.status(400).json({ error: true, message: "Error uploading gadget" });
-            }
-
-            return res.status(201).json({
+            return res.status(StatusCodes.CREATED).json({
                 success: true,
                 message: "Gadget was uploaded successfully",
                 gadget: newGadget
             });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error uploading gadget" });
+            const [status, errResponse] = AppError.handle(error, "Error uploading gadget");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -285,7 +264,7 @@ class ProductController {
 
             const humanReadableLocation = req.body.location as string;
             if (!isValidState(humanReadableLocation)) {
-                return res.status(422).json({ error: true, message: "Invalid location format" });
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format")
             }
             const location: ILocation = {
                 human_readable: humanReadableLocation,
@@ -317,9 +296,8 @@ class ProductController {
 
             // Validate users vehicle data
             const { error } = vehiclevalidationSchema.validate(vehicleData);
-            if (error) {
-                return res.status(422).json({ error: true, message: error.details[0].message });
-            }
+            if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
+
 
             // CHECK THAT NO SIMILAR PROD EXISTS IN DB
             const similarProdInDb = await Vehicle.findOne({
@@ -327,23 +305,20 @@ class ProductController {
                 description: vehicleData.description,
                 price: vehicleData.price,
             });
-            if (similarProdInDb) {
-                return res.status(400).json({ error: true, message: "A similar product exists" });
-            }
+            if (similarProdInDb) throw new AppError(StatusCodes.BAD_REQUEST, "A similar product exists");
 
             const newVehicle = await Vehicle.create(vehicleData);
-            if (!newVehicle) {
-                return res.status(400).json({ error: true, message: "Error uploading vehicle" });
-            }
+            if (!newVehicle) throw new AppError(StatusCodes.BAD_REQUEST, "Error uploading vehicle");
 
-            return res.status(201).json({
+            return res.status(StatusCodes.CREATED).json({
                 success: true,
                 message: "Vehicle uploaded successfully",
                 vehicle: newVehicle
             });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error uploading vehicle" });
+            const [status, errResponse] = AppError.handle(error, "Error uploading vehicle")
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -354,7 +329,7 @@ class ProductController {
 
             const humanReadableLocation = req.body.location as string;
             if (!isValidState(humanReadableLocation)) {
-                return res.status(422).json({ error: true, message: "Invalid location format" });
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format")
             }
             const location: ILocation = {
                 human_readable: humanReadableLocation,
@@ -380,9 +355,7 @@ class ProductController {
             if (ownership_documents.length) genericProductData.ownership_documents = ownership_documents;
 
             const { error } = genericValidationSchema.validate(genericProductData);
-            if (error) {
-                return res.status(422).json({ error: true, message: error.details[0].message });
-            }
+            if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
             // CHECK THAT NO SIMILAR PROD EXISTS IN DB
             const similarProdInDb = await Product.findOne({
@@ -390,49 +363,49 @@ class ProductController {
                 description: genericProductData.description,
                 price: genericProductData.price
             });
-            if (similarProdInDb) {
-                return res.status(400).json({ error: true, message: "A similar product exists" });
-            }
+            if (similarProdInDb) throw new AppError(StatusCodes.BAD_REQUEST, "A similar product exists");
+
 
             switch (genericProductData.category) {
                 case "furnitures":
                     const newFurniture = await Furniture.create(genericProductData);
-                    if (!newFurniture) throw new Error("Could not create product");
-                    return res.status(201).json({
+                    if (!newFurniture) throw new AppError(StatusCodes.BAD_REQUEST, "Could not create product");
+                    return res.status(StatusCodes.CREATED).json({
                         success: true,
                         message: "Product uploaded succesfully",
                         furniture: newFurniture
                     });
                 case "machineries":
                     const newMachinery = await Machinery.create(genericProductData);
-                    if (!newMachinery) throw new Error("Could not create product");
-                    return res.status(201).json({
+                    if (!newMachinery) throw new AppError(StatusCodes.BAD_REQUEST, "Could not create product");
+                    return res.status(StatusCodes.CREATED).json({
                         success: true,
                         message: "Product uploaded succesfully",
                         machinery: newMachinery
                     });
                 case "fashion_wears":
                     const newFashionWear = await FashionProduct.create(genericProductData);
-                    if (!newFashionWear) throw new Error("Error creating product");
-                    return res.status(201).json({
+                    if (!newFashionWear) throw new AppError(StatusCodes.BAD_REQUEST, "Error creating product");
+                    return res.status(StatusCodes.CREATED).json({
                         success: true,
                         message: "Product created successfully",
                         fashion_wears: newFashionWear
                     });
                 case "others":
                     const otherProduct = await OtherProduct.create(genericProductData);
-                    if (!otherProduct) throw new Error("Error creating product");
-                    return res.status(201).json({
+                    if (!otherProduct) throw new AppError(StatusCodes.BAD_REQUEST, "Error creating product");
+                    return res.status(StatusCodes.CREATED).json({
                         success: true,
                         message: "Product created successfully",
                         other_product: otherProduct
                     });
                 default:
-                    throw new Error("Invalid product category, how did you get here?");
+                    throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Invalid product category, how did you get here?");
             }
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error uploading product" });
+            const [status, errResponse] = AppError.handle(error, "Error uploading product");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -442,16 +415,13 @@ class ProductController {
             const { productID } = req.params;
 
             const product = await Product.findById(productID);
-            if (!product) {
-                return res.status(404).json({ error: true, message: "Product not found!" });
-            };
-            return res.status(200).json({ success: true, message: "Product found", product });
+            if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
+
+            return res.status(StatusCodes.OK).json({ success: true, message: "Product found", product });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({
-                error: true,
-                message: "An error occured while trying to fetch taht product!"
-            });
+            const [status, errResponse] = AppError.handle(error, "An error occured while trying to fetch that product");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -461,9 +431,7 @@ class ProductController {
             const { productCategory } = req.params;
 
             const user = await User.findById(req.user?._id);
-            if (!user) {
-                return res.status(404).json({ error: true, message: "User not found!" });
-            }
+            if (!user) throw new AppError(StatusCodes.BAD_REQUEST, "User not found");
 
             let page = 1;
             if (!isNaN(parseInt(req.query.page as string))) {
@@ -478,7 +446,7 @@ class ProductController {
 
             // validate product category
             const isValidCategory = allowedCategories.includes(productCategory);
-            if (!isValidCategory) return res.status(400).json({ error: true, message: "Invalid product category!" });
+            if (!isValidCategory) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid product category!");
 
             const productsCount = await Product.find({
                 category: productCategory,
@@ -486,9 +454,7 @@ class ProductController {
             }).countDocuments();
             const isValidPage = page <= Math.ceil(productsCount / limit);
 
-            if (!isValidPage) {
-                return res.status(404).json({ error: true, message: "Oops...Could not find that page" })
-            }
+            if (!isValidPage) throw new AppError(StatusCodes.NOT_FOUND, "Oops...Could not find that page");
 
             const products = await ProductService.filterAndSortByLocation(
                 user.location?.coordinates,
@@ -496,7 +462,9 @@ class ProductController {
                 limit,
                 skips
             );
-            if (products) return res.status(200).json({ success: true, message: "Products found!", products });
+            if (!products.length) throw new AppError(StatusCodes.NOT_FOUND, "No products found for this category");
+
+            return res.status(200).json({ success: true, message: "Products found!", products });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: true, message: "Error fetching products" })
@@ -509,24 +477,26 @@ class ProductController {
             const { productID } = req.params;
 
             const productListing = await Product.findById(productID);
-            if (!productListing) return res.status(404).json({ error: true, message: "Product not found!" });
+            if (!productListing) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
             const isAuthorizedToDelete = compareObjectID(currentUser!, productListing.owner);
-            if (!isAuthorizedToDelete) return res.status(400).json({ error: true, message: "Unauthorized!" });
+            if (!isAuthorizedToDelete) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
             // check if there are no pending operations (transactions, bids) on this item
             if (productListing.purchase_lock.is_locked) {
-                return res.status(400)
-                    .json({ error: true, message: "Product still has pending operations cannot delete at the moment" });
+                throw new AppError(StatusCodes.LOCKED, "Product still has pending operations. Cannot delete at the moment");
             }
             const deletedProductListing = await Product.findByIdAndUpdate(productID, { deleted_at: new Date() });
-            if (!deletedProductListing) throw new Error("An error occured while attempting to delete product");
+            if (!deletedProductListing) {
+                throw new AppError(StatusCodes.BAD_REQUEST, "An error occured while attempting to delete product");
+            }
 
-            return res.status(200).json({ success: true, message: "Product listing has been deleted successfully" });
+            return res.status(StatusCodes.NO_CONTENT);
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error deleting product listing" });
+            const [status, errResponse] = AppError.handle(error, "Error deleting product listing");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -535,9 +505,7 @@ class ProductController {
             const { productCategory } = req.params;
 
             const isValidProductCategory = allowedCategories.includes(productCategory);
-            if (!isValidProductCategory) {
-                return res.status(422).json({ error: true, message: "Invalid product category" });
-            }
+            if (!isValidProductCategory) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid product category");
             const now = new Date();
             const sponsoredProds = await Product.find({
                 deleted_at: { $exists: false },
@@ -545,13 +513,13 @@ class ProductController {
                 sponsorship: { $exists: true },
                 "sponsorship.expires": { $gte: now },
             });
-            if (!sponsoredProds || !sponsoredProds.length) {
-                return res.status(404).json({ error: true, message: "No sponsored products found" })
-            }
-            return res.status(200).json({ success: true, message: "Ads found", products: sponsoredProds });
+            if (!sponsoredProds.length) throw new AppError(StatusCodes.NOT_FOUND, "No sponsored products found");
+
+            return res.status(StatusCodes.OK).json({ success: true, message: "Ads found", products: sponsoredProds });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error getting sponsored products" });
+            const [status, errResponse] = AppError.handle(error, "Error getting sponsored products");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -564,25 +532,24 @@ class ProductController {
             // FIND PRODUCT AND MAKE SURE THERE ARE NO PENDING OPERATIONS LIKE
             // TRANSACTION, BIDS ON IT TO AVOID FRAUDULENT ACTIVITY
             const product = await Product.findOne({ _id: productID, deleted_at: { $exists: false } });
-            if (!product) {
-                return res.status(404).json({ error: true, message: "Product not found" });
-            }
-            if (product.status !== "available") {
-                return res.status(400).json({ error: true, message: "Cannot edit product!" });
+            if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found");
+            if (product.status !== "available" || product.purchase_lock.is_locked) {
+                throw new AppError(StatusCodes.LOCKED, "Cannot edit product!");
             }
 
             // Find all pending bids and reject them
-            const pendingBids = await Bid.updateMany(
+             await Bid.updateMany(
                 { product: product._id, status: "pending" },
                 { $set: { status: "rejected" } }
             );
 
             // !TODO => UPDATE PRODUCT LISTING
-            return res.status(200).json({ success: true, message: "Product updated successfully" });
+            return res.status(StatusCodes.OK).json({ success: true, message: "Product updated successfully" });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error editing product" })
+            const [status, errResponse] = AppError.handle(error, "Error editing product");
+            return res.status(status).json(errResponse);
         }
 
     }

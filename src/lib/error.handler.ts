@@ -19,7 +19,7 @@ export class AppError {
     }
 
     static handle(error: any, default_message: string) {
-        let status = error.status || StatusCodes.INTERNAL_SERVER_ERROR;
+        let status: StatusCodes = error.status || StatusCodes.INTERNAL_SERVER_ERROR;
         const errResponse: AppErrorResponse = { error: true, message: default_message };
 
         if (error.name === "APP_ERROR") {
