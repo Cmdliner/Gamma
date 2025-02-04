@@ -3,7 +3,7 @@ import User from "./user.model";
 import IWallet from "../types/wallet.schema";
 import PaystackService from "../lib/paystack.service";
 import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
-import { ReferralTransaction } from "../payment/transaction.model";
+import { ReferralTransaction, WithdrawalTransaction } from "../payment/transaction.model";
 import { isValidState } from "../lib/utils";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import IUser from "../types/user.schema";
@@ -55,13 +55,20 @@ class UserController {
             const active_referrals = (user.referrals as unknown as IUser[])
                 .filter((referral: IUser) => referral.account_status === "active").length;
             const rewards_balance = user.rewards.balance;
+            let amount_withdrawn = 0;
 
             // Get referral history
             const referral_history = await ReferralTransaction.find({ bearer: user._id }).sort({ createdAt: -1 });
 
+            // Calculate the total amount withdrawn
+            const rewardsWithdrawals = await WithdrawalTransaction.find({ bearer: user._id, from: "rewards" });
+            if(rewardsWithdrawals.length) {
+                rewardsWithdrawals.forEach( withdrawal =>  amount_withdrawn += withdrawal.amount);
+            }
+
             return res.status(200).json({
                 success: true,
-                info: { referral_code, total_referrals, active_referrals, rewards_balance, referral_history }
+                info: { referral_code, total_referrals, amount_withdrawn, active_referrals, rewards_balance, referral_history }
             })
         } catch (error) {
             console.error(error);
