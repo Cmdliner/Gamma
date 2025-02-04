@@ -76,7 +76,7 @@ export class SafeHavenService {
                 },
                 body: JSON.stringify({
                     type: "BVN",
-                    number: "22399690538", // !todo => replace with user's actual bvn
+                    number: "sjdfdlksld", // !todo => replace with user's actual bvn
                     debitAccountNumber: "0100729966", // What's this?
                 }),
             });

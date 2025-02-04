@@ -57,6 +57,7 @@ class PaymentController {
         }
     }
 
+    // Actual payment actions
     static async withdrawFromWallet(req: Request, res: Response) {
         const MIN_WITHDRAWAL_VALUE = 500;
         const session = await startSession();
@@ -65,33 +66,25 @@ class PaymentController {
             const user = req.user as IUser;
             const { amount_to_withdraw } = req.body;
 
-            if (!amount_to_withdraw) {
-                return res.status(422).json({ error: true, message: "amount required!" })
-            }
+            if (!amount_to_withdraw) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Amount required!");
 
             session.startTransaction();
             // Get user wallet
             const wallet = await Wallet.findById(user.wallet).session(session);
-            if (!wallet) {
-                await session.abortTransaction();
-                return res.status(404).json({ error: true, message: "Error finding wallet" });
-            }
+            if (!wallet) throw new AppError(StatusCodes.NOT_FOUND, "Error finding wallet");
 
             // Make sure user does not try to add to their balance by atempting to withdraw 
             // negative balance or less than the MIN_WITHDRAW_VALUE
             if (amount_to_withdraw < MIN_WITHDRAWAL_VALUE) {
-                await session.abortTransaction();
-                return res.status(400).json({ error: true, message: "Amount too small" });
+                throw new AppError(StatusCodes.BAD_REQUEST, "Amount too small");
             }
             // Check amount to withdraw
             if (amount_to_withdraw > wallet.balance) {
-                await session.abortTransaction();
-                return res.status(400).json({ error: true, message: "Insufficient funds!" });
+                throw new AppError(StatusCodes.BAD_REQUEST, "Insufficient funds!");
             }
 
             // Generate a new transaction for the payout
             const payoutTransaction = new WithdrawalTransaction({
-                for: "withdrawal",
                 bearer: req.user?._id,
                 amount: amount_to_withdraw,
                 status: "pending",
@@ -106,6 +99,7 @@ class PaymentController {
 
             // Attempt to transfer to user bank acc using fincra
             const withdrawalRes = await FincraService.withdrawFunds(user, transactionRef, amount_to_withdraw);
+
             // Update balance and transaction once payout is not failed
             if (withdrawalRes.success) {
                 wallet.balance -= amount_to_withdraw;
@@ -126,7 +120,8 @@ class PaymentController {
         } catch (error) {
             await session.abortTransaction();
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error withdrawing money from wallet" });
+            const [status, errResponse] = await AppError.handle(error, "Error withdrawing money from wallet");
+            return res.status(status).json(errResponse);
         } finally {
             await session.endSession();
         }
@@ -143,7 +138,7 @@ class PaymentController {
                 .find({ bearer: user._id })
                 .sort({ createdAt: -1 }).populate("product");
             if (!transactions.length) throw new AppError(StatusCodes.NOT_FOUND, "No transactions yet");
-            
+
 
             return res.status(StatusCodes.OK).json({ success: true, transactions });
         } catch (error) {
@@ -161,49 +156,40 @@ class PaymentController {
             const { payment_method } = req.body;
             session.startTransaction();
 
-            if (!payment_method) {
-                return res.status(422).json({ error: true, message: "Payment method required!" })
-            }
+            if (!payment_method) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Payment method required!");
 
             const user = await User.findById(userId).session(session);
-            if (!user) {
-                await session.abortTransaction();
-                return res.status(404).json({ error: true, message: "User not found!" })
-            }
+            if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
 
             // VALIDATION LOGIC
             const { error } = ItemPurchaseValidation.validate({ payment_method });
-            if (error) {
-                await session.abortTransaction();
-                return res.status(422).json({ error: true, message: error.details[0].message });
-            }
+            if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
-
-            const product = await Product.findOne({ _id: productID, deleted_at: { $exists: false } }).session(session);
-            if (!product || product.status !== "available") {
-                await session.abortTransaction();
-                return res.status(400).json({ error: true, message: "Product not available!" });
+            const product = await Product.findOne({
+                _id: productID,
+                deleted_at: { $exists: false },
+            }).session(session);
+            if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
+            if (product.status !== "available" || product.purchase_lock.is_locked) {
+                throw new AppError(StatusCodes.BAD_REQUEST, "Product not available!");
             }
 
             // CHECK IF THIS REQUEST IS FOR A BID
             let bidPrice = undefined; // Initialize bid price
             if (bidID) {
                 const bid = await Bid.findOne({ _id: bidID, status: "accepted" }).session(session);
-                if (!bid) {
-                    await session.abortTransaction();
-                    return res.status(404).json({ error: true, message: "Couldn't find bid" });
-                }
+                if (!bid) throw new AppError(StatusCodes.NOT_FOUND, "Couldn't find that bid");
 
                 // Ensure bid has not yet expired
                 if (bid.expires.valueOf() < Date.now()) {
                     bid.status = "expired";
                     await bid.save({ session });
-                    return res.status(400).json({ error: true, message: "Bid expired!" })
+                    throw new AppError(StatusCodes.BAD_REQUEST, "Bid expired!");
                 }
 
                 const isBidder = compareObjectID(bid.buyer, req.user?._id);
-                if (!isBidder) return res.status(400).json({ error: true, message: "Action Forbidden!" });
+                if (!isBidder) throw new AppError(StatusCodes.NOT_FOUND, "Bid not found")
 
                 // Set bid Price to that negotiated
                 bidPrice = bid.negotiating_price as number;
@@ -224,15 +210,13 @@ class PaymentController {
                 }
             }, { new: true, session });
             if (!updatedProduct) {
-                await session.abortTransaction();
-                return res.status(400).json({ error: true, message: "Product is currently unavaliable for purchase" });
+                throw new AppError(StatusCodes.LOCKED, "Product is currently unavaliable for purchase")
             }
 
             // CREATE TRANSACTION FOR PRODUCT PURCHASE
             const itemPurchaseTransaction = new ProductPurchaseTransaction({
                 bearer: userId,
-                // set to negotiated price or actual price based on whether it's a bid or not
-                amount: bidPrice ? bidPrice : product.price,
+                amount: bidPrice ? bidPrice : product.price, // set to negotiated price or actual price based on whether it's a bid or not
                 seller: updatedProduct.owner,
                 status: "pending",
                 product: productID,
@@ -247,13 +231,14 @@ class PaymentController {
             const fincraResponse = await FincraService.purchaseItem(product, req.user!, transactionRef, payment_method, bidPrice);
             await session.commitTransaction();
 
-            return res.status(200).json({ success: true, transaction_id: itemPurchaseTransaction._id, fincra: fincraResponse });
+            return res.status(StatusCodes.OK).json({ success: true, transaction_id: itemPurchaseTransaction._id, fincra: fincraResponse });
 
 
         } catch (error) {
             await session.abortTransaction();
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error purchasing item" });
+            const [status, errResponse] = AppError.handle(error, "Error purchasing item");
+            return res.status(status).json(errResponse);
         } finally {
             await session.endSession();
         }
@@ -268,14 +253,12 @@ class PaymentController {
 
         try {
             if (!sponsorship_duration || !payment_method) {
-                return res.status(422).json({ error: true, message: "sponsorship_duration and payment_method required!" });
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "sponsorship_duration and payment_method required!");
             }
 
             // VALIDATE SPONSORSHIP DURATION AND PAYMENT METHOD
             const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
-            if (error) {
-                return res.status(422).json({ error: true, message: error.details[0].message });
-            }
+            if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
             // START TRANSACTION
             session.startTransaction();
@@ -284,28 +267,18 @@ class PaymentController {
                 _id: productID,
                 deleted_at: { $exists: false },
             }).session(session);
-            if (!product) {
-                await session.abortTransaction();
-                return res.status(404).json({ error: true, message: "Product not found!" });
-            }
+            if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
             const isProductOwner = compareObjectID(product.owner, req.user?._id);
-            if (!isProductOwner) {
-                await session.abortTransaction();
-                return res.status(400).json({ error: true, message: "Forbidden!!!" });
-            }
+            if (!isProductOwner) throw new AppError(StatusCodes.NOT_FOUND, "Product not found");
 
             // CHECK IF AD SPONOSRHIP IS NOT YET EXPIRED
             if (product.sponsorship?.expires?.valueOf() > Date.now()) {
-                await session.abortTransaction();
-                return res.status(400).json({ error: true, message: "Previous ad sponsorhip is yet to expire" });
+                throw new AppError(StatusCodes.BAD_REQUEST, "Previous ad sponsorhip is yet to expire");
             }
 
             // CHECK IF PRODUCT IS SOLD
-            if (product.status === "sold") {
-                await session.abortTransaction();
-                return res.status(400).json({ error: true, message: "Product sold!" })
-            }
+            if (product.status === "sold") throw new AppError(StatusCodes.BAD_REQUEST, "Product sold!");
 
             // Create Transaction for ad sponsorhsip
             const adsDurationFmt = sponsorship_duration == "1Week" ? "one week" : "one month";
@@ -323,11 +296,16 @@ class PaymentController {
 
             await session.commitTransaction();
 
-            return res.status(200).json({ success: true, transaction_id: transaction.id, fincra: fincraRes })
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                transaction_id: transaction.id,
+                fincra: fincraRes
+            });
         } catch (error) {
             await session.abortTransaction();
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error occured during while trying to sponsor product" });
+            const [status, errResponse] = AppError.handle(error, "Error occured during while trying to sponsor product");
+            return res.status(status).json(errResponse);
         } finally {
             await session.endSession();
         }
@@ -340,13 +318,10 @@ class PaymentController {
             const { amount }: { amount: number } = req.body;
             const userId = req.user?._id;
             const user = await User.findById(userId).session(session);
-            if (!user) {
-                await session.abortTransaction();
-                return res.status(404).json({ error: true, message: "User  not found!" });
-            }
+            if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User  not found!");
 
             if (amount > user.rewards.balance || user.rewards.balance < 100) {
-                return res.status(400).json({ error: true, message: "Insuffecient funds!" });
+                throw new AppError(StatusCodes.BAD_REQUEST, "Insuffecient funds!");
             }
 
             // Ensure user has made a transaction in the last 30 days
@@ -356,15 +331,15 @@ class PaymentController {
                 kind: { $or: ["ProductPurchaseTransaction", "AdSponsorhipTransaction"] },
                 createdAt: { $gte: thirtyDaysAgo }
             }).session(session);
-            const canWithdrawRewards = !!transactionsInThePast30Days.length;
 
+            const canWithdrawRewards = !!transactionsInThePast30Days.length;
             if (!canWithdrawRewards) {
-                await session.abortTransaction();
-                return res.status(400).json({
-                    error: true,
-                    message: "Cannot claim rewards. No 'transactions' in the past 30 days",
-                });
+                throw new AppError(
+                    StatusCodes.BAD_REQUEST,
+                    "Cannot claim rewards. No 'transactions' in the past 30 days"
+                );
             }
+
             // Create transaction
             const payoutTransaction = new WithdrawalTransaction({
                 bearer: userId,
@@ -379,18 +354,25 @@ class PaymentController {
             const fincraRes = await FincraService.withdrawRewards(user, amount, payoutTransaction.id);
 
             // Handle response and service of rewards
-            if (fincraRes.data.status === "failed") { throw new Error() }
+            if (fincraRes.data.status === "failed") {
+                throw new AppError(StatusCodes.BAD_REQUEST, "Error making withdrawal")
+            }
             await WithdrawalTransaction.findByIdAndUpdate(payoutTransaction._id, {
                 status: "processing_payment"
             }).session(session);
             await session.commitTransaction();
 
-            return res.status(200).json({ success: true, message: "Rewards have been sent to account" });
+            return res
+                .status(StatusCodes.OK)
+                .json({
+                    success: true,
+                    message: "Rewards have been sent to account",
+                });
 
         } catch (error) {
             await session.abortTransaction();
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error withdrawing rewards!" })
+            const [status, errResponse] = AppError.handle(error, "Error withdrawing rewards!")
         } finally {
             await session.endSession();
         }
