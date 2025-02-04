@@ -8,6 +8,8 @@ import { isValidState } from "../lib/utils";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import IUser from "../types/user.schema";
 import Expo from "expo-server-sdk";
+import { AppError } from "../lib/error.handler";
+import { StatusCodes } from "http-status-codes";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -46,23 +48,25 @@ class UserController {
     static async getReferralInfo(req: Request, res: Response) {
         try {
             const user = await User.findById(req.user?._id).populate("referrals");
-            // const user = req.user;
-            if (!user) {
-                return res.status(404).json({ error: true, message: "User not found!" });
-            }
+            if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
+
             const referral_code = user.referral_code;
             const total_referrals = user.referrals.length;
             const active_referrals = (user.referrals as unknown as IUser[])
                 .filter((referral: IUser) => referral.account_status === "active").length;
             const rewards_balance = user.rewards.balance;
 
+            // Get referral history
+            const referral_history = await ReferralTransaction.find({ bearer: user._id }).sort({ createdAt: -1 });
+
             return res.status(200).json({
                 success: true,
-                info: { referral_code, total_referrals, active_referrals, rewards_balance }
+                info: { referral_code, total_referrals, active_referrals, rewards_balance, referral_history }
             })
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error retrieving referral info" })
+            const [status, errResponse] = AppError.handle(error, "Error retrieving referral info");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -164,16 +168,6 @@ class UserController {
 
     }
 
-    static async getReferralHistory(req: Request, res: Response) {
-        try {
-            const transactions = await ReferralTransaction.find({ bearer: req.user?._id }).populate(["referee"]);
-            return res.status(200).json({ success: true, transactions });
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: true, message: "Error getting referral history" });
-        }
-    }
-
     static async updateUsersDevicePushToken(req: Request, res: Response) {
         const { device_push_token } = req.body;
         try {
@@ -183,10 +177,10 @@ class UserController {
             }
 
             // Ensure that the device push token matches expo push token fmt
-            if(!Expo.isExpoPushToken(device_push_token)) {
-                return res.status(422).json({error: true, message: "Invalid push token"})
+            if (!Expo.isExpoPushToken(device_push_token)) {
+                return res.status(422).json({ error: true, message: "Invalid push token" })
             }
-            
+
             user.device_push_token = device_push_token;
             await user.save();
 
@@ -194,7 +188,7 @@ class UserController {
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({error: true, message: "Error updating the push token"})
+            return res.status(500).json({ error: true, message: "Error updating the push token" })
         }
     }
 

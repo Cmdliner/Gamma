@@ -15,6 +15,8 @@ import EmailService from "../lib/email.service";
 import OTP from "../auth/otp.model";
 import IProduct from "../types/product.schema";
 import { SafeHavenService } from "../lib/safehaven.service";
+import { StatusCodes } from "http-status-codes";
+import { AppError } from "../lib/error.handler";
 
 
 class PaymentController {
@@ -51,7 +53,7 @@ class PaymentController {
             return res.status(200).json({ success: true });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({error: true })
+            return res.status(500).json({ error: true })
         }
     }
 
@@ -137,11 +139,17 @@ class PaymentController {
     static async getTransactionHistory(req: Request, res: Response) {
         try {
             const user = req.user as IUser;
-            const transactions = await Transaction.find({ bearer: user._id }).sort({ createdAt: -1 }).populate("product");
-            return res.status(200).json({ success: true, message: "Transactions found", transactions });
+            const transactions = await Transaction
+                .find({ bearer: user._id })
+                .sort({ createdAt: -1 }).populate("product");
+            if (!transactions.length) throw new AppError(StatusCodes.NOT_FOUND, "No transactions yet");
+            
+
+            return res.status(StatusCodes.OK).json({ success: true, transactions });
         } catch (error) {
             console.error(error);
-            return res.send(500).json({ error: true, message: "Error getting transaction history" });
+            const [status, errResponse] = AppError.handle(error, "Error getting transaction history");
+            return res.send(status).json(errResponse);
         }
     }
 
