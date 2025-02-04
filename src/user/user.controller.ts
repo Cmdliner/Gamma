@@ -19,29 +19,29 @@ class UserController {
                 "-bvn",
                 "-device_push_token"
             ]);
-            if (!user) return res.status(404).json({ error: true, message: "User not found!" });
+            if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
-            return res.status(200).json({ success: true, user });
+            return res.status(StatusCodes.OK).json({ success: true, user });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Couldn't fetch user details" });
+            const [status, errResponse] = AppError.handle(error, "Couldn't fetch user details");
+            return res.status(status).json(errResponse);
         }
     }
 
     static async getWalletBalance(req: Request, res: Response) {
         try {
             const user = await User.findById(req.user?._id).populate("wallet");
-            if (!user) {
-                return res.status(404).json({ error: true, message: "Could not get wallet balance" });
-            }
+            if (!user) throw new AppError(StatusCodes.OK, "Could not get wallet balance");
 
             const balance = (user.wallet as unknown as IWallet).balance;
-            return res.status(200).json({ success: true, balance });
+            return res.status(StatusCodes.OK).json({ success: true, balance });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error getting wallet balance" });
+            const [status, errResponse] = AppError.handle(error, "Error getting wallet balance")
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -62,8 +62,8 @@ class UserController {
 
             // Calculate the total amount withdrawn
             const rewardsWithdrawals = await WithdrawalTransaction.find({ bearer: user._id, from: "rewards" });
-            if(rewardsWithdrawals.length) {
-                rewardsWithdrawals.forEach( withdrawal =>  amount_withdrawn += withdrawal.amount);
+            if (rewardsWithdrawals.length) {
+                rewardsWithdrawals.forEach(withdrawal => amount_withdrawn += withdrawal.amount);
             }
 
             return res.status(200).json({
@@ -83,33 +83,29 @@ class UserController {
 
             const bankDetails = req.user?.bank_details;
             console.log({ bank_details: bankDetails });
-            if (!bankDetails) {
-                return res.status(400).json({ error: true, message: "Cannot update bank details" });
-            }
+            if (!bankDetails) throw new AppError(StatusCodes.BAD_REQUEST, "Cannot update bank details");
+
 
             const dateAdded = bankDetails?.added_at.valueOf();
             const threeMonthsFromDateAdded = dateAdded + (30 * 24 * 60 * 60 * 1000);
 
             // Check if 3 months has passed
             if (threeMonthsFromDateAdded > Date.now()) {
-                return res.status(400).json({
-                    error: true,
-                    message: "Cannot update bank account details at this moment"
-                });
+                throw new AppError(StatusCodes.BAD_REQUEST, "Cannot update bank account details at this moment");
             }
 
             // Verify bank account with paystack
             const isValidBankAccount = await PaystackService.validateAccountDetails(account_no, bank_code);
-            if (!isValidBankAccount) {
-                return res.status(400).json({ error: true, message: "Invalid bank details" });
-            }
+            if (!isValidBankAccount) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid bank details");
+
 
             await User.findByIdAndUpdate(req.user?._id, { "bank_details.account_no": account_no }, { new: true });
-            return res.status(200).json({ success: true, message: "Bank details updated successfully!" });
+            return res.status(StatusCodes.OK).json({ success: true, message: "Bank details updated successfully!" });
 
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error updating bank account details" });
+            const [status, errResponse] = AppError.handle(error, "Error updating bank account details");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -141,17 +137,15 @@ class UserController {
 
     static async updateInfo(req: Request, res: Response) {
         const { phone_no_1, phone_no_2 } = req.body;
-        // !TODO => VALIDATE INPUTS AND HANDLE VERIFICATION DOCS UPLOAD
+        const verificationDocuments = req.verification_docs;
+        const profilePic = req.profile_pic;
         try {
             const user = await User.findById(req.user?._id);
-            if (!user) return res.status(404).json({ error: true, message: "User not found!" });
+            if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
-
-            if (phone_no_1) user.phone_numbers[0] = phone_no_1
-            if (phone_no_2) user.phone_numbers[1] = phone_no_2;
             if (req.body.location) {
                 if (!isValidState(req.body.location)) {
-                    return res.status(422).json({ error: true, message: "Invalid location" });
+                    throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format");
                 }
                 const location = {
                     human_readable: req.body.location,
@@ -161,16 +155,22 @@ class UserController {
                 user.location = location;
             }
 
+            // !todo => Validate phone no schema
+            if (phone_no_1) user.phone_numbers[0] = phone_no_1
+            if (phone_no_2) user.phone_numbers[1] = phone_no_2;
+
             const phoneNumberInUse = await User.findOne({ $or: [{ phone_no_1, phone_no_2 }] });
-            if (phoneNumberInUse) {
-                return res.status(400).json({ error: true, message: "Phone number in user!!" });
-            }
+            if (phoneNumberInUse) throw new AppError(StatusCodes.BAD_REQUEST, "Phone number in use!");
+
+            if(profilePic) user.display_pic = profilePic;
+            if (verificationDocuments) user.verification_docs = verificationDocuments;
 
             await user.save();
-            return res.status(200).json({ success: true, message: "User details updated" });
+            return res.status(StatusCodes.OK).json({ success: true, message: "User details updated" });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ error: true, message: "Error occured while updating info" });
+            const [status, errResponse] = AppError.handle(error, "Error occured while updating user info");
+            return res.status(status).json(errResponse);
         }
 
     }

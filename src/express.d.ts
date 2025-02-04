@@ -10,6 +10,8 @@ declare global {
                 product_images: string[],
                 ownership_documents: string[]
             };
+            verification_docs: string[];
+            profile_pic: string;
             user?: IUser;
         }
     }

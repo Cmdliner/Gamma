@@ -38,7 +38,7 @@ class AuthController {
                 first_name,
                 last_name,
                 dob,
-                email: email.trim().toLowerCase(),
+                email: email?.trim().toLowerCase(),
                 gender,
                 state_of_origin,
                 interested_categories,
@@ -438,13 +438,11 @@ class AuthController {
             session.startTransaction();
 
             const { email } = req.body;
-            if (!email || !email.trim()) {
+            if (!email?.trim()) {
                 throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Email required!");
             }
             const user = await User.findOne({ email: email.toLowerCase() }).session(session);
-            if (!user) {
-                throw new AppError(StatusCodes.NOT_FOUND, "Email not found");
-            }
+            if (!user) throw new AppError(StatusCodes.NOT_FOUND, "Email not found");
 
             // Delete any previous reset tokens
             await OTP.findOneAndDelete({ kind: "password_reset", owner: user._id }, { session });
@@ -478,7 +476,7 @@ class AuthController {
         try {
             const { otp, email } = req.body;
 
-            if (!otp || !email || !email.trim()) {
+            if (!otp || !email?.trim()) {
                 throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Email and otp token required!")
             }
 
@@ -544,7 +542,7 @@ class AuthController {
     static async login(req: Request, res: Response) {
         try {
             const { email, password } = req.body;
-            if (!email.trim() || !password.trim()) {
+            if (!email?.trim() || !password?.trim()) {
                 throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `${email ? "password" : "email"} required for sign in`);
             }
 

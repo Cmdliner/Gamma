@@ -44,6 +44,7 @@ interface IUser extends Document {
     transactions: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
+    verification_docs;
 }
 
 export default IUser;

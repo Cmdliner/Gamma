@@ -12,7 +12,7 @@ class DisputeController {
         const { issues, comments } = req.body;
 
         // VALIDATE REQUEST BODY
-        if (!comments.trim()) {
+        if (!comments?.trim()) {
             return res.status(422).json({ error: true, message: 'comments required' });
         }
         const session = await startSession();
@@ -58,7 +58,7 @@ class DisputeController {
                 transaction: transactionID,
                 comments
             }
-            if(issues.trim()) disputeData.issues = issues;
+            if(issues?.trim()) disputeData.issues = issues;
             const dispute = new Dispute(disputeData);
             await dispute.save({ session });
             await session.commitTransaction();

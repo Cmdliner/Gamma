@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { v2 as cloudinary } from "cloudinary";
 import { UploadApiResponse } from "cloudinary";
 import { cfg } from "../init";
+import { StatusCodes } from "http-status-codes";
 
 // Cloudinary configuration
 cloudinary.config({
@@ -41,6 +42,11 @@ export const UploadMiddleware = upload.fields([
 
 ]);
 
+export const UserAssetsUploadMiddleware = upload.fields([
+    { name: "profile_pics", maxCount: 1 },
+    { name: "verification_docs", maxCount: 10 }
+])
+
 // Process the image into high quality webp images using the sharp function
 const processLocalImage = async (file: Express.Multer.File): Promise<string> => {
     const fileName = `${uuidv4()}.webp`;
@@ -60,7 +66,7 @@ export const ProcessCloudinaryImage = async (file: Express.Multer.File): Promise
         .webp({ quality: QUALITY })
         .toBuffer();
 
-        // Upload to Cloudinary
+    // Upload to Cloudinary
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
             {
@@ -104,8 +110,25 @@ export const ValidateAndProcessUpload = async (req: Request, res: Response, next
     }
 }
 
-export const ValidateAndProcessSingle = async (req: Request, res: Response, next: NextFunction) => {
-    // Get single img
-    // Process with cloudinary
-    // return img
+export const ValidateUserUploads = async (req: Request, res: Response, next: NextFunction) => {
+    const files = req.files as ReqFiles;
+    const { verification_docs, profile_pics } = files;
+    try {
+        if (verification_docs) {
+            const processedVerificationUploads = await Promise.all(
+                verification_docs.map(ProcessCloudinaryImage)
+            );
+            req.verification_docs = processedVerificationUploads;
+        }
+        if (profile_pics) {
+            const processedProfilePic = await ProcessCloudinaryImage(profile_pics[0]);
+            req.profile_pic = processedProfilePic;
+        }
+        next();
+    } catch (error) {
+        console.error(error);
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json({ error: true, message: "Error during image upload" });
+    }
 }

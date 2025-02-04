@@ -102,6 +102,9 @@ const UserSchema = new Schema({
     transactions: [{
         type: Schema.Types.ObjectId,
         ref: "Transaction"
+    }],
+    verification_docs: [{
+        type: String
     }]
 }, { timestamps: true });
 
