@@ -4,12 +4,12 @@ import IWallet from "../types/wallet.schema";
 import PaystackService from "../lib/paystack.service";
 import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
 import { ReferralTransaction, WithdrawalTransaction } from "../payment/transaction.model";
-import { isValidState } from "../lib/utils";
-import { GeospatialDataNigeria } from "../lib/location.data";
+import { resolveLocation } from "../lib/utils";
 import IUser from "../types/user.schema";
 import Expo from "expo-server-sdk";
 import { AppError } from "../lib/error.handler";
 import { StatusCodes } from "http-status-codes";
+import { logger } from "../config/logger.config";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -24,7 +24,7 @@ class UserController {
             return res.status(StatusCodes.OK).json({ success: true, user });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Couldn't fetch user details");
             return res.status(status).json(errResponse);
         }
@@ -39,7 +39,7 @@ class UserController {
             return res.status(StatusCodes.OK).json({ success: true, balance });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error getting wallet balance")
             return res.status(status).json(errResponse);
         }
@@ -71,7 +71,7 @@ class UserController {
                 info: { referral_code, total_referrals, amount_withdrawn, active_referrals, rewards_balance, referral_history }
             })
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error retrieving referral info");
             return res.status(status).json(errResponse);
         }
@@ -103,7 +103,7 @@ class UserController {
             return res.status(StatusCodes.OK).json({ success: true, message: "Bank details updated successfully!" });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error updating bank account details");
             return res.status(status).json(errResponse);
         }
@@ -130,7 +130,7 @@ class UserController {
 
             return res.status(200).json({ success: true, message: "Display picture upload successful" });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error updating display picture" })
         }
     }
@@ -144,31 +144,33 @@ class UserController {
             if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
             if (req.body.location) {
-                if (!isValidState(req.body.location)) {
-                    throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format");
-                }
-                const location = {
-                    human_readable: req.body.location,
-                    coordinates: GeospatialDataNigeria[req.body.location],
-                    type: "Point"
-                }
-                user.location = location;
+                user.location = resolveLocation(req.body.location);
             }
 
             // !todo => Validate phone no schema
-            if (phone_no_1) user.phone_numbers[0] = phone_no_1
-            if (phone_no_2) user.phone_numbers[1] = phone_no_2;
+            const inputedPhoneNos: any = [];
+            if (phone_no_1) {
+                inputedPhoneNos.push(phone_no_1);
+                user.phone_numbers[0] = phone_no_1;
+            }
+            if (phone_no_2) {
+                inputedPhoneNos.push(phone_no_2);
+                user.phone_numbers[1] = phone_no_2;
+            }
 
-            const phoneNumberInUse = await User.findOne({ $or: [{ phone_no_1, phone_no_2 }] });
+            let phoneNumberInUse = false;
+            if (phone_no_1 || phone_no_2) {
+                phoneNumberInUse = !!await User.exists({ phone_numbers: { $in: inputedPhoneNos } });
+            }
             if (phoneNumberInUse) throw new AppError(StatusCodes.BAD_REQUEST, "Phone number in use!");
 
-            if(profilePic) user.display_pic = profilePic;
+            if (profilePic) user.display_pic = profilePic;
             if (verificationDocuments) user.verification_docs = verificationDocuments;
 
             await user.save();
             return res.status(StatusCodes.OK).json({ success: true, message: "User details updated" });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error occured while updating user info");
             return res.status(status).json(errResponse);
         }
@@ -179,23 +181,21 @@ class UserController {
         const { device_push_token } = req.body;
         try {
             const user = await User.findById(req.user?._id);
-            if (!user) {
-                return res.status(404).json({ error: true, message: "User not found!" });
-            }
+            if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
             // Ensure that the device push token matches expo push token fmt
             if (!Expo.isExpoPushToken(device_push_token)) {
-                return res.status(422).json({ error: true, message: "Invalid push token" })
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid push token!");
             }
-
             user.device_push_token = device_push_token;
             await user.save();
 
-            return res.status(200).json({ success: true, message: "Push token updated!" });
+            return res.status(StatusCodes.OK).json({ success: true, message: "Push token updated!" });
 
         } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: true, message: "Error updating the push token" })
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "Error updating the push token")
+            return res.status(status).json(errResponse);
         }
     }
 
