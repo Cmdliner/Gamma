@@ -5,6 +5,7 @@ import type IBid from "../types/bid.schema";
 import { Types } from "mongoose";
 import { compareObjectID, Next5Mins } from "../lib/utils";
 import IProduct from "../types/product.schema";
+import { logger } from "../config/logger.config";
 
 class BidController {
 
@@ -29,7 +30,7 @@ class BidController {
 
             return res.status(200).json({ success: true, message: "Bids found", bids: productBids });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error fetching bids associated with that product" });
         }
 
@@ -43,7 +44,7 @@ class BidController {
             }
             return res.status(200).json({ success: true, message: "Bids found", bids })
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error getting deals" })
         }
     }
@@ -56,7 +57,7 @@ class BidController {
             }
             return res.status(200).json({ success: true, bids });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error fetching bids" })
         }
     }
@@ -66,7 +67,7 @@ class BidController {
         try {
             const bids = await Bid.find({ "product.owner": req.user?._id, status: "rejected" }).populate(["product"])
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error fetching rejected bids" })
         }
     }
@@ -100,7 +101,7 @@ class BidController {
             //!TODO => Send push notifications for bid creation here
             return res.status(201).json({ success: true, message: "Bid for product successful" })
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error sending bid!" });
         }
     }
@@ -129,7 +130,7 @@ class BidController {
             await bid.save();
             return res.status(200).json({ success: true, message: "Bid accepted successfully", bid });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "An error occured while trying to accept bid" });
         }
     }
@@ -155,7 +156,7 @@ class BidController {
 
             return res.status(200).json({ success: true, message: "Bid rejected", bid });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Bid rejection failed" });
         }
 
@@ -168,7 +169,7 @@ class BidController {
             if (!bid) throw new Error("Could not delete that bid");
             return res.status(200).json({ success: true, message: "Bid deleted successfuly" })
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error deleting bid" });
         }
     }

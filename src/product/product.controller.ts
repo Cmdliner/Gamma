@@ -31,6 +31,7 @@ import { ILocation } from "../types/common.type";
 import IProduct from "../types/product.schema";
 import { AppError } from "../lib/error.handler";
 import { StatusCodes } from "http-status-codes";
+import { logger } from "../config/logger.config";
 
 class ProductController {
 
@@ -68,7 +69,7 @@ class ProductController {
             return res.status(StatusCodes.OK).json({ status: true, products: sortedProducts });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Internal server error");
             return res.status(status).json(errResponse);
         }
@@ -128,7 +129,7 @@ class ProductController {
             });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "An error occured during electronics product upload")
             return res.status(status).json(errResponse);
         }
@@ -189,7 +190,7 @@ class ProductController {
             });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "An error occured during property upload");
             return res.status(status).json(errResponse);
         }
@@ -251,7 +252,7 @@ class ProductController {
                 gadget: newGadget
             });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error uploading gadget");
             return res.status(status).json(errResponse);
         }
@@ -316,7 +317,7 @@ class ProductController {
                 vehicle: newVehicle
             });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error uploading vehicle")
             return res.status(status).json(errResponse);
         }
@@ -403,7 +404,7 @@ class ProductController {
                     throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Invalid product category, how did you get here?");
             }
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error uploading product");
             return res.status(status).json(errResponse);
         }
@@ -419,7 +420,7 @@ class ProductController {
 
             return res.status(StatusCodes.OK).json({ success: true, message: "Product found", product });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "An error occured while trying to fetch that product");
             return res.status(status).json(errResponse);
         }
@@ -466,7 +467,7 @@ class ProductController {
 
             return res.status(200).json({ success: true, message: "Products found!", products });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error fetching products" })
         }
     }
@@ -494,7 +495,7 @@ class ProductController {
             return res.status(StatusCodes.NO_CONTENT);
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error deleting product listing");
             return res.status(status).json(errResponse);
         }
@@ -517,7 +518,7 @@ class ProductController {
 
             return res.status(StatusCodes.OK).json({ success: true, message: "Ads found", products: sponsoredProds });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error getting sponsored products");
             return res.status(status).json(errResponse);
         }
@@ -547,7 +548,7 @@ class ProductController {
             return res.status(StatusCodes.OK).json({ success: true, message: "Product updated successfully" });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error editing product");
             return res.status(status).json(errResponse);
         }

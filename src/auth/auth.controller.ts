@@ -16,6 +16,7 @@ import FincraService from "../lib/fincra.service";
 import { cfg } from "../init";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../lib/error.handler";
+import { logger } from "../config/logger.config";
 
 
 class AuthController {
@@ -129,7 +130,7 @@ class AuthController {
             });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             await session.abortTransaction();
 
             const [status, errResponse] = AppError.handle(error, "Error registering user");
@@ -180,7 +181,7 @@ class AuthController {
             });
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
+            logger.error(error);
 
             const [status, errResponse] = AppError.handle(error, "Error sending verification email");
             return res.status(status).json(errResponse);
@@ -228,7 +229,7 @@ class AuthController {
             return res.status(StatusCodes.OK).json({ success: true, message: "User verification successful" });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error verifying email");
             return res.status(status).json(errResponse);
         }
@@ -275,7 +276,7 @@ class AuthController {
             return res.status(StatusCodes.OK).json({ success: true, message: "Password created successfully" });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error setting password");
             return res.status(status).json(errResponse);
         }
@@ -339,7 +340,7 @@ class AuthController {
 
             return res.status(StatusCodes.OK).json({ success: true, message: "Bvn verification successful" });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "An error occured during bvn verification");
             return res.status(status).json(errResponse);
         }
@@ -361,7 +362,7 @@ class AuthController {
             }
             return res.status(StatusCodes.OK).json({ success: true, banks: BankCodes });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: true, message: "Error retrieving bank codes" });
         }
     }
@@ -418,7 +419,7 @@ class AuthController {
 
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
+            logger.error(error);
 
             if (error.code === 11000) {
                 return res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: true, message: "A user exists with that account already" })
@@ -462,7 +463,7 @@ class AuthController {
         } catch (error) {
             await session.abortTransaction();
 
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "An error occured while trying to reset password");
             return res.status(status).json(errResponse);
         } finally {
@@ -501,7 +502,7 @@ class AuthController {
 
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error verifying OTP!");
             return res.status(status).json(errResponse);
         }
@@ -531,7 +532,7 @@ class AuthController {
 
             return res.status(StatusCodes.OK).json({ success: true, message: "Password reset successful" });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error reseting password");
             return res.status(status).json(errResponse);
         }
@@ -565,7 +566,7 @@ class AuthController {
                 refresh_token: refreshToken,
             });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error signing in user");
             return res.status(status).json(errResponse);
         }
@@ -596,7 +597,7 @@ class AuthController {
                 access_token: accessToken
             });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             if ((error as Error).name === 'TokenExpiredError') {
                 return res.status(StatusCodes.FORBIDDEN).json({ error: true, reason: "REFRESH_TOKEN_EXPIRED" })
             }

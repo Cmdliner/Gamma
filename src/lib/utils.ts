@@ -4,6 +4,8 @@ import { GeospatialDataNigeria } from "./location.data";
 import { cfg } from "../init";
 import { type Request, type Response, type NextFunction } from "express";
 import { Options } from "express-rate-limit";
+import { AppError } from "./error.handler";
+import { StatusCodes } from "http-status-codes";
 
 export function compareObjectID(obj1: Types.ObjectId, obj2: Types.ObjectId): boolean {
     return obj1.toString() === obj2.toString();
@@ -106,6 +108,26 @@ export function matchAccNameInDb(
 
 export function rateLimitMiddlewareHandler(_req: Request, res: Response, _next: NextFunction, _: Options) {
     return res.status(429).json({ error: true, message: "Too many requests" });
+}
+
+type LocationType = { type: "Point", human_readable: string, coordinates: [number, number] };
+
+export  function resolveLocation(location: string): LocationType {
+
+    const humanReadableLocation = location;
+
+    if (!isValidState(humanReadableLocation)) {
+        throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format");
+    }
+
+    return {
+        type: "Point",
+        human_readable: humanReadableLocation,
+        coordinates: [
+            GeospatialDataNigeria[humanReadableLocation].lat,
+            GeospatialDataNigeria[humanReadableLocation].long
+        ]
+    };
 }
 
 export const isValidState = (state: string) => GeospatialDataNigeria[state] ? true : false;

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Types, startSession } from "mongoose";
+import { startSession } from "mongoose";
 import Wallet from "../user/wallet.model";
 import FincraService from "../lib/fincra.service";
 import Transaction, { AdSponsorshipTransaction, ProductPurchaseTransaction, ReferralTransaction, RefundTransaction } from "./transaction.model";
@@ -17,6 +17,7 @@ import IProduct from "../types/product.schema";
 import { SafeHavenService } from "../lib/safehaven.service";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../lib/error.handler";
+import { logger } from "../config/logger.config";
 
 
 class PaymentController {
@@ -30,7 +31,7 @@ class PaymentController {
             console.log(verificationRes);
             return res.status(200).json({ error: true, message: verificationRes })
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "An error occured" })
         }
     }
@@ -41,7 +42,7 @@ class PaymentController {
             console.log({ response });
             return res.status(201).json({ success: true })
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true })
         }
     }
@@ -52,7 +53,7 @@ class PaymentController {
             console.log({ result });
             return res.status(200).json({ success: true });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true })
         }
     }
@@ -119,7 +120,7 @@ class PaymentController {
 
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = await AppError.handle(error, "Error withdrawing money from wallet");
             return res.status(status).json(errResponse);
         } finally {
@@ -142,7 +143,7 @@ class PaymentController {
 
             return res.status(StatusCodes.OK).json({ success: true, transactions });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error getting transaction history");
             return res.send(status).json(errResponse);
         }
@@ -236,7 +237,7 @@ class PaymentController {
 
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error purchasing item");
             return res.status(status).json(errResponse);
         } finally {
@@ -272,7 +273,7 @@ class PaymentController {
             const isProductOwner = compareObjectID(product.owner, req.user?._id);
             if (!isProductOwner) throw new AppError(StatusCodes.NOT_FOUND, "Product not found");
 
-            // CHECK IF AD SPONOSRHIP IS NOT YET EXPIRED
+            // CHECK IF AD SPONSORSHIP IS NOT YET EXPIRED
             if (product.sponsorship?.expires?.valueOf() > Date.now()) {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Previous ad sponsorhip is yet to expire");
             }
@@ -303,7 +304,7 @@ class PaymentController {
             });
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error occured during while trying to sponsor product");
             return res.status(status).json(errResponse);
         } finally {
@@ -371,7 +372,7 @@ class PaymentController {
 
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
+            logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error withdrawing rewards!")
         } finally {
             await session.endSession();
@@ -400,7 +401,7 @@ class PaymentController {
 
             return res.status(200).json({ success: true, seller_id: (transaction.product as unknown as IProduct).owner });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Could not send funds to seller" });
         }
     }
@@ -480,7 +481,7 @@ class PaymentController {
             return res.status(200).json({ success: true });
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error sending funds!" });
         } finally {
             await session.endSession()
@@ -527,7 +528,7 @@ class PaymentController {
             return res.status(200).json({ success: true, message: "Seller has been notified of request to refund" });
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Failed to request refund" });
         } finally {
             await session.endSession();
@@ -613,7 +614,7 @@ class PaymentController {
             return res.status(200).json({ success: true, message: "Refund successful!" });
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Refund approval failed!" });
         } finally {
             await session.endSession();
@@ -631,7 +632,7 @@ class PaymentController {
             }
             return res.status(200).json({ success: true, deals });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error getting deals at this moment" });
         }
     }
@@ -647,7 +648,7 @@ class PaymentController {
             }
             return res.status(200).json({ success: true, deals });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error getting deals at the moment" });
         }
     }
@@ -669,7 +670,7 @@ class PaymentController {
             }
             return res.status(200).json({ success: true, deals });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error getting deals at the moment" });
         }
     }
@@ -686,7 +687,7 @@ class PaymentController {
             return res.status(200).json({ success: true, deals });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error getting ongoing dealas" })
         }
     }

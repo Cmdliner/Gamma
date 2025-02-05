@@ -5,6 +5,7 @@ import { compareObjectID } from "../lib/utils";
 import Dispute from "./dispute.model";
 import { ProductPurchaseTransaction } from "../payment/transaction.model";
 import { startSession } from "mongoose";
+import { logger } from "../config/logger.config";
 
 class DisputeController {
     static async raiseDispute(req: Request, res: Response) {
@@ -65,7 +66,7 @@ class DisputeController {
             return res.status(200).json({ success: true, message: "Dispute registered" });
         } catch (error) {
             await session.abortTransaction();
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error raising dispute!" });
         } finally {
             await session.endSession();
@@ -90,7 +91,7 @@ class DisputeController {
             await disputedTransaction.save();
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             return res.status(500).json({ error: true, message: "Error resolving dispute" });
         }
     }
