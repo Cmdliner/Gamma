@@ -294,7 +294,6 @@ class PaymentController {
             await transaction.save({ session });
 
             const fincraRes = await FincraService.sponsorProduct(product, req.user!, sponsorship_duration, transaction.id, payment_method);
-
             await session.commitTransaction();
 
             return res.status(StatusCodes.OK).json({

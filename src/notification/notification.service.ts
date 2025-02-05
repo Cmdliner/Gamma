@@ -1,6 +1,7 @@
 import Expo, { ExpoPushMessage, ExpoPushTicket } from "expo-server-sdk";
 import { Types } from "mongoose";
 import User from "../user/user.model";
+import { logger } from "../config/logger.config";
 
 class NotificationService {
     private expo: Expo;
@@ -25,7 +26,7 @@ class NotificationService {
         try {
             const user = await User.findById(user_id);
             if (!user?.device_push_token) {
-                console.error(`Invalid pushtoken ${user.device_push_token} for user ${user_id}`);
+                logger.error(`Invalid pushtoken ${user.device_push_token} for user ${user_id}`);
                 return false;
             }
 
@@ -50,14 +51,14 @@ class NotificationService {
             // Handle tickets (you might want to store these in your database)
             for (const ticket of tickets) {
                 if (ticket.status === 'error') {
-                    console.error(`Error sending notification: ${ticket.message}`);
+                    logger.error(`Error sending notification: ${ticket.message}`);
                     return false;
                 }
             }
 
             return true;
         } catch (error) {
-            console.error('Error in sendPushNotification:', error);
+            logger.error('Error in sendPushNotification:', error);
             return false;
         }
     }

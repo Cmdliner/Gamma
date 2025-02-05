@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Receipt</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #E8EAED;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .receipt-container {
+            width: 334px;
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            width: 106px;
+            height: 38.58px;
+        }
+
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #EDEDED;
+        }
+
+        .receipt-header h1 {
+            color: #121212;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .receipt-header p {
+            color: #008751;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .amount-section {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #EDEDED;
+        }
+
+        .amount-label {
+            color: #707070;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .amount {
+            color: #121212;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .detail-group {
+            border-bottom: 1px solid #EDEDED;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+        }
+
+        .detail-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .detail-label {
+            color: #707070;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            color: #121212;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .transaction-id {
+            word-break: break-all;
+        }
+
+        .detail-column {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <div class="logo-container">
+            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Frame%202085660650-hClbDOxSpVLxTQmfF9843qTOgpC2z5.png" alt="Oyeah! Escrow" class="logo">
+        </div>
+        
+        <div class="receipt-header">
+            <h1>Ad Payment Receipt</h1>
+            <p>Your Payment was Successful</p>
+        </div>
+
+        <div class="amount-section">
+            <div class="amount-label">Amount</div>
+            <div class="amount">₦{{amount}}</div>
+        </div>
+
+        <div class="detail-group">
+            <div class="detail-label">Payment Date & Time</div>
+            <div class="detail-value">{{payment_date}}</div>
+        </div>
+
+        <div class="detail-group">
+            <div class="detail-row">
+                <div class="detail-column">
+                    <div class="detail-label">Item Transaction</div>
+                    <div class="detail-value">{{item_name}}</div>
+                </div>
+                <div class="detail-column">
+                    <div class="detail-label">Payment Method</div>
+                    <div class="detail-value">{{payment_method}}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-group">
+            <div class="detail-label">Transaction ID</div>
+            <div class="detail-value transaction-id">{{tx_id}}</div>
+        </div>
+
+        <div class="detail-group">
+            <div class="detail-label">Destination</div>
+            <div class="detail-value">{{destination}}</div>
+        </div>
+    </div>
+</body>
+</html>

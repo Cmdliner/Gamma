@@ -7,6 +7,9 @@ import { AdSponsorshipTransaction, ProductPurchaseTransaction, RefundTransaction
 import User from "../user/user.model";
 import { cfg } from "../init";
 import FincraService from "../lib/fincra.service";
+import EmailService from "../lib/email.service";
+import IUser from "../types/user.schema";
+import { logger } from "../config/logger.config";
 
 class WebhookService {
 
@@ -72,17 +75,28 @@ class WebhookService {
             const product = await Product.findByIdAndUpdate(payload.data.metadata.product_id, {
                 "sponsorship.sponsored_at": new Date(),
                 "sponsorship.expires": expiry
-            }, { new: true, session });
+            }, { new: true, session }).populate("owner");
             if (!product) throw new Error();
 
             // Update transaction status
-            await AdSponsorshipTransaction.findByIdAndUpdate(payload.data.reference, {
+            const tx = await AdSponsorshipTransaction.findByIdAndUpdate(payload.data.reference, {
                 external_ref: payload.data.chargeReference,
                 status: "success"
             }, { new: true, session });
+
+            const user = (product.owner as any as IUser);
+            await EmailService.sendMailWithAttachment({
+                kind: "ads_receipt",
+                amount: tx.amount,
+                tx_id: tx.id,
+                to: user.email,
+                user,
+                destination: 'Oyeah Technologies Limited'
+            });
             await session.commitTransaction();
         } catch (error) {
             await session.abortTransaction();
+            logger.error(error);
             throw error;
         } finally {
             await session.endSession();
@@ -163,7 +177,7 @@ class WebhookService {
                 return result
             }
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             throw error;
         }
     }
