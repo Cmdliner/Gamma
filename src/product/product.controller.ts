@@ -58,7 +58,7 @@ class ProductController {
 
                 searchQuery = ProductService.buildSearchQueryForCategories(searchWords, productCategory);
             }
-            
+
             // Fetch products
             const products = await Product.find({ deleted_at: { $exists: false }, ...searchQuery })
                 .limit(Number(limit))
@@ -526,8 +526,6 @@ class ProductController {
                 limit,
                 skips
             );
-
-            console.log({ products, skips, limit, page });
 
             // Check if no products were found and return 404 if so
             if (productsCount === 0 || !products.length) {

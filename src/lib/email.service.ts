@@ -122,6 +122,7 @@ class EmailService {
             };
 
             const pdfDoc = await pdf.create(document, this.pdfOptions);
+            console.log(pdfDoc);
 
             // Send email
             const mailOptions: Mail.Options = {
@@ -136,7 +137,7 @@ class EmailService {
             };
             await this.transporter.sendMail(mailOptions);
         } catch (error) {
-            logger.error(error);
+            console.error(error);
             throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Error sending email");
         }
     }
