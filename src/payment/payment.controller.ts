@@ -276,7 +276,7 @@ class PaymentController {
             const pendingSponsorshipTx = await AdSponsorshipTransaction.findOne({
                 bearer: req.user?._id,
                 product: product._id,
-                "sponsorship.status": "pending"
+                status: "pending"
                 // !todo => check for when it was created
             });
             if(pendingSponsorshipTx) throw new AppError(StatusCodes.BAD_REQUEST, "Processing pending payments");
@@ -294,7 +294,7 @@ class PaymentController {
             const transaction = new AdSponsorshipTransaction({
                 bearer: req.user?._id,
                 product: product._id,
-                "sponsorship.status": "pending",
+                status: "pending",
                 payment_method: payment_method,
                 reason: `To run ads for ${product.name} for a duration of ${adsDurationFmt}`,
                 amount: sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly
