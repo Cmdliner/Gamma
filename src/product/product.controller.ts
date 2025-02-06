@@ -50,9 +50,9 @@ class ProductController {
             // Build query
             let searchQuery = ProductService.buildSearchQuery(searchWords);
             const offset = (Number(page) - 1) * Number(limit);
-            
+
             // Check if its product category based search
-            if(productCategory) {
+            if (productCategory) {
                 const isValidCategory = allowedCategories.includes(productCategory);
                 if (!isValidCategory) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid product category!");
 
@@ -584,15 +584,23 @@ class ProductController {
     static async getSponsoredProducts(req: Request, res: Response) {
         try {
             const { productCategory } = req.params;
+            const { status }: { status: string } = req.query as any;
 
             const isValidProductCategory = allowedCategories.includes(productCategory);
-            if (!isValidProductCategory) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid product category");
+            if (!isValidProductCategory) {
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid product category");
+            }
+            const validAdStatuses = ["under_review", "active"];
+            const isValidAdStatus = validAdStatuses.includes(status)
+            if (!isValidAdStatus) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid status");
+
             const now = new Date();
             const sponsoredProds = await Product.find({
                 deleted_at: { $exists: false },
                 category: productCategory,
                 sponsorship: { $exists: true },
                 "sponsorship.expires": { $gte: now },
+                "sponsorship.status": status
             });
             if (!sponsoredProds.length) throw new AppError(StatusCodes.NOT_FOUND, "No sponsored products found");
 

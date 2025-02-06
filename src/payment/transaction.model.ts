@@ -19,7 +19,7 @@ const TransactionSchema = new Schema({
             "WithdrawalTransaction",
             "ProductPurchaseTransaction",
             "RefundTransaction",
-            "AdSponsorhipTransaction",
+            "AdSponsorshipTransaction",
         ],
         required: true,
     },
@@ -117,7 +117,7 @@ const RefundTransactionSchema = new Schema({
     }
 });
 
-const AdSponsorhipTransactionSchema = new Schema({
+const AdSponsorshipTransactionSchema = new Schema({
     payment_method: {
         type: String,
         enum: ['card', 'bank_transfer'],
@@ -168,13 +168,13 @@ const Transaction = model<ITransaction>("Transaction", TransactionSchema);
  * @deprecated
  *  Use individual Transaction models for Payment
  *  @see RefundTransaction
- *  @see AdSponsorhipTransaction
+ *  @see AdSponsorshipTransaction
  *  @see ProductPurchaseTransaction
  */
 export const PaymentTransaction = Transaction.discriminator("PaymentTransaction", PaymentTransactionShema);
 export const ProductPurchaseTransaction = Transaction.discriminator<IProductPurchaseTransaction>("ProductPurchaseTransaction", ProductPurchaseTransactionSchema);
 export const RefundTransaction = Transaction.discriminator<IRefundTransaction>("RefundTransaction", RefundTransactionSchema);
-export const AdSponsorshipTransaction = Transaction.discriminator<IAdSponsorshipTransaction>("AdSponsorshipTransaction", AdSponsorhipTransactionSchema);
+export const AdSponsorshipTransaction = Transaction.discriminator<IAdSponsorshipTransaction>("AdSponsorshipTransaction", AdSponsorshipTransactionSchema);
 export const ReferralTransaction = Transaction.discriminator<IReferralTransaction>("ReferralTransaction", ReferralTransactionSchema);
 export const WithdrawalTransaction = Transaction.discriminator<IWithdrawalTransaction>("WithdrawalTransaction", WithdrawalTransactionSchema);
 

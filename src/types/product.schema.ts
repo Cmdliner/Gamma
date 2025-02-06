@@ -28,6 +28,7 @@ interface IProduct extends Document {
     sponsorship: {
         sponsored_at: Date;
         expires: Date;
+        status: "active" | "pending" | "under_review";
     };
 }
 

@@ -5,7 +5,7 @@ interface ITransaction extends Document {
     | "ReferralTransaction"
     | "WithdrawalTransaction"
     | "ProductPurchaseTransaction"
-    | "AdSponsorhipTransaction"
+    | "AdSponsorshipTransaction"
     | "RefundTransaction";
     bearer: Types.ObjectId;
     amount: number;

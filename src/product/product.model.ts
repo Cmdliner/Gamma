@@ -73,6 +73,7 @@ const ProductSchema = new Schema({
     sponsorship: {
         sponsored_at: { type: Date },
         expires: { type: Date },
+        status: { type: String, enum: ["active", "pending", "under_review"]}
     },
     deleted_at: {
         type: Schema.Types.ObjectId

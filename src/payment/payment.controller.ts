@@ -129,8 +129,7 @@ class PaymentController {
     }
 
     // !TODO => verify transaction
-    static async verifyPayment(req: Request, res: Response) {
-    }
+    static async verifyPayment(_req: Request, _res: Response) {}
 
     static async getTransactionHistory(req: Request, res: Response) {
         try {
@@ -257,7 +256,7 @@ class PaymentController {
                 throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "sponsorship_duration and payment_method required!");
             }
 
-            // VALIDATE SPONSORSHIP DURATION AND PAYMENT METHOD
+            // Validate sponsorship and payment method
             const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
             if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
@@ -277,14 +276,14 @@ class PaymentController {
             const pendingSponsorshipTx = await AdSponsorshipTransaction.findOne({
                 bearer: req.user?._id,
                 product: product._id,
-                status: "pending"
+                "sponsorship.status": "pending"
                 // !todo => check for when it was created
             });
             if(pendingSponsorshipTx) throw new AppError(StatusCodes.BAD_REQUEST, "Processing pending payments");
 
             // CHECK IF AD SPONSORSHIP IS NOT YET EXPIRED
             if (product.sponsorship?.expires?.valueOf() > Date.now()) {
-                throw new AppError(StatusCodes.BAD_REQUEST, "Previous ad sponsorhip is yet to expire");
+                throw new AppError(StatusCodes.BAD_REQUEST, "Previous ad sponsorship is yet to expire");
             }
 
             // CHECK IF PRODUCT IS SOLD
@@ -295,11 +294,11 @@ class PaymentController {
             const transaction = new AdSponsorshipTransaction({
                 bearer: req.user?._id,
                 product: product._id,
-                status: "pending",
+                "sponsorship.status": "pending",
                 payment_method: payment_method,
                 reason: `To run ads for ${product.name} for a duration of ${adsDurationFmt}`,
                 amount: sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly
-            })
+            });
             await transaction.save({ session });
 
             const fincraRes = await FincraService.sponsorProduct(product, req.user!, sponsorship_duration, transaction.id, payment_method);
@@ -337,7 +336,7 @@ class PaymentController {
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
             const transactionsInThePast30Days = await Transaction.find({
                 bearer: req.user?._id,
-                kind: { $or: ["ProductPurchaseTransaction", "AdSponsorhipTransaction"] },
+                kind: { $or: ["ProductPurchaseTransaction", "AdSponsorshipTransaction"] },
                 createdAt: { $gte: thirtyDaysAgo }
             }).session(session);
 
