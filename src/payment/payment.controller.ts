@@ -273,6 +273,15 @@ class PaymentController {
             const isProductOwner = compareObjectID(product.owner, req.user?._id);
             if (!isProductOwner) throw new AppError(StatusCodes.NOT_FOUND, "Product not found");
 
+            // Check if product has pending sponsorship Transactions
+            const pendingSponsorshipTx = await AdSponsorshipTransaction.findOne({
+                bearer: req.user?._id,
+                product: product._id,
+                status: "pending"
+                // !todo => check for when it was created
+            });
+            if(pendingSponsorshipTx) throw new AppError(StatusCodes.BAD_REQUEST, "Processing pending payments");
+
             // CHECK IF AD SPONSORSHIP IS NOT YET EXPIRED
             if (product.sponsorship?.expires?.valueOf() > Date.now()) {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Previous ad sponsorhip is yet to expire");
