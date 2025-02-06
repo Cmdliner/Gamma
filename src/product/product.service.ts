@@ -71,6 +71,19 @@ class ProductService {
         };
     }
 
+    static buildSearchQueryForCategories(words: string[], category: string) {
+        return {
+            category,
+            $and: words.map((word) => ({
+                $or: [
+                    { title: this.createSearchRegex(word) },
+                    { description: this.createSearchRegex(word) },
+                    { category: this.createSearchRegex(word) },
+                ],
+            })),
+        };
+    }
+
     static calculateRelevanceScore(product: IProduct, searchWords: string[]) {
         return searchWords.reduce((score, word) => {
             const regex = new RegExp(word, 'i');

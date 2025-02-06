@@ -37,6 +37,7 @@ class ProductController {
 
     static async search(req: Request, res: Response) {
         const { q, page = 1, limit = 10 } = req.query;
+        const { productCategory } = req.params;
         try {
             if (!q) {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Query parameter 'q' is required")
@@ -47,9 +48,17 @@ class ProductController {
             }
 
             // Build query
-            const searchQuery = ProductService.buildSearchQuery(searchWords);
+            let searchQuery = ProductService.buildSearchQuery(searchWords);
             const offset = (Number(page) - 1) * Number(limit);
+            
+            // Check if its product category based search
+            if(productCategory) {
+                const isValidCategory = allowedCategories.includes(productCategory);
+                if (!isValidCategory) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid product category!");
 
+                searchQuery = ProductService.buildSearchQueryForCategories(searchWords, productCategory);
+            }
+            
             // Fetch products
             const products = await Product.find({ deleted_at: { $exists: false }, ...searchQuery })
                 .limit(Number(limit))
@@ -475,15 +484,15 @@ class ProductController {
     static async getAllProductsInCategory(req: Request, res: Response) {
         try {
             const { productCategory } = req.params;
-    
+
             // Find the user
             const user = await User.findById(req.user?._id);
             if (!user) throw new AppError(StatusCodes.BAD_REQUEST, "User not found");
-    
+
             // Default pagination values
             let page = 1;
             let limit = 10;
-    
+
             // Optional: Get page and limit from query parameters
             if (!isNaN(parseInt(req.query.page as string))) {
                 page = parseInt(req.query.page as string);
@@ -491,25 +500,25 @@ class ProductController {
             if (!isNaN(parseInt(req.query.limit as string))) {
                 limit = parseInt(req.query.limit as string);
             }
-    
+
             // Skip calculation for pagination
             const skips = (page - 1) * limit;
-    
+
             // Validate product category
             const isValidCategory = allowedCategories.includes(productCategory);
             if (!isValidCategory) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid product category!");
-    
+
             // Get the total number of products for the category
             const productsCount = await Product.find({
                 category: productCategory,
                 deleted_at: { $exists: false },  // Exclude soft deleted products
             }).countDocuments();
-    
+
             // Validate page number - return 404 if the page does not exist
             if (page > Math.ceil(productsCount / limit) && productsCount > 0) {
                 throw new AppError(StatusCodes.NOT_FOUND, "Oops... Could not find that page");
             }
-    
+
             // Fetch products for the category with pagination
             const products = await ProductService.filterAndSortByLocation(
                 user.location?.coordinates,
@@ -518,13 +527,13 @@ class ProductController {
                 skips
             );
 
-            console.log({products, skips, limit, page});
-    
+            console.log({ products, skips, limit, page });
+
             // Check if no products were found and return 404 if so
             if (productsCount === 0 || !products.length) {
                 throw new AppError(StatusCodes.NOT_FOUND, "No products found for this category");
             }
-    
+
             // Return the products
             return res.status(200).json({
                 success: true,
@@ -540,10 +549,10 @@ class ProductController {
         } catch (error) {
             logger.error(error);
             const [status, errResponse] = await AppError.handle(error, "Error fetching products");
-            return res.status(status    ).json(errResponse);
+            return res.status(status).json(errResponse);
         }
     }
-    
+
 
     static async deleteProductListing(req: Request, res: Response) {
         try {
@@ -612,7 +621,7 @@ class ProductController {
             }
 
             // Find all pending bids and reject them
-             await Bid.updateMany(
+            await Bid.updateMany(
                 { product: product._id, status: "pending" },
                 { $set: { status: "rejected" } }
             );
