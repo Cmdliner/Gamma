@@ -7,7 +7,6 @@ import { AdSponsorshipTransaction, ProductPurchaseTransaction, RefundTransaction
 import User from "../user/user.model";
 import { cfg } from "../init";
 import FincraService from "../lib/fincra.service";
-import EmailService from "../lib/email.service";
 import IUser from "../types/user.schema";
 import { logger } from "../config/logger.config";
 
@@ -85,14 +84,7 @@ class WebhookService {
             }, { new: true, session });
 
             const user = (product.owner as any as IUser);
-            / *await EmailService.sendMailWithAttachment({
-                kind: "ads_receipt",
-                amount: tx.amount,
-                tx_id: tx.id,
-                to: user.email,
-                user,
-                destination: 'Oyeah Technologies Limited'
-            });*/
+
             await session.commitTransaction();
         } catch (error) {
             await session.abortTransaction();
