@@ -427,7 +427,7 @@ class ProductController {
     }
 
     // Get all products in a single category
-    static async getAllProductsInCategory(req: Request, res: Response) {
+    static async getAllProductsInCategoryOld(req: Request, res: Response) {
         try {
             const { productCategory } = req.params;
 
@@ -471,6 +471,79 @@ class ProductController {
             return res.status(500).json({ error: true, message: "Error fetching products" })
         }
     }
+
+    static async getAllProductsInCategory(req: Request, res: Response) {
+        try {
+            const { productCategory } = req.params;
+    
+            // Find the user
+            const user = await User.findById(req.user?._id);
+            if (!user) throw new AppError(StatusCodes.BAD_REQUEST, "User not found");
+    
+            // Default pagination values
+            let page = 1;
+            let limit = 10;
+    
+            // Optional: Get page and limit from query parameters
+            if (!isNaN(parseInt(req.query.page as string))) {
+                page = parseInt(req.query.page as string);
+            }
+            if (!isNaN(parseInt(req.query.limit as string))) {
+                limit = parseInt(req.query.limit as string);
+            }
+    
+            // Skip calculation for pagination
+            const skips = (page - 1) * limit;
+    
+            // Validate product category
+            const isValidCategory = allowedCategories.includes(productCategory);
+            if (!isValidCategory) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid product category!");
+    
+            // Get the total number of products for the category
+            const productsCount = await Product.find({
+                category: productCategory,
+                deleted_at: { $exists: false },  // Exclude soft deleted products
+            }).countDocuments();
+    
+            // Validate page number - return 404 if the page does not exist
+            if (page > Math.ceil(productsCount / limit) && productsCount > 0) {
+                throw new AppError(StatusCodes.NOT_FOUND, "Oops... Could not find that page");
+            }
+    
+            // Fetch products for the category with pagination
+            const products = await ProductService.filterAndSortByLocation(
+                user.location?.coordinates,
+                productCategory,
+                limit,
+                skips
+            );
+
+            console.log({products, skips, limit, page});
+    
+            // Check if no products were found and return 404 if so
+            if (productsCount === 0 || !products.length) {
+                throw new AppError(StatusCodes.NOT_FOUND, "No products found for this category");
+            }
+    
+            // Return the products
+            return res.status(200).json({
+                success: true,
+                message: "Products found!",
+                products,
+                pagination: {
+                    page,
+                    limit,
+                    totalProducts: productsCount,
+                    totalPages: Math.ceil(productsCount / limit),
+                },
+            });
+        } catch (error) {
+            logger.error(error);
+            const [status, errResponse] = await AppError.handle(error, "Error fetching products");
+            return res.status(status    ).json(errResponse);
+        }
+    }
+    
 
     static async deleteProductListing(req: Request, res: Response) {
         try {
