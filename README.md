@@ -35,9 +35,11 @@ bun run dev
 
 ## BUGS
 - Payment links might never expire (check again with fincra)
-
+- Pending sponsorships can be retried even when previous payment status hasn't been confirmed
+  
 ## TODOS
 - Add auto sign-in after last phase of onboarding
+- Implement under_review for ads
 - Indempotency key on payment
 - Handle actual refund logic in cron job
 - Seller reject refund enter dispute

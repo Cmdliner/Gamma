@@ -1,0 +1,24 @@
+{"level":"error","message":"No products found for this category","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:29:40.038 AM"}
+{"level":"error","message":"No products found for this category","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:32:11.513 AM"}
+{"level":"error","message":"Oops... Could not find that page","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:32:36.585 AM"}
+{"level":"error","message":"No products found for this category","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:32:51.266 AM"}
+{"level":"error","message":"No products found for this category","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:33:42.802 AM"}
+{"level":"error","message":"Oops... Could not find that page","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:33:51.153 AM"}
+{"level":"error","message":"No products found for this category","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:36:23.563 AM"}
+{"level":"error","message":"No products found for this category","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:36:32.954 AM"}
+{"level":"error","message":"No products found for this category","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:36:44.333 AM"}
+{"level":"error","message":"No products found for this category","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:37:59.912 AM"}
+{"level":"error","message":"No products found for this category","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:38:49.449 AM"}
+{"level":"error","message":"Invalid product category!","name":"APP_ERROR","status":400,"timestamp":"2025-02-06 03:42:15.379 AM"}
+{"level":"error","message":"Invalid product category!","name":"APP_ERROR","status":400,"timestamp":"2025-02-06 03:42:27.136 AM"}
+{"level":"error","message":"Invalid product category!","name":"APP_ERROR","status":400,"timestamp":"2025-02-06 03:42:37.900 AM"}
+{"level":"error","message":"No products found for this category","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:43:53.241 AM"}
+{"level":"error","message":"No sponsored products found","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 03:53:56.107 AM"}
+{"level":"error","message":"No products found","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 04:08:23.294 AM"}
+{"level":"error","message":"No products found","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 04:09:47.047 AM"}
+{"level":"error","message":"No products found","name":"APP_ERROR","status":404,"timestamp":"2025-02-06 04:10:03.438 AM"}
+{"level":"error","timestamp":"2025-02-06 04:34:49.311 AM"}
+{"level":"error","message":"Error sending email","name":"APP_ERROR","status":500,"timestamp":"2025-02-06 04:34:49.669 AM"}
+{"level":"error","timestamp":"2025-02-06 04:41:42.047 AM"}
+{"level":"error","message":"Error sending email","name":"APP_ERROR","status":500,"timestamp":"2025-02-06 04:44:52.213 AM"}
+{"level":"error","message":"Error sending email","name":"APP_ERROR","status":500,"timestamp":"2025-02-06 04:52:37.319 AM"}

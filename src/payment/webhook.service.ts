@@ -7,7 +7,6 @@ import { AdSponsorshipTransaction, ProductPurchaseTransaction, RefundTransaction
 import User from "../user/user.model";
 import { cfg } from "../init";
 import FincraService from "../lib/fincra.service";
-import IUser from "../types/user.schema";
 import { logger } from "../config/logger.config";
 
 class WebhookService {
@@ -70,10 +69,11 @@ class WebhookService {
             else if (amountPaid === AdPayments.monthly) expiry = OneMonthFromNow;
             else {/*handle underpayments here */ }
 
-            // Update product expiry
+            // Update product expiry and active status
             const product = await Product.findByIdAndUpdate(payload.data.metadata.product_id, {
                 "sponsorship.sponsored_at": new Date(),
-                "sponsorship.expires": expiry
+                "sponsorship.expires": expiry,
+                "sponsorship.status": "active",
             }, { new: true, session }).populate("owner");
             if (!product) throw new Error();
 
@@ -83,12 +83,11 @@ class WebhookService {
                 status: "success"
             }, { new: true, session });
 
-            const user = (product.owner as any as IUser);
 
             await session.commitTransaction();
         } catch (error) {
             await session.abortTransaction();
-            logger.error(error);
+            console.error(error);
             throw error;
         } finally {
             await session.endSession();

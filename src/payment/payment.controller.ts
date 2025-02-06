@@ -278,15 +278,18 @@ class PaymentController {
                 product: product._id,
                 status: "pending"
                 // !todo => check for when it was created
-            });
-            if(pendingSponsorshipTx) throw new AppError(StatusCodes.BAD_REQUEST, "Processing pending payments");
+            }).session(session);
 
-            // CHECK IF AD SPONSORSHIP IS NOT YET EXPIRED
+            if(pendingSponsorshipTx || product.sponsorship.status ==="pending") {
+                throw new AppError(StatusCodes.BAD_REQUEST, "Processing pending payments");
+            }
+
+            // Check if ad sponsorship is not yet expired
             if (product.sponsorship?.expires?.valueOf() > Date.now()) {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Previous ad sponsorship is yet to expire");
             }
 
-            // CHECK IF PRODUCT IS SOLD
+            // Check if product is sold
             if (product.status === "sold") throw new AppError(StatusCodes.BAD_REQUEST, "Product sold!");
 
             // Create Transaction for ad sponsorhsip
