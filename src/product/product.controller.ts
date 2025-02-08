@@ -583,13 +583,8 @@ class ProductController {
 
     static async getSponsoredProducts(req: Request, res: Response) {
         try {
-            const { productCategory } = req.params;
             const { status }: { status: string } = req.query as any;
 
-            const isValidProductCategory = allowedCategories.includes(productCategory);
-            if (!isValidProductCategory) {
-                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid product category");
-            }
             const validAdStatuses = ["under_review", "active"];
             const isValidAdStatus = validAdStatuses.includes(status)
             if (!isValidAdStatus) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid status");
@@ -597,7 +592,6 @@ class ProductController {
             const now = new Date();
             const sponsoredProds = await Product.find({
                 deleted_at: { $exists: false },
-                category: productCategory,
                 sponsorship: { $exists: true },
                 "sponsorship.expires": { $gte: now },
                 "sponsorship.status": status

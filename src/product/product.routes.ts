@@ -17,7 +17,7 @@ product.post("/upload-machinery", UploadMiddleware, ValidateAndProcessUpload, Pr
 product.post("/upload-others", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadGenericProduct);
 product.post("/upload-fashionwears", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadGenericProduct);
 product.put("/:productID", ProductController.editProduct);
-product.get("/:productCategory/sponsored",ProductController.getSponsoredProducts);  
+product.get("/sponsored",ProductController.getSponsoredProducts);  
 product.delete("/:productID",ProductController.deleteProductListing);
 
 export default product;
