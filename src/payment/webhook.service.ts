@@ -40,6 +40,7 @@ class WebhookService {
                 const transaction = await ProductPurchaseTransaction.findById(payload.data.reference).session(session);
                 if (!transaction) throw new Error("Transaction not found");
                 if (payload.data.amountToSettle > 0 && payload.data.metadata.amount_expected === product.price) {
+		    console.log("Transaction is noe in escrow");
                     transaction.status = "in_escrow";
                     transaction.external_ref = payload.data.chargeReference
                     await transaction.save({ session });
