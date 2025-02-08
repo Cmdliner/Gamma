@@ -24,7 +24,7 @@ class BidController {
             }
 
             const productBids = await Bid.find({ product: productID }).populate(["buyer", "product"]);
-            if (!productBids || !productBids.length) {
+            if (!productBids.length) {
                 return res.status(404).json({ error: true, message: "No bids found" });
             }
 
@@ -38,7 +38,7 @@ class BidController {
 
     static async getAllReceivedBids(req: Request, res: Response) {
         try {
-            const bids = await Bid.find({ status: "accepted", seller: req.user?._id }).populate("buyer");
+            const bids = await Bid.find({ status: "pending", seller: req.user?._id }).populate("buyer");
             if (!bids) {
                 return res.status(404).json({ error: true, message: "No bids found!" });
             }
@@ -65,7 +65,7 @@ class BidController {
 
     static async getRejectedBids(req: Request, res: Response) {
         try {
-            const bids = await Bid.find({ "product.owner": req.user?._id, status: "rejected" }).populate(["product"])
+            const bids = await Bid.find({ seller: req.user?._id, status: "rejected" }).populate(["product"])
         } catch (error) {
             logger.error(error);
             return res.status(500).json({ error: true, message: "Error fetching rejected bids" })
@@ -90,7 +90,8 @@ class BidController {
             const canBidForItem = !compareObjectID(req.user?._id, product.owner);
             if (!canBidForItem) return res.status(400).json({ error: true, message: "Cannot bid for your own item!" });
 
-            const bidData: Pick<IBid, "buyer" | "negotiating_price" | "product"> = {
+            const bidData: Pick<IBid, "seller" | "buyer" | "negotiating_price" | "product"> = {
+                seller: product.owner,
                 buyer: req.user?._id,
                 negotiating_price,
                 product: new Types.ObjectId(productID)
@@ -115,11 +116,8 @@ class BidController {
 
             // ENSURE CURRENT USER IS PRODUCT OWNER
             const userId = req.user?._id;
-            const productOwner = (bid.product as unknown as IProduct).owner;
-            const isProductOwner = compareObjectID(userId, productOwner);
-            if (!isProductOwner) {
-                return res.status(400).json({ error: true, message: "Unauthorized!" });
-            }
+            const isProductOwner = compareObjectID(userId, bid.seller);
+            if (!isProductOwner) return res.status(400).json({ error: true, message: "Unauthorized!" });
 
 
             bid.status = "accepted";
@@ -138,18 +136,14 @@ class BidController {
     static async rejectBid(req: Request, res: Response) {
         try {
             const { bidID } = req.params;
-            const bid = await Bid.findById(bidID).populate("product");
+            const bid = await Bid.findById(bidID);
             if (!bid) return res.status(404).json({ error: true, message: "Bid not found!" });
 
 
             // ENSURE CURRENT USER IS PRODUCT OWNER
-            const userId = req.user?._id;
-            const productOwner = (bid.product as unknown as IProduct).owner;
-            const isProductOwner = compareObjectID(userId, productOwner);
-            if (!isProductOwner) {
-                return res.status(400).json({ error: true, message: "Unauthorized!" });
-            }
-
+            const currentUser = req.user?._id;
+            const isProductOwner = compareObjectID(currentUser, bid.seller);
+            if (!isProductOwner) return res.status(400).json({ error: true, message: "Unauthorized!" });
 
             bid.status = "rejected";
             await bid.save();
