@@ -27,7 +27,7 @@ class WebhookService {
         try {
             session.startTransaction();
             if (payload.data.status === "success") {
-                console.dir({payload.data});
+                console.dir({payload_data: payload.data});
                 const { product_id } = payload.data.metadata;
 
                 const product = await Product.findById(product_id).session(session);
