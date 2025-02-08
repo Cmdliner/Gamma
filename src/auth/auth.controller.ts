@@ -174,6 +174,8 @@ class AuthController {
             await emailVToken.save({ session });
             await user.save({ session });
 
+            await session.commitTransaction();
+
             return res.status(StatusCodes.OK).json({
                 success: true,
                 onboarding_token: onboardingToken,
@@ -219,10 +221,9 @@ class AuthController {
 
             const userVerificationOTP = await OTP.findOneAndDelete({ kind: "verification", owner: user._id, token: otp });
             if (!userVerificationOTP) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid OTP!");
-            if (!user.email_verified) {
+            if (user.email_verified) {
                 return res.status(StatusCodes.OK).json({ success: true, message: "User verification successful" });
             }
-
             user.email_verified = true;
             await user.save();
 
