@@ -6,8 +6,9 @@ const product = Router();
 
 product.get("/search", ProductController.search);
 product.get("/search/:productCategory", ProductController.search);
-product.get("/:productID", ProductController.getProductInfo);
+product.get("/sponsored",ProductController.getSponsoredProducts);  
 product.get("/categories/:productCategory",ProductController.getAllProductsInCategory);
+product.get("/:productID", ProductController.getProductInfo);
 product.post("/upload-gadget", UploadMiddleware, ValidateAndProcessUpload,ProductController.uploadGadget);
 product.post("/upload-vehicle", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadVehicle);
 product.post("/upload-landed-property", UploadMiddleware, ValidateAndProcessUpload, ProductController.addLandedProperty);
@@ -17,7 +18,6 @@ product.post("/upload-machinery", UploadMiddleware, ValidateAndProcessUpload, Pr
 product.post("/upload-others", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadGenericProduct);
 product.post("/upload-fashionwears", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadGenericProduct);
 product.put("/:productID", ProductController.editProduct);
-product.get("/sponsored",ProductController.getSponsoredProducts);  
 product.delete("/:productID",ProductController.deleteProductListing);
 
 export default product;
