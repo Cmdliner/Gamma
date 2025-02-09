@@ -27,11 +27,11 @@ class WebhookService {
         try {
             session.startTransaction();
             if (payload.data.status === "success") {
-                console.dir({payload_data: payload.data});
+                console.dir({ payload_data: payload.data });
                 const { product_id } = payload.data.metadata;
 
                 const product = await Product.findById(product_id).session(session);
-                console.dir({product});
+                console.dir({ product });
                 if (!product) throw new Error("Product not found");
                 product.status = "sold";
                 await product.save({ session });
@@ -39,8 +39,8 @@ class WebhookService {
                 // Transaction
                 const transaction = await ProductPurchaseTransaction.findById(payload.data.reference).session(session);
                 if (!transaction) throw new Error("Transaction not found");
-                if (payload.data.amountToSettle > 0 && payload.data.metadata.amount_expected === product.price) {
-		    console.log("Transaction is noe in escrow");
+                if (payload.data.amountToSettle > 0 && payload.data.metadata.amount_expected === payload.data.amount) {
+                    console.log("Transaction is noe in escrow");
                     transaction.status = "in_escrow";
                     transaction.external_ref = payload.data.chargeReference
                     await transaction.save({ session });
@@ -135,9 +135,9 @@ class WebhookService {
                 product.status = "available";
                 product.purchase_lock = undefined;
                 await product.save();
-    
+
                 if (!product) throw new Error("Product not found");
-    
+
                 // Payment transaction
                 const transaction = await ProductPurchaseTransaction.findById(payload.data.reference);
                 if (!transaction) throw new Error("Transaction not found");
@@ -146,15 +146,15 @@ class WebhookService {
                     transaction.external_ref = payload.data.chargeReference
                     await transaction.save();
                 }
-    
+
                 // User
                 const user = await User.findById(transaction.bearer);
-                if(!user) throw new Error("User not found");
-    
-    
+                if (!user) throw new Error("User not found");
+
+
                 const OYEAH_REFUND_CUT = (0.55 / 100) * payload.data.amountReceived;
                 const AMOUNT_TO_REFUND = payload.data.amountReceived - OYEAH_REFUND_CUT;
-    
+
                 // Create a new refund transaction
                 const refundTransaction = await RefundTransaction.create({
                     amount: AMOUNT_TO_REFUND,
@@ -166,8 +166,8 @@ class WebhookService {
                     payment_method: "bank_transfer",
                     product: product._id
                 });
-    
-                const result  = await FincraService.handleRefund(user, AMOUNT_TO_REFUND, refundTransaction.id);
+
+                const result = await FincraService.handleRefund(user, AMOUNT_TO_REFUND, refundTransaction.id);
                 return result
             }
         } catch (error) {
@@ -179,7 +179,7 @@ class WebhookService {
     /**
      * @description Handles Overpayments or underpayments
      */
-    static async handlePaymentsVariance() {}
+    static async handlePaymentsVariance() { }
 
 }
 
