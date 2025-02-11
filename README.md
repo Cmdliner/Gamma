@@ -37,7 +37,8 @@ bun run dev
 - Payment links might never expire (check again with fincra)
 - Pending sponsorships can be retried even when previous payment status hasn't been confirmed
   
-## TODOS
+## 
+- Consistent user phone mumber containing country code and validation should be done
 - Add auto sign-in after last phase of onboarding
 - Implement under_review for ads
 - Indempotency key on payment

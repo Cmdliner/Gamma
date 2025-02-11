@@ -10,6 +10,8 @@ import Expo from "expo-server-sdk";
 import { AppError } from "../lib/error.handler";
 import { StatusCodes } from "http-status-codes";
 import { logger } from "../config/logger.config";
+import { IAbuse } from "../types/abuse.schema";
+import AbuseComplaint from "./abuse.model";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -195,6 +197,35 @@ class UserController {
         } catch (error) {
             logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error updating the push token")
+            return res.status(status).json(errResponse);
+        }
+    }
+
+    static async reportAbuse(req: Request, res: Response) {
+        try {
+            const { subject, body } = req.body;
+            const { screenshots } = req.files as any;
+
+            const processedScreenshots = null;
+            if (screenshots) {
+                await Promise.all(screenshots.map(ProcessCloudinaryImage));
+            }
+            if (!processedScreenshots) {
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Screenshots required!");
+            }
+            if (!subject || !body) {
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "`subject` and `body` required");
+            }
+            const abuseComplaintData: IAbuse = { subject, body };
+            if (processedScreenshots) abuseComplaintData.screenshots = processedScreenshots;
+            const abuseComplaint = new AbuseComplaint(abuseComplaintData);
+            await abuseComplaint.save();
+
+            return res.status(StatusCodes.CREATED).json({success: true, message: "Your report has been sent"});
+
+        } catch (error) {
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "Can't make a report at the moment");
             return res.status(status).json(errResponse);
         }
     }

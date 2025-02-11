@@ -9,6 +9,7 @@ const user = Router();
 user.get("/profile-info", UserController.getUserInfo);
 user.get("/my-wallet", UserController.getWalletBalance);
 user.get("/referral-info", UserController.getReferralInfo);
+user.get("/report-abuse", upload.array("screenshots", 10), UserController.reportAbuse);
 user.patch("/bank-details", UserController.editBankAccountDetails);
 user.patch("/push-token", UserController.updateUsersDevicePushToken);
 user.patch("/info", UserAssetsUploadMiddleware, ValidateUserUploads, UserController.updateInfo);
