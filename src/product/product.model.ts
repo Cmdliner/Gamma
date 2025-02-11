@@ -76,7 +76,7 @@ const ProductSchema = new Schema({
         status: { type: String, enum: ["active", "pending", "under_review"]}
     },
     deleted_at: {
-        type: Schema.Types.ObjectId
+        type: Date
     },
     purchase_lock: {
         is_locked: {

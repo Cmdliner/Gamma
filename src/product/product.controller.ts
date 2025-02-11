@@ -558,9 +558,10 @@ class ProductController {
             const { productID } = req.params;
 
             const productListing = await Product.findById(productID);
+	    console.log({ productListing });
             if (!productListing) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
-            const isAuthorizedToDelete = compareObjectID(currentUser!, productListing.owner);
+            const isAuthorizedToDelete = compareObjectID(currentUser, productListing.owner);
             if (!isAuthorizedToDelete) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
             // check if there are no pending operations (transactions, bids) on this item
@@ -572,7 +573,7 @@ class ProductController {
                 throw new AppError(StatusCodes.BAD_REQUEST, "An error occured while attempting to delete product");
             }
 
-            return res.status(StatusCodes.NO_CONTENT);
+            return res.status(StatusCodes.NO_CONTENT).json();
 
         } catch (error) {
             logger.error(error);
