@@ -410,12 +410,15 @@ class AuthController {
             user.bank_details = { account_no, bank_code, added_at: new Date() };
             await user.save({ session });
 
+            const authToken = await AuthService.createToken(user._id, cfg.ACCESS_TOKEN_SECRET, '2h');
+
             // Commit  transactions to the db
             await session.commitTransaction();
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: "Bank details added successfully",
-                account: validBankAcc
+                account: validBankAcc,
+                access_token: authToken
             });
 
         } catch (error) {
