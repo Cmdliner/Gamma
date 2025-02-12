@@ -103,6 +103,7 @@ class ProductController {
                 condition: req.body.condition,
                 owner: req.user?._id,
                 product_images,
+                localty: req.body.localty
             };
             if (ownership_documents.length) productData.ownership_documents = ownership_documents;
 
@@ -156,7 +157,6 @@ class ProductController {
             const { error } = landedPropertyValidationSchema.validate(landedPropertyData);
             if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
-            // CHECK THAT NO SIMILAR PROD EXISTS IN DB
             const similarProdInDb = await LandedProperty.findOne({
                 name: landedPropertyData.name,
                 description: landedPropertyData.description
@@ -191,6 +191,7 @@ class ProductController {
                 description: req.body.description,
                 owner: req.user?._id,
                 location,
+                localty: req.body.localty,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
                 category: PRODUCT_CATEGORY.GADGETS as any as ProductCategory,
@@ -239,6 +240,7 @@ class ProductController {
                 description: req.body.description,
                 owner: req.user?._id,
                 location,
+                localty: req.body.localty,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
                 category: PRODUCT_CATEGORY.VEHICLES as any as ProductCategory,
@@ -291,6 +293,7 @@ class ProductController {
                 description: req.body.description,
                 owner: req.user?._id,
                 location,
+                localty: req.body.localty,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
                 condition: req.body.condition,
@@ -459,9 +462,10 @@ class ProductController {
             if (req.body.name) productData.name = req.body.name;
             if (req.body.description) productData.description = req.body.description;
             if (req.body.location) productData.location = resolveLocation(req.body.location);
+            if (req.body.localty) productData.localty = req.body.localty;
             if (req.body.brand) productData.brand = req.body.brand;
-	    if (req.body.price) productData.price = req.body.price;
-	    if (req.body.is_negotiable) productData.is_negotiable = req.body.is_negotiable;
+            if (req.body.price) productData.price = req.body.price;
+            if (req.body.is_negotiable) productData.is_negotiable = req.body.is_negotiable;
             if (req.body.item_model) productData.item_model = req.body.item_model;
             if (req.body.condition) productData.condition = req.body.condition;
             if (ownership_documents?.length) productData.ownership_documents = ownership_documents;
@@ -497,6 +501,7 @@ class ProductController {
             if (req.body.name) gadgetData.name = req.body.name;
             if (req.body.description) gadgetData.description = req.body.description;
             if (req.body.location) gadgetData.location = resolveLocation(req.body.location);
+            if (req.body.localty) gadgetData.localty = req.body.localty;
             if (req.body.price) gadgetData.price = req.body.price;
             if (req.body.is_negotiable) gadgetData.is_negotiable = req.body.is_negotiable;
             if (req.body.brand) gadgetData.brand = req.body.brand;
@@ -539,6 +544,7 @@ class ProductController {
             if (req.body.name) vehicleUpdateData.name = req.body.name;
             if (req.body.description) vehicleUpdateData.description = req.body.description;
             if (req.body.location) vehicleUpdateData.location = resolveLocation(req.body.location);
+            if (req.body.localty) vehicleUpdateData.localty = req.body.location;
             if (req.body.price) vehicleUpdateData.price = req.body.price;
             if (req.body.is_negotiable) vehicleUpdateData.is_negotiable = req.body.is_negotiable;
             if (req.body.make) vehicleUpdateData.make = req.body.make;
@@ -600,6 +606,7 @@ class ProductController {
         }
     }
 
+    // Edit furnitures, fashion products, machinery and other products
     static async editGenericProduct(req: Request, res: Response) {
         try {
             const { ownership_documents, product_images } = req.processed_images;
@@ -623,6 +630,7 @@ class ProductController {
             if (req.body.name) genericProdUpdateData.name = req.body.name;
             if (req.body.description) genericProdUpdateData.description = req.body.description;
             if (req.body.location) genericProdUpdateData.location = resolveLocation(req.body.location);
+            if (req.body.localty) genericProdUpdateData.localty = req.body.localty;
             if (req.body.price) genericProdUpdateData.price = req.body.price;
             if (req.body.is_negotiable) genericProdUpdateData.is_negotiable = req.body.is_negotiable;
             if (req.body.condition) genericProdUpdateData.condition = req.body.condition;

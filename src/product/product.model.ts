@@ -34,6 +34,10 @@ const ProductSchema = new Schema({
         coordinates: { type: [Number, Number], required: true },
         human_readable: { type: String, required: true },
     },
+    localty: {
+        type: String,
+        required: true
+    },
     price: {
         type: Number,
         required: true,
@@ -156,10 +160,6 @@ const OtherProductSchema = new Schema({
 });
 
 const LandedPropertySchema = new Schema({
-    localty: {
-        type: String,
-        required: true,
-    },
     dimensions: {
         type: String,
         // required: true
@@ -174,7 +174,6 @@ const LandedPropertySchema = new Schema({
             "under_construction",
             "empty_land",
         ],
-        // required: true
     }
 });
 

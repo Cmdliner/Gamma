@@ -13,6 +13,7 @@ interface IProduct extends Document {
         coordinates: [number, number];
         human_readable: string;
     };
+    localty: string;
     price: number;
     is_negotiable: boolean;
     active_bid: Types.ObjectId;
