@@ -22,7 +22,7 @@ import type ILandedProperty from "../types/landed_property.schema";
 import type IGadget from "../types/gadget.schema";
 import type IVehicle from "../types/vehicle.schema";
 import type { IFurniture } from "../types/generic.schema";
-import { compareObjectID, isValidState } from "../lib/utils";
+import { compareObjectID, isValidState, resolveLocation } from "../lib/utils";
 import Bid from "../bid/bid.model";
 import { GeospatialDataNigeria } from "../lib/location.data";
 import ProductService from "./product.service";
@@ -32,6 +32,8 @@ import IProduct from "../types/product.schema";
 import { AppError } from "../lib/error.handler";
 import { StatusCodes } from "http-status-codes";
 import { logger } from "../config/logger.config";
+import { PRODUCT_CATEGORY } from "../lib/product_category";
+import { ProductCategory } from "../types/common";
 
 class ProductController {
 
@@ -84,25 +86,12 @@ class ProductController {
         }
     }
 
-    // Add new electronics
     static async addElectronicProduct(req: Request, res: Response) {
         try {
             const { ownership_documents, product_images } = req.processed_images;
 
-            const humanReadableLocation = req.body.location as string;
-            if (!isValidState(humanReadableLocation)) {
-                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format");
-            }
-
-            const location: ILocation = {
-                human_readable: humanReadableLocation,
-                coordinates: [
-                    GeospatialDataNigeria[humanReadableLocation].lat,
-                    GeospatialDataNigeria[humanReadableLocation].long,
-                ],
-                type: "Point"
-            };
-            const electronicProductData: Partial<IElectronics> = {
+            const location = resolveLocation(req.body.location);
+            const productData: Partial<IElectronics> = {
                 name: req.body.name,
                 description: req.body.description,
                 location,
@@ -110,25 +99,25 @@ class ProductController {
                 is_negotiable: req.body.is_negotiable,
                 brand: req.body.brand,
                 item_model: req.body.item_model,
-                category: req.body.category,
+                category: PRODUCT_CATEGORY.ELECTRONICS as any as ProductCategory,
                 condition: req.body.condition,
                 owner: req.user?._id,
                 product_images,
             };
-            if (ownership_documents.length) electronicProductData.ownership_documents = ownership_documents;
+            if (ownership_documents.length) productData.ownership_documents = ownership_documents;
 
-            const { error } = electronicsValidationSchema.validate(electronicProductData);
+            const { error } = electronicsValidationSchema.validate(productData);
             if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
             // check that no similar product exists in db
             const similarProdInDb = await Electronics.findOne({
-                name: electronicProductData.name,
-                description: electronicProductData.description,
-                price: electronicProductData.price,
+                name: productData.name,
+                description: productData.description,
+                price: productData.price,
             });
             if (similarProdInDb) throw new AppError(StatusCodes.BAD_REQUEST, "A similar product exists");
 
-            const newElectronics = await Electronics.create(electronicProductData);
+            const newElectronics = await Electronics.create(productData);
             if (!newElectronics) throw new AppError(StatusCodes.BAD_REQUEST, "Error uploading product");
 
             return res.status(StatusCodes.CREATED).json({
@@ -144,24 +133,10 @@ class ProductController {
         }
     }
 
-    // Add new landed property
     static async addLandedProperty(req: Request, res: Response) {
         try {
             const { ownership_documents, product_images } = req.processed_images;
-
-            const humanReadableLocation = req.body.location as string;
-            if (!isValidState(humanReadableLocation)) {
-                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format");
-            }
-
-            const location: ILocation = {
-                human_readable: humanReadableLocation,
-                coordinates: [
-                    GeospatialDataNigeria[humanReadableLocation].lat,
-                    GeospatialDataNigeria[humanReadableLocation].long,
-                ],
-                type: "Point"
-            };
+            const location = resolveLocation(req.body.location);
 
             const landedPropertyData: Partial<ILandedProperty> = {
                 name: req.body.name,
@@ -169,7 +144,7 @@ class ProductController {
                 location,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
-                category: req.body.category,
+                category: PRODUCT_CATEGORY.LANDED_PROPERTIES as any as ProductCategory,
                 ownership_documents,
                 product_images,
                 owner: req.user?._id,
@@ -205,24 +180,10 @@ class ProductController {
         }
     }
 
-    // Add new gadget
     static async uploadGadget(req: Request, res: Response) {
         try {
             const { product_images, ownership_documents } = req.processed_images;
-
-            const humanReadableLocation = req.body.location as string;
-            if (!isValidState(humanReadableLocation)) {
-                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format");
-            }
-            const location: ILocation = {
-                human_readable: humanReadableLocation,
-                coordinates: [
-                    GeospatialDataNigeria[humanReadableLocation].lat,
-                    GeospatialDataNigeria[humanReadableLocation].long,
-                ],
-                type: "Point"
-            };
-
+            const location = resolveLocation(req.body.location);
 
             const gadgetData: Partial<IGadget> = {
                 product_images: product_images,
@@ -232,7 +193,7 @@ class ProductController {
                 location,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
-                category: req.body.category,
+                category: PRODUCT_CATEGORY.GADGETS as any as ProductCategory,
                 brand: req.body.brand,
                 item_model: req.body.item_model,
                 RAM: req.body.RAM,
@@ -267,23 +228,10 @@ class ProductController {
         }
     }
 
-    // Add new vehicle
     static async uploadVehicle(req: Request, res: Response) {
         try {
             const { product_images, ownership_documents } = req.processed_images;
-
-            const humanReadableLocation = req.body.location as string;
-            if (!isValidState(humanReadableLocation)) {
-                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format")
-            }
-            const location: ILocation = {
-                human_readable: humanReadableLocation,
-                coordinates: [
-                    GeospatialDataNigeria[humanReadableLocation].lat,
-                    GeospatialDataNigeria[humanReadableLocation].long,
-                ],
-                type: "Point"
-            };
+            const location = resolveLocation(req.body.location);
 
             const vehicleData: Partial<IVehicle> = {
                 product_images: product_images,
@@ -293,7 +241,7 @@ class ProductController {
                 location,
                 price: req.body.price,
                 is_negotiable: req.body.is_negotiable,
-                category: req.body.category,
+                category: PRODUCT_CATEGORY.VEHICLES as any as ProductCategory,
                 make: req.body.make,
                 is_registered: req.body.is_registered,
                 item_model: req.body.item_model,
@@ -336,19 +284,7 @@ class ProductController {
     static async uploadGenericProduct(req: Request, res: Response) {
         try {
             const { ownership_documents, product_images } = req.processed_images;
-
-            const humanReadableLocation = req.body.location as string;
-            if (!isValidState(humanReadableLocation)) {
-                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid location format")
-            }
-            const location: ILocation = {
-                human_readable: humanReadableLocation,
-                coordinates: [
-                    GeospatialDataNigeria[humanReadableLocation].lat,
-                    GeospatialDataNigeria[humanReadableLocation].long,
-                ],
-                type: "Point"
-            };
+            const location = resolveLocation(req.body.location);
 
             const genericProductData: Partial<IFurniture> = {
                 name: req.body.name,
@@ -419,7 +355,6 @@ class ProductController {
         }
     }
 
-    // Get product info
     static async getProductInfo(req: Request, res: Response) {
         try {
             const { productID } = req.params;
@@ -435,51 +370,6 @@ class ProductController {
         }
     }
 
-    // Get all products in a single category
-    static async getAllProductsInCategoryOld(req: Request, res: Response) {
-        try {
-            const { productCategory } = req.params;
-
-            const user = await User.findById(req.user?._id);
-            if (!user) throw new AppError(StatusCodes.BAD_REQUEST, "User not found");
-
-            let page = 1;
-            if (!isNaN(parseInt(req.query.page as string))) {
-                page = parseInt(req.query.page as string)
-            }
-
-            let limit = 10;
-            if (!isNaN(parseInt(req.query.limit as string))) {
-                limit = parseInt(req.query.limit as string)
-            }
-            const skips = (page - 1) * limit;
-
-            // validate product category
-            const isValidCategory = allowedCategories.includes(productCategory);
-            if (!isValidCategory) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid product category!");
-
-            const productsCount = await Product.find({
-                category: productCategory,
-                deleted_at: { $exists: false },
-            }).countDocuments();
-            const isValidPage = page <= Math.ceil(productsCount / limit);
-
-            if (!isValidPage) throw new AppError(StatusCodes.NOT_FOUND, "Oops...Could not find that page");
-
-            const products = await ProductService.filterAndSortByLocation(
-                user.location?.coordinates,
-                productCategory,
-                limit,
-                skips
-            );
-            if (!products.length) throw new AppError(StatusCodes.NOT_FOUND, "No products found for this category");
-
-            return res.status(200).json({ success: true, message: "Products found!", products });
-        } catch (error) {
-            logger.error(error);
-            return res.status(500).json({ error: true, message: "Error fetching products" })
-        }
-    }
 
     static async getAllProductsInCategory(req: Request, res: Response) {
         try {
@@ -551,6 +441,216 @@ class ProductController {
         }
     }
 
+    static async editUploadedElectronic(req: Request, res: Response) {
+        try {
+            const { product_images, ownership_documents } = req.processed_images;
+            const { productID } = req.params;
+
+            const electronic = await Electronics.findOne({ _id: productID, deleted_at: { $exists: false } });
+            if (!electronic) throw new AppError(StatusCodes.NOT_FOUND, "Electronic upload not found!");
+
+            const canEdit = compareObjectID(req.user?._id, electronic.owner);
+            if (!canEdit) throw new AppError(StatusCodes.NOT_FOUND, "Electronic upload not found!");
+
+            const isProdAvailable = electronic.status === "available";
+            if (!isProdAvailable) throw new AppError(StatusCodes.LOCKED, "Product is unavailable for editting!");
+
+            const productData: Partial<IElectronics> = {};
+            if (req.body.name) productData.name = req.body.name;
+            if (req.body.description) productData.description = req.body.description;
+            if (req.body.location) productData.location = resolveLocation(req.body.location);
+            if (req.body.brand) productData.brand = req.body.brand;
+	    if (req.body.price) productData.price = req.body.price;
+	    if (req.body.is_negotiable) productData.is_negotiable = req.body.is_negotiable;
+            if (req.body.item_model) productData.item_model = req.body.item_model;
+            if (req.body.condition) productData.condition = req.body.condition;
+            if (ownership_documents?.length) productData.ownership_documents = ownership_documents;
+            if (product_images?.length) productData.product_images = product_images;
+
+            // !todo => Validate data
+
+            await Electronics.findByIdAndUpdate(electronic._id, productData);
+            return res.status(StatusCodes.OK).json({ success: true, message: "Item update successful" });
+
+        } catch (error) {
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "Error updating item");
+            return res.status(status).json(errResponse);
+        }
+    }
+
+    static async editUploadedGadget(req: Request, res: Response) {
+        try {
+            const { product_images, ownership_documents } = req.processed_images;
+            const { productID } = req.params;
+
+            const gadget = await Gadget.findOne({ _id: productID, deleted_at: { $exists: false } });;
+            if (!gadget) throw new AppError(StatusCodes.NOT_FOUND, "Gadget upload not found!");
+
+            const canEdit = compareObjectID(req.user?._id, gadget.owner);
+            if (!canEdit) throw new AppError(StatusCodes.NOT_FOUND, "Gadget upload not found!");
+
+            const isProdAvailable = gadget.status === "available";
+            if (!isProdAvailable) throw new AppError(StatusCodes.LOCKED, "Product is unavailable for editting!");
+
+            const gadgetData: Partial<IGadget> = {};
+            if (req.body.name) gadgetData.name = req.body.name;
+            if (req.body.description) gadgetData.description = req.body.description;
+            if (req.body.location) gadgetData.location = resolveLocation(req.body.location);
+            if (req.body.price) gadgetData.price = req.body.price;
+            if (req.body.is_negotiable) gadgetData.is_negotiable = req.body.is_negotiable;
+            if (req.body.brand) gadgetData.brand = req.body.brand;
+            if (req.body.RAM) gadgetData.RAM = req.body.RAM;
+            if (req.body.condition) gadgetData.condition = req.body.condition;
+
+            if (product_images?.length) gadgetData.product_images = product_images;
+            if (ownership_documents?.length) gadgetData.ownership_documents = ownership_documents;
+
+            // !todo => Validate the user data
+
+            await Gadget.findByIdAndUpdate(productID, gadgetData);
+
+            return res.status(StatusCodes.OK).json({ success: true, message: "Item update successful" });
+
+
+        } catch (error) {
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "Error updating item");
+            return res.status(status).json(errResponse);
+        }
+    }
+
+    static async editUploadedVehicle(req: Request, res: Response) {
+        try {
+            const { ownership_documents, product_images } = req.processed_images;
+            const { productID } = req.params;
+
+            const vehicle = await Vehicle.findOne({ _id: productID, deleted_at: { $exists: false } });
+            if (!vehicle) throw new AppError(StatusCodes.NOT_FOUND, "Vehicle upload not found!");
+
+            const canEdit = compareObjectID(req.user?._id, vehicle.owner);
+            if (!canEdit) throw new AppError(StatusCodes.NOT_FOUND, "Vehicle upload not found!");
+
+            const isProdAvailable = vehicle.status === "available";
+            if (!isProdAvailable) throw new AppError(StatusCodes.LOCKED, "Product is unavailable for editting!");
+
+            const vehicleUpdateData: Partial<IVehicle> = {};
+
+            if (req.body.name) vehicleUpdateData.name = req.body.name;
+            if (req.body.description) vehicleUpdateData.description = req.body.description;
+            if (req.body.location) vehicleUpdateData.location = resolveLocation(req.body.location);
+            if (req.body.price) vehicleUpdateData.price = req.body.price;
+            if (req.body.is_negotiable) vehicleUpdateData.is_negotiable = req.body.is_negotiable;
+            if (req.body.make) vehicleUpdateData.make = req.body.make;
+            if (req.body.is_registered) vehicleUpdateData.is_registered = req.body.is_registered;
+            if (req.body.item_model) vehicleUpdateData.item_model = req.body.item_model;
+            if (req.body.year) vehicleUpdateData.year = req.body.year;
+            if (req.body.condition) vehicleUpdateData.condition = req.body.condition;
+            if (req.body.vin) vehicleUpdateData.vin = req.body.vin;
+            if (req.body.transmission_type) vehicleUpdateData.transmission_type;
+            if (product_images?.length) vehicleUpdateData.product_images = product_images;
+            if (ownership_documents?.length) vehicleUpdateData.ownership_documents = ownership_documents;
+
+            // ! todo => Validate data
+
+            await Vehicle.findByIdAndUpdate(vehicle._id, vehicleUpdateData);
+            return res.status(StatusCodes.OK).json({ success: true, message: "Item update successful" });
+
+        } catch (error) {
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "Error updating item");
+            return res.status(status).json(errResponse);
+        }
+    }
+
+    static async editUploadedLandedProperty(req: Request, res: Response) {
+        try {
+            const { ownership_documents, product_images } = req.processed_images;
+            const { productID } = req.params;
+
+            const landedProperty = await LandedProperty.findOne({ _id: productID, deleted_at: { $exists: false } });
+            if (!landedProperty) throw new AppError(StatusCodes.NOT_FOUND, "Landed property upload not found!");
+
+            const canEdit = compareObjectID(req.user?._id, landedProperty.owner);
+            if (!canEdit) throw new AppError(StatusCodes.NOT_FOUND, "Landed property upload not found!");
+
+            const isProdAvailable = landedProperty.status === "available";
+            if (!isProdAvailable) throw new AppError(StatusCodes.LOCKED, "Product is unavailable for editting!");
+
+            const landUpdateData: Partial<ILandedProperty> = {};
+            if (req.body.name) landUpdateData.name = req.body.name;
+            if (req.body.description) landUpdateData.description = req.body.description;
+            if (req.body.location) landUpdateData.location = resolveLocation(req.body.location);
+            if (req.body.price) landUpdateData.price = req.body.price;
+            if (req.body.is_negotiable) landUpdateData.is_negotiable = req.body.is_negotiable;
+            if (req.body.localty) landUpdateData.localty = req.body.localty;
+            if (req.body.dimensions) landUpdateData.dimensions = req.body.dimensions;
+            if (req.body.condition) landUpdateData.condition = req.body.condition;
+            if (product_images?.length) landUpdateData.product_images = product_images;
+            if (ownership_documents?.length) landUpdateData.ownership_documents = ownership_documents;
+
+            // !todo => validate data
+
+            await LandedProperty.findByIdAndUpdate(landedProperty._id, landUpdateData);
+            return res.status(StatusCodes.OK).json({ success: true, message: "Item upload successful" });
+        } catch (error) {
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "Error updating item");
+            return res.status(status).json(errResponse);
+        }
+    }
+
+    static async editGenericProduct(req: Request, res: Response) {
+        try {
+            const { ownership_documents, product_images } = req.processed_images;
+            const { productID } = req.params;
+
+            if (!req.body.category) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "category required!");
+
+            const isValidCategory = allowedCategories.includes(req.body.category);
+            if (!isValidCategory) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid category!");
+
+            const genericProduct = await Product.findOne({ _id: productID, deleted_at: { $exists: false } });
+            if (!genericProduct) throw new AppError(StatusCodes.NOT_FOUND, "Product upload not found!");
+
+            const canEdit = compareObjectID(req.user?._id, genericProduct.owner);
+            if (!canEdit) throw new AppError(StatusCodes.NOT_FOUND, "Product upload not found!");
+
+            const isProdAvailable = genericProduct.status === "available";
+            if (!isProdAvailable) throw new AppError(StatusCodes.LOCKED, "Product is unavailable for editting!");
+
+            const genericProdUpdateData: Partial<IFurniture> = {};
+            if (req.body.name) genericProdUpdateData.name = req.body.name;
+            if (req.body.description) genericProdUpdateData.description = req.body.description;
+            if (req.body.location) genericProdUpdateData.location = resolveLocation(req.body.location);
+            if (req.body.price) genericProdUpdateData.price = req.body.price;
+            if (req.body.is_negotiable) genericProdUpdateData.is_negotiable = req.body.is_negotiable;
+            if (req.body.condition) genericProdUpdateData.condition = req.body.condition;
+            if (product_images?.length) genericProdUpdateData.product_images = product_images;
+            if (ownership_documents?.length) genericProdUpdateData.ownership_documents = ownership_documents;
+
+            switch (req.body.category) {
+                case "furnitures":
+                    await Furniture.findByIdAndUpdate(genericProduct._id, genericProdUpdateData);
+                    break;
+                case "machineries":
+                    await Machinery.findByIdAndUpdate(genericProduct._id, genericProdUpdateData);
+                    break;
+                case "fashion_wears":
+                    await FashionProduct.findByIdAndUpdate(genericProduct._id, genericProdUpdateData);
+                    break;
+                case "others":
+                    await OtherProduct.findByIdAndUpdate(genericProduct._id, genericProdUpdateData);
+                    break;
+            }
+            return res.status(StatusCodes.OK).json({ success: true, message: "Item upload successful" });
+
+        } catch (error) {
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "Error updating item");
+            return res.status(status).json(errResponse);
+        }
+    }
 
     static async deleteProductListing(req: Request, res: Response) {
         try {
@@ -558,7 +658,7 @@ class ProductController {
             const { productID } = req.params;
 
             const productListing = await Product.findById(productID);
-	    console.log({ productListing });
+            console.log({ productListing });
             if (!productListing) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
             const isAuthorizedToDelete = compareObjectID(currentUser, productListing.owner);
@@ -568,10 +668,7 @@ class ProductController {
             if (productListing.purchase_lock.is_locked) {
                 throw new AppError(StatusCodes.LOCKED, "Product still has pending operations. Cannot delete at the moment");
             }
-            const deletedProductListing = await Product.findByIdAndUpdate(productID, { deleted_at: new Date() });
-            if (!deletedProductListing) {
-                throw new AppError(StatusCodes.BAD_REQUEST, "An error occured while attempting to delete product");
-            }
+            await Product.findByIdAndUpdate(productID, { deleted_at: new Date() });
 
             return res.status(StatusCodes.NO_CONTENT).json();
 
@@ -605,37 +702,6 @@ class ProductController {
             const [status, errResponse] = AppError.handle(error, "Error getting sponsored products");
             return res.status(status).json(errResponse);
         }
-    }
-
-    static async editProduct(req: Request, res: Response) {
-        const { productID } = req.params;
-        const { price } = req.body;
-
-        try {
-
-            // FIND PRODUCT AND MAKE SURE THERE ARE NO PENDING OPERATIONS LIKE
-            // TRANSACTION, BIDS ON IT TO AVOID FRAUDULENT ACTIVITY
-            const product = await Product.findOne({ _id: productID, deleted_at: { $exists: false } });
-            if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found");
-            if (product.status !== "available" || product.purchase_lock.is_locked) {
-                throw new AppError(StatusCodes.LOCKED, "Cannot edit product!");
-            }
-
-            // Find all pending bids and reject them
-            await Bid.updateMany(
-                { product: product._id, status: "pending" },
-                { $set: { status: "rejected" } }
-            );
-
-            // !TODO => UPDATE PRODUCT LISTING
-            return res.status(StatusCodes.OK).json({ success: true, message: "Product updated successfully" });
-
-        } catch (error) {
-            logger.error(error);
-            const [status, errResponse] = AppError.handle(error, "Error editing product");
-            return res.status(status).json(errResponse);
-        }
-
     }
 
 }

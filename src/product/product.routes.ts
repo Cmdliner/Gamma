@@ -17,7 +17,14 @@ product.post("/upload-furniture", UploadMiddleware, ValidateAndProcessUpload, Pr
 product.post("/upload-machinery", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadGenericProduct);
 product.post("/upload-others", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadGenericProduct);
 product.post("/upload-fashionwears", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadGenericProduct);
-product.put("/:productID", ProductController.editProduct);
+product.patch("/gadgets/:productID", UploadMiddleware, ValidateAndProcessUpload,  ProductController.editUploadedGadget);
+product.patch("/vehicles/:productID", UploadMiddleware, ValidateAndProcessUpload, ProductController.editUploadedVehicle);
+product.patch("/landed-properties/:productID", UploadMiddleware, ValidateAndProcessUpload, ProductController.editUploadedLandedProperty);
+product.patch("/electronics/:productID", UploadMiddleware, ValidateAndProcessUpload, ProductController.editUploadedElectronic);
+product.patch("/furnitures/:productID", UploadMiddleware, ValidateAndProcessUpload, ProductController.editGenericProduct);
+product.patch("/machineries/:productID", UploadMiddleware, ValidateAndProcessUpload, ProductController.editGenericProduct);
+product.patch("/fashionables/:productID", UploadMiddleware, ValidateAndProcessUpload, ProductController.editGenericProduct);
+product.patch("/others/:productID", UploadMiddleware, ValidateAndProcessUpload, ProductController.editGenericProduct);
 product.delete("/:productID",ProductController.deleteProductListing);
 
 export default product;
