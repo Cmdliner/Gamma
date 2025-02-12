@@ -24,7 +24,7 @@ const QUALITY = 80;
 const isProd = cfg.NODE_ENV === "production";
 
 const storage = multer.memoryStorage();
-const fileFilter = (_: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+export const useFileFilter = (_: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     if (file.mimetype.startsWith("image/")) {
         return cb(null, true);
     }
@@ -32,7 +32,7 @@ const fileFilter = (_: Request, file: Express.Multer.File, cb: multer.FileFilter
 }
 const upload = multer({
     storage,
-    fileFilter,
+    fileFilter: useFileFilter,
     limits: { fileSize: MAX_FILE_SIZE }
 });
 
@@ -88,15 +88,15 @@ export const ProcessCloudinaryImage = async (file: Express.Multer.File): Promise
 
 export const ValidateAndProcessUpload = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as ReqFiles;
-    if (!files || !files.product_images) {
+   /*  if (!files || !files.product_images) {
         console.log("product_images is undefined in the controller");
         return res.status(400).json({ error: true, message: "product_images is required" });
-    }
+    } */
     const { ownership_documents, product_images } = files;
     try {
         const processImage = isProd ? ProcessCloudinaryImage : processLocalImage;
 
-        const processedProductImages = await Promise.all(product_images.map(processImage));
+        const processedProductImages = product_images ? await Promise.all(product_images.map(processImage)) : [];
         const processedOwnershipDocs = ownership_documents ? await Promise.all(ownership_documents.map(processImage)) : [];
 
         req.processed_images = {
