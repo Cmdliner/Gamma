@@ -1,0 +1,123 @@
+// Identity verification endpoint response
+
+{
+    "statusCode": 200,
+    "data": {
+        "_id": "67af5c506259e2e47f9e3ba4", // This is vId to be passed
+        "clientId": "677e387c7896680024594875",
+        "type": "BVN",
+        "amount": 50,
+        "status": "SUCCESS",
+        "debitAccountNumber": "0112982791",
+        "vat": 0,
+        "stampDuty": 0,
+        "isDeleted": false,
+        "otpVerified": true,
+        "otpResendCount": 0,
+        "createdAt": "2025-02-14T15:08:00.672Z",
+        "updatedAt": "2025-02-14T15:08:02.997Z",
+        "__v": 0,
+        "debitMessage": "Approved or completed successfully",
+        "debitResponsCode": 200,
+        "debitSessionId": "090286250214150800276604472565",
+        "otpId": "67af5c526259e2e47f9e3ba8",
+        "providerResponse": "{\"bvn\":\"22637757955\",\"fullName\":\"John Doe\",\"firstName\":\"John\",\"middleName\":\"\",\"lastName\":\"Doe\",\"dateOfBirth\":\"14-02-1920\",\"phoneNumber1\":\"0812345678\",\"phoneNumber2\":\"0812345678\",\"gender\":\"Male\",\"enrollmentBank\":\"enrollmentBank\",\"enrollmentBranch\":\"enrollmentBranch\",\"email\":\"email\",\"lgaOfOrigin\":\"lgaOfOrigin\",\"lgaOfResidence\":\"lgaOfResidence\",\"maritalStatus\":\"Single\",\"nin\":\"\",\"nationality\":\"\",\"residentialAddress\":\"\",\"stateOfOrigin\":\"stateOfOrigin\",\"stateOfResidence\":\"\",\"title\":\"\",\"watchListed\":\"\",\"levelOfAccount\":\"\",\"registrationDate\":null,\"imageBase64\":\"/9j/4AAQSkZJRgABAgAAAQ\"}"
+    },
+    "message": "Record fetched successfully"
+}
+
+
+// User wallet endpoints i.e (subaccount)
+{
+    "statusCode": 200,
+    "message": "Account Created Successfully.",
+    "data": {
+        "canDebit": true,
+        "canCredit": true,
+        "_id": "67af5d001625ce00243ed379",
+        "client": "677e387c7896680024594875",
+        "accountProduct": "612cbd5a5e7f33693c591a8f",
+        "accountNumber": "8021298754",
+        "accountName": "OYEAHTECHNOLOGI / JOHN DOE",
+        "accountType": "Current",
+        "currencyCode": "NGN",
+        "bvn": "22637757955",
+        "identityId": "67aa10ff6259e2e47f9e39b6",
+        "accountBalance": 0,
+        "bookBalance": 0,
+        "interestBalance": 0,
+        "withHoldingTaxBalance": 0,
+        "status": "Active",
+        "isDefault": false,
+        "nominalAnnualInterestRate": 0,
+        "interestCompoundingPeriod": "Daily",
+        "interestPostingPeriod": "Monthly",
+        "interestCalculationType": "DailyBalance",
+        "interestCalculationDaysInYearType": "365",
+        "minRequiredOpeningBalance": 0,
+        "lockinPeriodFrequency": 0,
+        "lockinPeriodFrequencyType": "Days",
+        "allowOverdraft": false,
+        "overdraftLimit": 0,
+        "chargeWithHoldingTax": true,
+        "chargeValueAddedTax": true,
+        "chargeStampDuty": true,
+        "notificationSettings": {
+            "_id": "67af5d001625ce00243ed37a",
+            "smsNotification": false,
+            "emailNotification": false,
+            "emailMonthlyStatement": false,
+            "smsMonthlyStatement": false
+        },
+        "isSubAccount": true,
+        "subAccountDetails": {
+            "_id": "67af5d001625ce00243ed37b",
+            "firstName": "John",
+            "lastName": "Doe",
+            "emailAddress": "john.doe@mail.ng",
+            "bvn": "22637757955",
+            "nin": "",
+            "accountType": "Individual"
+        },
+        "externalReference": "oyeah-test-00003",
+        "isDeleted": false,
+        "createdAt": "2025-02-14T15:10:56.286Z",
+        "updatedAt": "2025-02-14T15:10:56.286Z",
+        "nin": "",
+        "__v": 0,
+        "cbaAccountId": "22638"
+    }
+}
+
+
+// Create expirable virtual account response
+
+{
+    "statusCode": 200,
+    "message": "Virtual Account Created Successfully.",
+    "data": {
+        "_id": "67af5d9b1625ce00243ed3a5",
+        "client": "677e387c7896680024594875",
+        "bankCode": "999240",
+        "accountNumber": "6025934986",
+        "accountName": "OyeahTechnologi Checkout",
+        "currencyCode": "NGN",
+        "bvn": "22399690538",
+        "validFor": 900,
+        "externalReference": "test-tx-00003",
+        "amountControl": "Fixed",
+        "amount": 5000,
+        "expiryDate": "2025-02-14T15:28:31.267Z",
+        "callbackUrl": "https://oyeahescrow-server.onrender.com/webhooks-v2",
+        "settlementAccount": {
+            "_id": "67af5d9b1625ce00243ed3a6",
+            "accountNumber": "0114705141",
+            "bankCode": "999240"
+        },
+        "status": "Active",
+        "isDeleted": false,
+        "createdAt": "2025-02-14T15:13:31.267Z",
+        "updatedAt": "2025-02-14T15:13:31.267Z",
+        "__v": 0
+    }
+}

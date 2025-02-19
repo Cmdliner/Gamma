@@ -6,20 +6,19 @@ import compression from "compression";
 import ExpressMongoSanitize from "express-mongo-sanitize";
 import DB from "./config/db";
 import AuthMiddleware from "./middlewares/auth.middlewares";
-import auth from "./auth/auth.routes";
-import bid from "./bid/bid.routes";
-import dispute from "./dispute/dispute.routes";
-import notification from "./notification/notification.routes";
-import deals from "./payment/deals.routes";
-import payment from "./payment/payment.routes";
-import WebhookController from "./payment/webhook.controller";
-import product from "./product/product.routes";
-import user from "./user/user.routes";
+import auth from "./routes/auth.routes";
+import bid from "./routes/bid.routes";
+import dispute from "./routes/dispute.routes";
+import notification from "./routes/notification.routes";
+import deals from "./routes/deals.routes";
+import payment from "./routes/payment.routes";
+import product from "./routes/product.routes";
+import user from "./routes/user.routes";
 import { cfg } from "./init";
 import rateLimit from "express-rate-limit";
 import { AppConfig } from "./config/app.config";
-import { CronScheduler } from "./jobs/cron.scheduler";
 import { logger } from "./config/logger.config";
+import webhook from "./routes/webhook.routes";
 
 const API_VERSION = "api/v1";
 
@@ -37,7 +36,6 @@ class App {
     constructor() {
         this.app = express();
         this.cfg = cfg;
-        this.scheduleCronJobs();
         this.initializeMiddlewares();
         this.initializeRoutes();
         this.initializeErrorHandlers();
@@ -64,6 +62,7 @@ class App {
     
     private initializeRoutes() {
         this.app.use(`/${API_VERSION}/auth`, auth);
+        this.app.use(`/${API_VERSION}/webhook`, webhook);
         this.app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
         this.app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
         this.app.use(`/${API_VERSION}/payments`, AuthMiddleware.requireAuth, payment);
@@ -71,7 +70,6 @@ class App {
         this.app.use(`/${API_VERSION}/bids`, AuthMiddleware.requireAuth, bid);
         this.app.use(`/${API_VERSION}/notifications`, AuthMiddleware.requireAuth, notification);
         this.app.use(`/${API_VERSION}/disputes`, AuthMiddleware.requireAuth, dispute);
-        this.app.post('/webhooks', WebhookController.confirm);
         this.app.get("/healthz", (_req: Request, res: Response) => {
             res.status(200).json({ active: "The hood is up commandliner⚡" });
         });
@@ -81,12 +79,8 @@ class App {
     private initializeErrorHandlers() {
         this.app.use((_: Request, res: Response, _next: NextFunction) => {
             logger.error("An error occured");
-            return res.status(500).json({ error: true, message: "An  error occured\n" });
+            return res.status(500).json({ error: true, message: "An  error occured" });
         });
-    }
-
-    private scheduleCronJobs() {
-        CronScheduler.runDailyAtMidnight();
     }
 
     public async start() {

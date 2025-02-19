@@ -22,3 +22,14 @@
 {"level":"error","timestamp":"2025-02-06 04:41:42.047 AM"}
 {"level":"error","message":"Error sending email","name":"APP_ERROR","status":500,"timestamp":"2025-02-06 04:44:52.213 AM"}
 {"level":"error","message":"Error sending email","name":"APP_ERROR","status":500,"timestamp":"2025-02-06 04:52:37.319 AM"}
+{"level":"error","message":"OTP not found!","name":"APP_ERROR","status":404,"timestamp":"2025-02-08 01:04:29.460 PM"}
+{"level":"error","message":"Cannot update bank account details at this moment","name":"APP_ERROR","status":400,"timestamp":"2025-02-08 01:12:06.041 PM"}
+{"level":"error","message":"Invalid push token!","name":"APP_ERROR","status":422,"timestamp":"2025-02-08 01:14:15.049 PM"}
+{"level":"error","message":"Product not found!","name":"APP_ERROR","status":404,"timestamp":"2025-02-08 02:09:48.505 PM"}
+{"level":"error","message":"Product not available!","name":"APP_ERROR","status":400,"timestamp":"2025-02-08 02:25:35.641 PM"}
+{"level":"error","message":"Product not found!","name":"APP_ERROR","status":404,"timestamp":"2025-02-11 07:39:58.525 AM"}
+{"level":"error","message":"Product not found!","name":"APP_ERROR","status":404,"timestamp":"2025-02-11 07:41:42.711 AM"}
+{"kind":"ObjectId","message":"Cast to ObjectId failed for value \"2025-02-11T06:45:48.445Z\" (type Date) at path \"deleted_at\" because of \"BSONError\"","name":"CastError","path":"deleted_at","reason":{},"stringValue":"\"2025-02-11T06:45:48.445Z\"","value":"2025-02-11T06:45:48.445Z","valueType":"Date"}
+{"kind":"ObjectId","message":"Cast to ObjectId failed for value \"2025-02-11T06:46:52.028Z\" (type Date) at path \"deleted_at\" because of \"BSONError\"","name":"CastError","path":"deleted_at","reason":{},"stringValue":"\"2025-02-11T06:46:52.028Z\"","value":"2025-02-11T06:46:52.028Z","valueType":"Date"}
+{"level":"error","message":"A similar product exists","name":"APP_ERROR","status":400,"timestamp":"2025-02-12 09:32:18.381 AM"}
+{"level":"error","message":"A similar product exists","name":"APP_ERROR","status":400,"timestamp":"2025-02-12 09:32:18.417 AM"}

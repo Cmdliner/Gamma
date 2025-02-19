@@ -1,7 +1,6 @@
 import { Types } from "mongoose"
 import crypto, { randomInt } from "crypto";
 import { GeospatialDataNigeria } from "./location.data";
-import { cfg } from "../init";
 import { type Request, type Response, type NextFunction } from "express";
 import { Options } from "express-rate-limit";
 import { AppError } from "./error.handler";
@@ -21,54 +20,8 @@ export function generateOTP(): string {
     return `${randomInt(9)}${randomInt(6)}${randomInt(9)}${randomInt(8)}`;
 }
 
-export const hashBvn = (bvn: string) => {
-    return crypto.createHash("sha256").update(bvn).digest("hex");
-}
-
-export const encryptBvn = (bvn: string): string => {
-    try {
-        const IV_LENGTH = 16;
-
-        // Base 64 encoded key gen using openssl
-        const ENCRYPTION_KEY = Buffer.from(cfg.BVN_ENCRYPTION_KEY, "base64");
-
-
-        // Create a 16 bit init vector (think of this like a unique salt)
-        const iv = crypto.randomBytes(IV_LENGTH);
-
-        // Create cipher using encryption key and iv
-        const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
-
-        // encrypt the bvn payload 
-        let encrypted = cipher.update(bvn, 'utf8', 'hex');
-        encrypted += cipher.final('hex');
-
-        return `${iv.toString('hex')}:${encrypted}`;
-    } catch (error) {
-        throw new Error(`Failed to encrypt bvn ${(error as Error).message}`);
-
-    }
-}
-
-export const decryptBvn = (encryptedData: string): string => {
-    try {
-        const ENCRYPTION_KEY = Buffer.from(cfg.BVN_ENCRYPTION_KEY, "base64");
-
-        const [ivString, encryptedBvnString] = encryptedData.split(":");
-
-        const iv = Buffer.from(ivString, 'hex');
-        const encrypted = Buffer.from(encryptedBvnString, 'hex');
-
-        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
-
-        let decrypted = decipher.update(encrypted).toString('utf8');
-        decrypted += decipher.final('utf8');
-
-        return decrypted;
-    } catch (error) {
-        throw new Error(`Failed to decrypt bvn ${(error as Error).message}`);
-    }
-
+export const hashIdentityNumber = (identityNumber: string) => {
+    return crypto.createHash("sha256").update(identityNumber).digest("hex");
 }
 
 export function matchAccNameInDb(
@@ -112,7 +65,7 @@ export function rateLimitMiddlewareHandler(_req: Request, res: Response, _next: 
 
 type LocationType = { type: "Point", human_readable: string, coordinates: [number, number] };
 
-export  function resolveLocation(location: string): LocationType {
+export function resolveLocation(location: string): LocationType {
 
     const humanReadableLocation = location;
 

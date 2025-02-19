@@ -18,22 +18,26 @@ export class AppConfig {
     PAYSTACK_URI: string;
     PAYSTACK_SECRET_KEY: string;
     PAYSTACK_PUBLIC_KEY: string;
-    BVN_ENCRYPTION_KEY: string;
     CLOUDINARY_CLOUD_NAME: string;
     CLOUDINARY_SECRET: string;
     CLOUDINARY_API_KEY: string;
     FINCRA_BUSINESS_ID: string;
     SAFE_HAVEN_CLIENT_ASSERTION: string;
     SAFE_HAVEN_CLIENT_ID: string;
-    SAFE_HAVEN_IBS_CLIENT_ID:string;
+    SAFE_HAVEN_IBS_CLIENT_ID: string;
     SAFE_HAVEN_IBS_USER_ID: string;
     SAFE_HAVEN_AUTH_TOKEN: string;
     SAFE_HAVEN_REFRESH_TOKEN: string;
     LOG_LEVEL: string;
+    OYEAH_MAIN_ACCOUNT_SAFEHAVEN: string;
+    OYEAH_ESCROW_ACCOUNT_SAFEHAVEN: string;
+    OYEAH_SERVER_URL: string;
+
 
     constructor(cfg: AppConfig) {
 
         this.PORT = cfg.PORT;
+        this.OYEAH_SERVER_URL = cfg.OYEAH_SERVER_URL;
         this.DB_URI = cfg.DB_URI;
         this.NODE_ENV = cfg.NODE_ENV;
         this.APP_EMAIL_ADDRESS = cfg.APP_EMAIL_ADDRESS
@@ -48,7 +52,6 @@ export class AppConfig {
         this.PAYSTACK_URI = cfg.PAYSTACK_URI;
         this.PAYSTACK_SECRET_KEY = cfg.PAYSTACK_SECRET_KEY;
         this.PAYSTACK_PUBLIC_KEY = cfg.PAYSTACK_PUBLIC_KEY;
-        this.BVN_ENCRYPTION_KEY = cfg.BVN_ENCRYPTION_KEY;
         this.CLOUDINARY_CLOUD_NAME = cfg.CLOUDINARY_CLOUD_NAME;
         this.CLOUDINARY_SECRET = cfg.CLOUDINARY_SECRET;
         this.CLOUDINARY_API_KEY = cfg.CLOUDINARY_API_KEY;
@@ -60,6 +63,8 @@ export class AppConfig {
         this.SAFE_HAVEN_REFRESH_TOKEN = cfg.SAFE_HAVEN_REFRESH_TOKEN;
         this.SAFE_HAVEN_AUTH_TOKEN = cfg.SAFE_HAVEN_AUTH_TOKEN;
         this.LOG_LEVEL = cfg.LOG_LEVEL;
+        this.OYEAH_MAIN_ACCOUNT_SAFEHAVEN = cfg.OYEAH_MAIN_ACCOUNT_SAFEHAVEN;
+        this.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN = cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN
 
         const missingKeys = [];
         Object.keys(cfg).forEach((key: keyof typeof cfg) => {
@@ -70,9 +75,9 @@ export class AppConfig {
 
         if (missingKeys.length) {
             const errMssg =
-              "The following keys are missing from your config: \n" +
-              missingKeys.join(",") +
-              "\nCheck your your environment and update accordingly";
+                "The following keys are missing from your config: \n" +
+                missingKeys.join(",") +
+                "\nCheck your your environment and update accordingly";
             console.error(errMssg);
             process.exit(1);
         }

@@ -21,7 +21,6 @@ interface IProduct extends Document {
         is_locked: boolean;
         locked_at: Date;
         locked_by: Types.ObjectId;
-        payment_link: string;
     };
     ownership_documents: string[];
     category: ProductCategory;
@@ -29,7 +28,7 @@ interface IProduct extends Document {
     sponsorship: {
         sponsored_at: Date;
         expires: Date;
-        status: "active" | "pending" | "under_review";
+        status: "active" | "processing_payment" | "flagged" | "under_review";
     };
 }
 

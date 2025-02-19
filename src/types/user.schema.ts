@@ -21,25 +21,23 @@ interface IUser extends Document {
     email:  string;
     password?: string;
     interested_categories: ProductCategory[];
-    bvn?: {
+    identity?: {
+        identity_type: "nin" | "bvn";
         verified_at: Date;
-        verification_status: "verified" | "unverified",
-        encrypted_data: string;
         hash: string;
+        v_id: string;
+        verification_status: "verified" | "unverified";
     };
     bank_details?: {
         account_no: number;
         added_at: Date;
         bank_code: number;
     };
-    rewards: {
-        balance: number;
-    }
     referred_by: Types.ObjectId;
     referral_code?: string;
     referrals: Types.ObjectId[];
     email_verified?: boolean;
-    account_status: "dormant" | "active";
+    account_status: "dormant" | "active" | "suspended";
     wallet: Types.ObjectId;
     transactions: Types.ObjectId[];
     createdAt: Date;

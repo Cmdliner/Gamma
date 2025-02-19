@@ -37,14 +37,15 @@ bun run dev
 - Payment links might never expire (check again with fincra)
 - Pending sponsorships can be retried even when previous payment status hasn't been confirmed
   
-## 
+## TODOS
+- user suspension by admin
 - Consistent user phone mumber containing country code and validation should be done
-- Add auto sign-in after last phase of onboarding
+- Rm ads on activate to rm from market place
 - Implement under_review for ads
-- Indempotency key on payment
+- Indempotency key on payment; store in redis cache
 - Handle actual refund logic in cron job
 - Seller reject refund enter dispute
-- Send tx receipts with email to seller and buyer for payments and also on ad sponsorship;
+- Send tx receipts with email to seller and buyer for payments and also on ad sponsorship
 - Write tests for auth, product and payment
 
 ## REMEMBER
