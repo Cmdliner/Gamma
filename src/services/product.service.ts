@@ -25,7 +25,7 @@ class ProductService {
                         spherical: true,
                     },
                 },
-                { $match: { category } },
+                { $match: { category, status: "available" } },
                 { $sort: { distance: 1 } },
                 {
                     $lookup: {
@@ -60,6 +60,7 @@ class ProductService {
 
     static buildSearchQuery(words: string[]) {
         return {
+            status: "available",
             $and: words.map((word) => ({
                 $or: [
                     { title: this.createSearchRegex(word) },
@@ -73,6 +74,7 @@ class ProductService {
     static buildSearchQueryForCategories(words: string[], category: string) {
         return {
             category,
+            status: "available",
             $and: words.map((word) => ({
                 $or: [
                     { title: this.createSearchRegex(word) },

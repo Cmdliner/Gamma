@@ -362,7 +362,7 @@ class ProductController {
             const product = await Product.findById(productID);
             if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
-            return res.status(StatusCodes.OK).json({ success: true, message: "Product found", product });
+            return res.status(StatusCodes.OK).json({ success: true, product });
         } catch (error) {
             logger.error(error);
             const [status, errResponse] = AppError.handle(error, "An error occured while trying to fetch that product");
@@ -412,12 +412,6 @@ class ProductController {
                 skips
             );
 
-            // Check if no products were found and return 404 if so
-            if (productsCount === 0 || !products.length) {
-                throw new AppError(StatusCodes.NOT_FOUND, "No products found for this category");
-            }
-
-            // Return the products
             return res.status(200).json({
                 success: true,
                 message: "Products found!",
@@ -691,10 +685,10 @@ class ProductController {
             const sponsoredProds = await Product.find({
                 deleted_at: { $exists: false },
                 sponsorship: { $exists: true },
+                owner: req.user?._id,
                 "sponsorship.expires": { $gte: now },
                 "sponsorship.status": status
             });
-            if (!sponsoredProds.length) throw new AppError(StatusCodes.NOT_FOUND, "No sponsored products found");
 
             return res.status(StatusCodes.OK).json({ success: true, message: "Ads found", products: sponsoredProds });
         } catch (error) {

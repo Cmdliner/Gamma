@@ -14,7 +14,6 @@ export class PaymentService {
      * The payment service uses Safehaven API internally for all payment or bank transactions
      * 
      */
-
     private static SAFE_HAVEN_BASE_URI = cfg.NODE_ENV === "production" ? "https://api.sandbox.safehavenmfb.com" : "";
     private static SAFE_HAVEN_BANK_CODE = cfg.NODE_ENV === "production" ? "999240" : "999240";
     private static SAFE_HAVEN_CALLBACK_URL = `${cfg.OYEAH_SERVER_URL}/webhook`;
@@ -54,7 +53,7 @@ export class PaymentService {
                     Accept: 'application/json',
                     "Content-Type": 'application/json',
                     ClientID: cfg.SAFE_HAVEN_CLIENT_ID,
-                    Authorization: `Bearer ${this.generateSafehavenAuthToken()}`
+                    Authorization: `Bearer ${this.generateSafehavenAuthToken("refresh")}`
                 },
                 body: JSON.stringify({
                     bankCode: bank_code,
@@ -71,16 +70,12 @@ export class PaymentService {
     }
 
     static calculateCutAndAmountToDisburse(amount: number): CalculateCutReturnType {
-        try {
-            const OYEAH_CUT = (5 / 100) * amount;
-            const PROCESSING_FEE = 200;
-            const TOTAL_FEE = OYEAH_CUT + PROCESSING_FEE;
-            const AMOUNT_TO_WITHDRAW = amount - TOTAL_FEE;
+        const OYEAH_CUT = (5 / 100) * amount;
+        const PROCESSING_FEE = 200;
+        const TOTAL_FEE = OYEAH_CUT + PROCESSING_FEE;
+        const AMOUNT_TO_WITHDRAW = amount - TOTAL_FEE;
 
-            return { total_fee: TOTAL_FEE, amount_to_withdraw: AMOUNT_TO_WITHDRAW };
-        } catch (error) {
-            throw error;
-        }
+        return { total_fee: TOTAL_FEE, amount_to_withdraw: AMOUNT_TO_WITHDRAW };
     }
 
     static async getBankList() {
@@ -143,7 +138,7 @@ export class PaymentService {
 
     static async createUserWallet(user: IUser) {
         try {
-            const { access_token } = await this.generateSafehavenAuthToken();
+            const { access_token } = await this.generateSafehavenAuthToken("refresh");
             const url = `${this.SAFE_HAVEN_BASE_URI}/accounts/v2/subaccount`;
             const options = {
                 method: "POST",
