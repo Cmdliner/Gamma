@@ -63,8 +63,6 @@ class ProductController {
                 .limit(Number(limit))
                 .skip(offset);
 
-            if (!products.length) throw new AppError(StatusCodes.NOT_FOUND, "No products found");
-
             // Sort products by relevance
             const sortedProducts = products
                 .map((product: IProduct) => ({

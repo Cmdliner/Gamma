@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import { INotification } from "../types/notification.schema";
 
 const NotificationSchema = new Schema({
     for: {
@@ -6,19 +7,21 @@ const NotificationSchema = new Schema({
         ref: "User",
         required: true
     },
-    message: {
+    has_been_read: {
+        type: Boolean,
+        default: false
+    },
+    action_link: {
+        type: String,
+    },
+    body: {
         type: String,
         required: true,
         minlength: 5,
         maxlength: 40
-    },
-    app_code: {
-        type: String,
-        required: true,
-        immutable: true
     }
-});
+}, { timestamps: true });
 
-const Notification = model("Notification", NotificationSchema);
+const Notification = model<INotification>("Notification", NotificationSchema);
 
 export default Notification;

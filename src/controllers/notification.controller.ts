@@ -1,23 +1,60 @@
 import { Request, Response } from "express";
-import User from "../models/user.model";
+import { AppError } from "../lib/error.handler";
+import { logger } from "../config/logger.config";
+import Notification from "../models/notification.model";
+import { StatusCodes } from "http-status-codes";
+
 
 class NotificationController {
-    static async registerDevice(req: Request, res: Response) {
+    static async allNotifications(req: Request, res: Response) {
         try {
-            const { push_token } = req.body;
+            const notifications = await Notification.find({
+                for: req.user?._id,
+                has_been_read: false
+            });
 
-            // !TODO => VALIDATE PUSH TOKENS
-            const user = await User.findById(req.user?._id);
-            if (!user) {
-                return res.status(404).json({ error: true, message: "User not found!" });
-            }
-            user.device_push_token = push_token;
-            await user.save();
+            return res.status(StatusCodes.OK).json({ success: true, notifications });
         } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: true, message: "Error adding device push token" });
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "");
+            return res.status(status).json(errResponse);
         }
     }
+
+    static async read(req: Request, res: Response) {
+        try {
+            const { notificationID } = req.params;
+
+            const notification = await Notification.findById({
+                for: req.user?._id,
+                _id: notificationID,
+            });
+            if (!notification) throw new AppError(StatusCodes.NOT_FOUND, "Notification not found!");
+
+            return res.status(StatusCodes.OK).json({ success: true, notification });
+        } catch (error) {
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "");
+            return res.status(status).json(errResponse);
+        }
+    }
+
+    static async markAllAsRead(req: Request, res: Response) {
+        try {
+            await Notification.updateMany(
+                { for: req.user?._id, has_been_read: false },
+                { has_been_read: true }
+            );
+
+            return res.status(StatusCodes.OK).json({ success: true, message: "All notifications have been read" });
+        } catch (error) {
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "");
+            return res.status(status).json(errResponse);
+        }
+    }
+
+
 }
 
 export default NotificationController;

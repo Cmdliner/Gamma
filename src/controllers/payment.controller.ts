@@ -109,7 +109,6 @@ class PaymentController {
             const transactions = await Transaction
                 .find({ bearer: user._id })
                 .sort({ createdAt: -1 }).populate("product");
-            if (!transactions.length) throw new AppError(StatusCodes.NOT_FOUND, "No transactions yet");
 
 
             return res.status(StatusCodes.OK).json({ success: true, transactions });
@@ -595,13 +594,12 @@ class PaymentController {
                 $or: [{ seller: req.user?._id, bearer: req.user?._id }],
                 status: "success"
             });
-            if (!deals || !deals.length) {
-                return res.status(404).json({ error: true, message: "No deals found!" });
-            }
-            return res.status(200).json({ success: true, deals });
+
+            return res.status(StatusCodes.OK).json({ success: true, deals });
         } catch (error) {
             logger.error(error);
-            return res.status(500).json({ error: true, message: "Error getting deals at this moment" });
+            const [status, errResponse] = AppError.handle(error, "Error fetching deals at this moment");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -611,13 +609,12 @@ class PaymentController {
                 $or: [{ seller: req.user?._id, bearer: req.user?._id }],
                 status: "in_dispute"
             });
-            if (!deals) {
-                return res.status(404).json({ error: true, message: "No deals found" })
-            }
-            return res.status(200).json({ success: true, deals });
+
+            return res.status(StatusCodes.OK).json({ success: true, deals });
         } catch (error) {
             logger.error(error);
-            return res.status(500).json({ error: true, message: "Error getting deals at the moment" });
+            const [status, errResponse] = AppError.handle(error, "Error fetching deals at this moment");
+            return res.status(status).json(errResponse);
         }
     }
 
@@ -649,14 +646,12 @@ class PaymentController {
                 bearer: req.user?._id,
                 status: "in_escrow"
             });
-            if (!deals) {
-                return res.status(404).json({ error: true, message: "User has no ongoing transactions" });
-            }
-            return res.status(200).json({ success: true, deals });
+            return res.status(StatusCodes.OK).json({ success: true, deals });
 
         } catch (error) {
             logger.error(error);
-            return res.status(500).json({ error: true, message: "Error getting ongoing dealas" })
+            const [status, errResponse] = AppError.handle(error, "Error fetching deals at this moment");
+            return res.status(status).json(errResponse);
         }
     }
 
