@@ -5,6 +5,7 @@ import { type Request, type Response, type NextFunction } from "express";
 import { Options } from "express-rate-limit";
 import { AppError } from "./error.handler";
 import { StatusCodes } from "http-status-codes";
+import { SafehavenSupportedBanks } from "./safehaven_bankcodes";
 
 export function compareObjectID(obj1: Types.ObjectId, obj2: Types.ObjectId): boolean {
     return obj1.toString() === obj2.toString();
@@ -84,3 +85,9 @@ export function resolveLocation(location: string): LocationType {
 }
 
 export const isValidState = (state: string) => GeospatialDataNigeria[state] ? true : false;
+
+
+export function querySafeHavenBankCodes(q: RegExp) {
+    const matchedBank = SafehavenSupportedBanks.filter(bank => bank.name.match(q))[0];
+    return { bank_name: matchedBank?.name, bank_code: matchedBank?.bankCode }
+}

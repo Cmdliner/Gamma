@@ -33,5 +33,6 @@ declare namespace NodeJS {
         SAFE_HAVEN_AUTH_TOKEN: string;
         SAFE_HAVEN_REFRESH_TOKEN: string;
         REDIS_URL: string;
+        OYEAH_SERVER_URL: string;
     }
 }

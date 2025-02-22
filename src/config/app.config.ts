@@ -31,6 +31,7 @@ export class AppConfig {
     LOG_LEVEL: string;
     OYEAH_MAIN_ACCOUNT_SAFEHAVEN: string;
     OYEAH_ESCROW_ACCOUNT_SAFEHAVEN: string;
+    OYEAH_ADS_REVENUE_ACCOUNT_SAFEHAVEN: string;
     OYEAH_SERVER_URL: string;
 
 
@@ -64,7 +65,9 @@ export class AppConfig {
         this.SAFE_HAVEN_AUTH_TOKEN = cfg.SAFE_HAVEN_AUTH_TOKEN;
         this.LOG_LEVEL = cfg.LOG_LEVEL;
         this.OYEAH_MAIN_ACCOUNT_SAFEHAVEN = cfg.OYEAH_MAIN_ACCOUNT_SAFEHAVEN;
-        this.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN = cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN
+        this.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN = cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN;
+        this.OYEAH_ADS_REVENUE_ACCOUNT_SAFEHAVEN = cfg.OYEAH_ADS_REVENUE_ACCOUNT_SAFEHAVEN;
+        this.OYEAH_SERVER_URL = cfg.OYEAH_SERVER_URL;
 
         const missingKeys = [];
         Object.keys(cfg).forEach((key: keyof typeof cfg) => {

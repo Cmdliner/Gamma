@@ -1,13 +1,13 @@
 import Product from "../models/product.model";
 import { startSession } from "mongoose";
-import { ChargeSuccessPayload, PayoutSuccessPayload } from "../types/webhook.schema";
+import { ChargeSuccessPayload, IVirtualAccountTransferData, PayoutSuccessPayload } from "../types/webhook.schema";
 import crypto from "crypto";
 import { AdPayments } from "../types/ad.enums";
 import {
-  AdSponsorshipTransaction,
-  ProductPurchaseTransaction,
-  RefundTransaction,
-  WithdrawalTransaction,
+    AdSponsorshipTransaction,
+    ProductPurchaseTransaction,
+    RefundTransaction,
+    WithdrawalTransaction,
 } from "../models/transaction.model";
 import User from "../models/user.model";
 import { cfg } from "../init";
@@ -27,29 +27,31 @@ class WebhookService {
 
     }
 
-    static async handleSuccessfulProductPurchase(payload: ChargeSuccessPayload) {
+    static async handleSuccessfulProductPurchase(payload: IVirtualAccountTransferData) {
         const session = await startSession();
         try {
             session.startTransaction();
-            if (payload.data.status === "success") {
-                console.dir({ payload_data: payload.data });
-                const { product_id } = payload.data.metadata;
+            if (payload.status === "Completed") {
+                const [transaction_id, product_id] = payload.externalReference.split("::");
+                console.log({ transaction_id, product_id });
 
-                const product = await Product.findById(product_id).session(session);
+                const product = await Product.findOne({
+                    deleted_at: { $exists: false },
+                    status: "processing_payment",
+                    _id: product_id
+                }).session(session);
                 console.dir({ product });
                 if (!product) throw new Error("Product not found");
                 product.status = "sold";
                 await product.save({ session });
 
                 // Transaction
-                const transaction = await ProductPurchaseTransaction.findById(payload.data.reference).session(session);
+                const transaction = await ProductPurchaseTransaction.findById(transaction_id).session(session);
                 if (!transaction) throw new Error("Transaction not found");
-                if (payload.data.amountToSettle > 0 && payload.data.metadata.amount_expected === payload.data.amount) {
-                    console.log("Transaction is noe in escrow");
-                    transaction.status = "in_escrow";
-                    transaction.external_ref = payload.data.chargeReference
-                    await transaction.save({ session });
-                }
+                transaction.status = "in_escrow";
+                transaction.payment_ref = payload.paymentReference;
+                await transaction.save({ session });
+
                 await session.commitTransaction();
             }
         } catch (error) {
@@ -60,7 +62,7 @@ class WebhookService {
         }
     }
 
-    static async handleProductSponsorPayment(payload: ChargeSuccessPayload) {
+    static async handleProductSponsorPayment(payload: IVirtualAccountTransferData) {
 
         // Ads expire one week after payment plan chosen
         const SevenDaysFromNow = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
@@ -70,15 +72,18 @@ class WebhookService {
 
         try {
             session.startTransaction();
-            const amountPaid = payload.data.amountToSettle;
+            if (payload.status !== "Completed" || payload.isReversed) {
+                return { success: false }
+            }
+            const amountPaid = payload.amount;
+            const [transaction_id, product_id] = payload.externalReference.split("::");
             let expiry = new Date();
 
             if (amountPaid === AdPayments.weekly) expiry = SevenDaysFromNow;
             else if (amountPaid === AdPayments.monthly) expiry = OneMonthFromNow;
-            else {/*handle underpayments here */ }
 
             // Update product expiry and active status
-            const product = await Product.findByIdAndUpdate(payload.data.metadata.product_id, {
+            const product = await Product.findByIdAndUpdate(product_id, {
                 "sponsorship.sponsored_at": new Date(),
                 "sponsorship.expires": expiry,
                 "sponsorship.status": "active",
@@ -86,13 +91,14 @@ class WebhookService {
             if (!product) throw new Error();
 
             // Update transaction status
-            const tx = await AdSponsorshipTransaction.findByIdAndUpdate(payload.data.reference, {
-                external_ref: payload.data.chargeReference,
+            await AdSponsorshipTransaction.findByIdAndUpdate(transaction_id, {
+                payment_ref: payload.paymentReference,
                 status: "success"
             }, { new: true, session });
 
-
             await session.commitTransaction();
+
+            return { success: true, message: "Ad Payment received" }
         } catch (error) {
             await session.abortTransaction();
             console.error(error);
@@ -148,7 +154,7 @@ class WebhookService {
                 if (!transaction) throw new Error("Transaction not found");
                 if (payload.data.amountToSettle > 0 && payload.data.metadata.amount_expected > product.price) {
                     transaction.status = "failed";
-                    transaction.external_ref = payload.data.chargeReference
+                    transaction.payment_ref = payload.data.chargeReference
                     await transaction.save();
                 }
 

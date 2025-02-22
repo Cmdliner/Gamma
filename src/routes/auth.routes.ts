@@ -5,7 +5,7 @@ import AuthMiddleware from "../middlewares/auth.middlewares";
 
 const auth = Router();
 
-auth.get("/bank-codes", AuthController.getBankCodes);
+// auth.get("/bank-codes", AuthController.getBankCodes);
 auth.post("/register", AuthController.register);
 auth.post("/resend-verification-mail", AuthController.resendVerificationMail);
 auth.post("/verify-email", AuthController.verifyEmail);

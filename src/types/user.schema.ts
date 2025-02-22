@@ -29,9 +29,9 @@ interface IUser extends Document {
         verification_status: "verified" | "unverified";
     };
     bank_details?: {
-        account_no: number;
+        account_no: String;
         added_at: Date;
-        bank_code: number;
+        bank_code: string;
     };
     referred_by: Types.ObjectId;
     referral_code?: string;

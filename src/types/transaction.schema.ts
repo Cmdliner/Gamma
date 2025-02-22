@@ -26,7 +26,7 @@ export interface IProductPurchaseTransaction extends ITransaction {
     payment_method: "card" | "bank_transfer";
     product: Types.ObjectId;
     seller: Types.ObjectId;
-    external_ref: string;
+    payment_ref: string;
 }
 
 export interface IRefundTransaction extends ITransaction {
@@ -34,13 +34,13 @@ export interface IRefundTransaction extends ITransaction {
     product: Types.ObjectId;
     seller: Types.ObjectId;
     associated_payment_tx: Types.ObjectId;
-    external_ref: string;
+    payment_ref: string;
 }
 
 export interface IAdSponsorshipTransaction extends ITransaction {
     payment_method: "card" | "bank_transfer";
     product: Types.ObjectId;
-    external_ref: string;
+    payment_ref: string;
 }
 
 export interface IReferralTransaction extends ITransaction {
@@ -49,7 +49,7 @@ export interface IReferralTransaction extends ITransaction {
 
 export interface IWithdrawalTransaction extends ITransaction {
     payment_method: "card" | "bank_transfer";
-    external_ref: string;
+    payment_ref: string;
     from: "rewards" | "wallet"
 }
 

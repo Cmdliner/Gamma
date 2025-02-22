@@ -10,7 +10,7 @@ import Transaction, {
 } from "../models/transaction.model";
 import IUser from "../types/user.schema";
 import Product from "../models/product.model";
-import { compareObjectID, generateOTP } from "../lib/utils";
+import { compareObjectID, generateOTP, querySafeHavenBankCodes } from "../lib/utils";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../models/bid.model";
 import { AdPayments } from "../types/ad.enums";
@@ -25,6 +25,19 @@ import { logger } from "../config/logger.config";
 import { PaymentService } from "../services/payment.service";
 
 class PaymentController {
+
+    static async getSafeHavenBankCodes(req: Request, res: Response) {
+        try {
+            const { q } = req.query;
+            const searchPattern = new RegExp(`${q}`, "i");
+
+            const { bank_name, bank_code } = querySafeHavenBankCodes(searchPattern);
+            return res.status(StatusCodes.OK).json({ bank_name, bank_code });
+        } catch (error) {
+            logger.error(error);
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: true, message: "Error retrieving bank codes" });
+        }
+    }
 
     static async withdrawFromWallet(req: Request, res: Response) {
         const MIN_WITHDRAWAL_VALUE = 500;
@@ -82,7 +95,7 @@ class PaymentController {
                 // Update transaction
                 await WithdrawalTransaction.findByIdAndUpdate(
                     txRef,
-                    { external_ref: withdrawalRes.data.reference },
+                    { payment_ref: withdrawalRes.data.reference },
                     { new: true, session }
                 );
             }
@@ -141,7 +154,7 @@ class PaymentController {
             }).session(session);
             if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
             if (product.status !== "available" || product.purchase_lock.is_locked) {
-                throw new AppError(StatusCodes.BAD_REQUEST, "Product not available!");
+                throw new AppError(StatusCodes.LOCKED, "Product not available!");
             }
 
             // Check if this request is for a bid
@@ -174,8 +187,7 @@ class PaymentController {
                 purchase_lock: {
                     is_locked: true,
                     locked_at: Date.now(),
-                    locked_by: userId,
-                    payment_link: "" // !todo => Add payment link
+                    locked_by: userId
                 }
             }, { new: true, session });
             if (!updatedProduct) {
@@ -197,7 +209,8 @@ class PaymentController {
             const amountToPay = bidPrice ? bidPrice : product.price;
             const { payment_error, message, ...payment_details } = await PaymentService.generateProductPurchaseAccountDetails(
                 amountToPay,
-                product
+                product,
+                txRef
             );
             if (payment_error) throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, message);
             await session.commitTransaction();
@@ -256,7 +269,7 @@ class PaymentController {
 
             if (product.status === "sold") throw new AppError(StatusCodes.BAD_REQUEST, "Product sold!");
 
-            // Create Transaction for ad sponsorhsip
+            // Create Transaction for ad sponsorship
             const adsDurationFmt = sponsorship_duration === "1Week" ? "one week" : "one month";
             const transaction = new AdSponsorshipTransaction({
                 bearer: req.user?._id,
@@ -270,7 +283,8 @@ class PaymentController {
 
             const { payment_error, message, ...payment_details } = await PaymentService.generateSponsorshipPaymentAccountDetails(
                 amountToPay,
-                product
+                product,
+                transaction.id
             );
             if (payment_error) throw new AppError(StatusCodes.BAD_REQUEST, message);
 
@@ -293,8 +307,8 @@ class PaymentController {
 
     static async withdrawRewards(req: Request, res: Response) {
         const session = await startSession();
-        session.startTransaction();
         try {
+            session.startTransaction();
             const { amount }: { amount: number } = req.body;
 
             const user = await User.findById(req.user?._id).session(session);
@@ -334,11 +348,17 @@ class PaymentController {
             });
             await payoutTransaction.save({ session });
 
-            const { payout_error, message, status } = await PaymentService.withdraw("rewards", amount, user, wallet, payoutTransaction.id);
+            const { payout_error, message, status } = await PaymentService.withdraw(
+                "rewards",
+                amount,
+                user,
+                wallet,
+                payoutTransaction.id
+            );
             if (payout_error) throw new AppError(StatusCodes.BAD_REQUEST, message);
 
             const feeAndDisbursement = PaymentService.calculateCutAndAmountToDisburse(amount);
-            // Update balance and transaction once payout is not failed
+
             if (status === "success") {
                 wallet.rewards_balance -= amount;
                 wallet.disbursement_fees += feeAndDisbursement.total_fee;
@@ -424,13 +444,19 @@ class PaymentController {
 
             const sellerWallet = await Wallet.findById(seller.wallet).session(session);
             if (!sellerWallet) throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Seller's wallet not found!");
+
+            
+            const customer = await User.findById(transaction.bearer).session(session);
+            if (!customer) throw new AppError(StatusCodes.NOT_FOUND, "Customer not found");
+
+            const customerWallet = await Wallet.findById(customer.wallet).session(session);
+            if (!customerWallet) throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Customer's wallet not found!");
+
+            await PaymentService.transfer(customerWallet, sellerWallet, transaction.amount, transaction.id);
             sellerWallet.main_balance += transaction.amount;
             await sellerWallet.save({ session });
 
             // Activate customer's account if dormant
-            const customer = await User.findById(transaction.bearer).session(session);
-            if (!customer) throw new AppError(StatusCodes.NOT_FOUND, "Customer not found");
-
             if (customer.account_status === "dormant") {
                 customer.account_status = "active";
                 if (customer.referred_by) {
@@ -561,7 +587,7 @@ class PaymentController {
                 locked_by: undefined,
                 locked_at: undefined
             };
-            
+
             await product.save({ session });
 
             // Send money to user bank using fincra

@@ -63,8 +63,8 @@ const UserSchema = new Schema({
         verification_status: { type: String, enum: ["verified", "unverified"], default: "unverified" }
     },
     bank_details: {
-        account_no: { type: Number, sparse: true, unique: true },
-        bank_code: { type: Number },
+        account_no: { type: String, sparse: true, unique: true },
+        bank_code: { type: String },
         added_at: { type: Date }
     },
     account_status: {

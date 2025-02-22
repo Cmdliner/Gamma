@@ -60,7 +60,7 @@ const ProductPurchaseTransactionSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Product"
     },
-    external_ref: {
+    payment_ref: {
         type: String,
         unique: true,
         sparse: true
@@ -88,7 +88,7 @@ const RefundTransactionSchema = new Schema({
         ref: "User",
         required: true
     },
-    external_ref: {
+    payment_ref: {
         type: String,
         unique: true,
         sparse: true
@@ -106,7 +106,7 @@ const AdSponsorshipTransactionSchema = new Schema({
         ref: "Product",
         required: true
     },
-    external_ref: {
+    payment_ref: {
         type: String,
         unique: true,
         sparse: true
@@ -126,7 +126,7 @@ const WithdrawalTransactionSchema = new Schema({
         type: String,
         enum: ["card", "bank_transfer"]
     },
-    external_ref: {
+    payment_ref: {
         type: String
     },
     from: {

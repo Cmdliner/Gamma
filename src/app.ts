@@ -61,8 +61,8 @@ class App {
     }
     
     private initializeRoutes() {
+        this.app.use(`/webhook`, webhook);
         this.app.use(`/${API_VERSION}/auth`, auth);
-        this.app.use(`/${API_VERSION}/webhook`, webhook);
         this.app.use(`/${API_VERSION}/users`, AuthMiddleware.requireAuth, user);
         this.app.use(`/${API_VERSION}/products`, AuthMiddleware.requireAuth, product);
         this.app.use(`/${API_VERSION}/payments`, AuthMiddleware.requireAuth, payment);

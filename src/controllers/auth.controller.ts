@@ -9,7 +9,7 @@ import OTP from "../models/otp.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "../services/auth.service";
 import Wallet from "../models/wallet.model";
-import { generateOTP, hashIdentityNumber, matchAccNameInDb } from "../lib/utils";
+import { generateOTP, hashIdentityNumber, matchAccNameInDb, querySafeHavenBankCodes } from "../lib/utils";
 import PaystackService from "../services/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../services/fincra.service";
@@ -355,11 +355,7 @@ class AuthController {
 
     }
 
-    // Get bank codes
-    /**
-     * @deprecated
-     */
-    static async getBankCodes(req: Request, res: Response) {
+    static async getPaystackBankCodes(req: Request, res: Response) {
         try {
             const { q } = req.query;
             const searchPattern = new RegExp(`${q}`, "i");
@@ -375,33 +371,40 @@ class AuthController {
         }
     }
 
+
     // bank account details
     static async validateBankDetails(req: Request, res: Response) {
         const session = await startSession();
         try {
-            const { account_no, bank_code } = req.body;
+            session.startTransaction();
+            const { account_no, bank_name, paystack_bank_code } = req.body;
 
-            if (!account_no || !bank_code) {
-                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `${account_no ? "Bank code" : "Account no"} is required`);
+            if(!bank_name) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `"bank_name" required`);
+            if (!account_no || !paystack_bank_code) {
+                throw new AppError(
+                    StatusCodes.UNPROCESSABLE_ENTITY, 
+                    `${account_no ? "paystack_bank_code" : "account_no"} required`
+                );
             }
 
-            // Verify onboarding token and check if user is valid
             const unverifiedUserToken = req.headers["x-onboarding-user"] as string;
             if (!unverifiedUserToken) {
                 throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "x-onboarding-user header is not set");
             }
 
-            // Decode onboarding header
             const { error, id, reason, message } = AuthService.decodeOnboardingToken(unverifiedUserToken);
             if (error) throw new AppError(StatusCodes.FORBIDDEN, message, reason);
 
-            // Intiate db transaction
-            session.startTransaction();
+            const bankCodeSearchQuery = new RegExp(bank_name, "i");
+
+            const safehavenBankDetails = querySafeHavenBankCodes(bankCodeSearchQuery);
+            if(!safehavenBankDetails) throw new AppError(StatusCodes.BAD_REQUEST, "Bank unrecognized");
 
             const user = await User.findById(id).session(session);
             if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
-            const validBankAcc = await PaystackService.validateAccountDetails(account_no, bank_code)
+            const validBankAcc = await PaystackService.validateAccountDetails(account_no, paystack_bank_code);
+            
             if (!validBankAcc) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid bank details");
             const accNameMatched = matchAccNameInDb(
                 user.first_name,
@@ -412,8 +415,12 @@ class AuthController {
             if (!accNameMatched) {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Bank account and db user details mismatch!");
             }
-
-            user.bank_details = { account_no, bank_code, added_at: new Date() };
+  
+            user.bank_details = { 
+                account_no: account_no.toString(), 
+                bank_code: safehavenBankDetails.bank_code, 
+                added_at: new Date() 
+            };
             await user.save({ session });
 
             const { wallet_creation_error, err_message, wallet_account } = await PaymentService.createUserWallet(user);

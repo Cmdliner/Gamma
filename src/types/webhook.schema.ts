@@ -77,32 +77,46 @@ export interface PayoutSuccessPayload {
     }
 }
 
-/* 
 
-{
-  id: 56121,
-  amountCharged: 500,
-  amountReceived: 500,
-  recipient: {
-    name: "Abiola Abiade",
-    accountNumber: "9136229184",
-    type: "individual",
-    email: "ramatabiade@gmail.com",
-  },
-  fee: 0,
-  rate: 1,
-  paymentScheme: null,
-  paymentDestination: "bank_account",
-  sourceCurrency: "NGN",
-  destinationCurrency: "NGN",
-  status: "successful",
-  createdAt: "2024-12-22T09:42:28.000Z",
-  updatedAt: "2024-12-22T09:42:28.000Z",
-  reference: "39d6c402eb8343e6",
-  customerReference: "6767df02866905ca863a75cd",
-  reason: "Disbursement was successful",
-  traceId: "999999230619134112418465441784",
-  valuedAt: "2024-12-22T09:42:28.000Z",
-  isNip: false,
+
+type ProductId = string;
+type TransactionId = string;
+
+export interface IVirtualAccountTransferData {
+    _id: string,
+    client: string,
+    virtualAccount: string,
+    sessionId: string,
+    nameEnquiryReference: string;
+    paymentReference: string,
+    externalReference: `${TransactionId}::${ProductId}`,
+    isReversed: boolean,
+    reversalReference: string,
+    provider: "BANK",
+    providerChannel: "TRANSFER",
+    providerChannelCode: "IBS",
+    destinationInstitutionCode: "999240",
+    creditAccountName: "OyeahTechnologi Checkout",
+    creditAccountNumber: "6020355854",
+    creditBankVerificationNumber: null,
+    creditKYCLevel: "3",
+    debitAccountName: "OYEAH TECHNOLOGIES LIMITED",
+    debitAccountNumber: string,
+    debitBankVerificationNumber: null,
+    debitKYCLevel: string,
+    transactionLocation: string,
+    narration: string,
+    amount: 7000,
+    fees: 35,
+    vat: 0,
+    stampDuty: 0,
+    responseCode: "00",
+    responseMessage: string,
+    status: string, // ["Completed" | ]
+    isDeleted: boolean,
+    createdAt: string, // timestamps
+    declinedAt: string, // timestamps
+    updatedAt: string, //timestamps
+    __v: 0,
+
 }
-*/
