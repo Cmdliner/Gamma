@@ -24,6 +24,7 @@ interface ITransaction extends Document {
 
 export interface IProductPurchaseTransaction extends ITransaction {
     payment_method: "card" | "bank_transfer";
+    destination: "escrow" | "wallet";
     product: Types.ObjectId;
     seller: Types.ObjectId;
     payment_ref: string;

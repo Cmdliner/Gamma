@@ -198,6 +198,7 @@ class PaymentController {
                 bearer: userId,
                 amount: bidPrice ? bidPrice : product.price,
                 seller: updatedProduct.owner,
+                destination: 'escrow',
                 status: "pending",
                 product: productID,
                 reason: `For the purchase of ${product.name}`,
@@ -416,7 +417,7 @@ class PaymentController {
         const session = await startSession();
         try {
             session.startTransaction();
-            const { seller_id, transaction_id, otp, indempotence_key } = req.body;
+            const { seller_id, transaction_id, otp, _indempotency_key } = req.body;
 
             // Validate and verify  otp entered
             const now = new Date();
@@ -443,16 +444,35 @@ class PaymentController {
             if (!seller) throw new AppError(StatusCodes.NOT_FOUND, "Seller not found!");
 
             const sellerWallet = await Wallet.findById(seller.wallet).session(session);
-            if (!sellerWallet) throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Seller's wallet not found!");
+            if (!sellerWallet) throw new AppError(StatusCodes.BAD_REQUEST, "Seller's wallet not found!");
 
-            
+
             const customer = await User.findById(transaction.bearer).session(session);
             if (!customer) throw new AppError(StatusCodes.NOT_FOUND, "Customer not found");
 
             const customerWallet = await Wallet.findById(customer.wallet).session(session);
-            if (!customerWallet) throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Customer's wallet not found!");
+            if (!customerWallet) throw new AppError(StatusCodes.BAD_REQUEST, "Customer's wallet not found!");
 
-            await PaymentService.transfer(customerWallet, sellerWallet, transaction.amount, transaction.id);
+            const walletTransferTx = new ProductPurchaseTransaction({
+                bearer: customer._id,
+                amount: transaction.amount,
+                status: 'processing_payment',
+                payment_method: 'bank_transfer',
+                destination: 'wallet',
+                product: transaction.product,
+                seller: transaction.seller,
+                reason: "Funds transfer to seller"
+
+            });
+            await walletTransferTx.save({ session });
+
+            const intraTransfer = await PaymentService.transfer(
+                customerWallet,
+                sellerWallet,
+                transaction.amount,
+                walletTransferTx.id
+            );
+            if(intraTransfer.payout_error) throw new AppError(StatusCodes.BAD_REQUEST, "Couldn't process transfer");
             sellerWallet.main_balance += transaction.amount;
             await sellerWallet.save({ session });
 
@@ -487,6 +507,7 @@ class PaymentController {
             return res.status(StatusCodes.OK).json({ success: true });
         } catch (error) {
             await session.abortTransaction();
+            console.log(error);
             logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error sending funds!");
             return res.status(status).json(errResponse);
@@ -495,7 +516,7 @@ class PaymentController {
         }
     }
 
-    // Buyer request funds
+    // Buyer request refund
     static async requestRefund(req: Request, res: Response) {
         const session = await startSession();
         try {
@@ -618,6 +639,7 @@ class PaymentController {
         try {
             const deals = await ProductPurchaseTransaction.find({
                 $or: [{ seller: req.user?._id, bearer: req.user?._id }],
+                destination: "escrow",
                 status: "success"
             });
 
@@ -633,7 +655,8 @@ class PaymentController {
         try {
             const deals = await ProductPurchaseTransaction.find({
                 $or: [{ seller: req.user?._id, bearer: req.user?._id }],
-                status: "in_dispute"
+                status: "in_dispute",
+                destination: "escrow"
             });
 
             return res.status(StatusCodes.OK).json({ success: true, deals });
@@ -649,6 +672,7 @@ class PaymentController {
             const deals = await ProductPurchaseTransaction.find({
                 $or: [{ seller: req.user?._id, bearer: req.user?._id }],
                 status: "failed",
+                destination: "escrow"
             }).populate("bearer").populate({
                 path: "product",
                 populate: {
@@ -669,7 +693,8 @@ class PaymentController {
     static async getOngoingDeals(req: Request, res: Response) {
         try {
             const deals = await ProductPurchaseTransaction.find({
-                bearer: req.user?._id,
+                $or: [{ bearer: req.user?._id, seller: req.user?._id }],
+                destination: "escrow",
                 status: "in_escrow"
             });
             return res.status(StatusCodes.OK).json({ success: true, deals });

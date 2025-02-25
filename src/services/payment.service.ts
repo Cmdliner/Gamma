@@ -44,7 +44,7 @@ export class PaymentService {
         }
     }
 
-    private static async accountNameEnquiry(account_no: string, bank_code: string) {
+    private static async accountNameEnquiry(account_no: string, bank_code: string, access_token: string) {
         try {
             const url = `${this.SAFE_HAVEN_BASE_URI}/transfers/name-enquiry`;
             const options = {
@@ -53,7 +53,7 @@ export class PaymentService {
                     Accept: 'application/json',
                     "Content-Type": 'application/json',
                     ClientID: cfg.SAFE_HAVEN_CLIENT_ID,
-                    Authorization: `Bearer ${this.generateSafehavenAuthToken()}`
+                    Authorization: `Bearer ${access_token}`
                 },
                 body: JSON.stringify({
                     bankCode: bank_code,
@@ -64,6 +64,7 @@ export class PaymentService {
             const res = await fetch(url, options);
             const data = await res.json();
             return data.data;
+
         } catch (error) {
             throw error;
         }
@@ -82,7 +83,7 @@ export class PaymentService {
         try {
             const { access_token } = await this.generateSafehavenAuthToken();
 
-            const url = 'https://api.sandbox.safehavenmfb.com/transfers/banks';
+            const url = `${this.SAFE_HAVEN_BASE_URI}/transfers/banks`;
             const options = {
                 method: 'GET',
                 headers: {
@@ -159,11 +160,10 @@ export class PaymentService {
 
             const res = await fetch(url, options);
             const data = await res.json();
-            console.log(data);
+
             if (data.statusCode >= 400) return { wallet_creation_error: true, err_message: "Error creating wallet" };
             return { wallet_account: data.data.accountNumber };
         } catch (error) {
-            console.error(error);
             throw error;
         }
     }
@@ -196,7 +196,6 @@ export class PaymentService {
 
             const res = await fetch(url, options);
             const data = await res.json();
-            console.log(data);
             if (data.statusCode >= 400 || data.data.status !== "Active") {
                 return { payment_error: true, message: "Error generating payment account" }
             }
@@ -206,7 +205,6 @@ export class PaymentService {
                 amount_to_pay: data.data.amount
             }
         } catch (error) {
-            console.error(error);
             throw error;
         }
     }
@@ -239,7 +237,6 @@ export class PaymentService {
 
             const res = await fetch(url, options);
             const data = await res.json();
-            console.log({ productPurchaseAcc: data });
             if (data.statusCode >= 400 || data.data.status !== "Active") {
                 return { payment_error: true, message: "Error generating payment account" }
             }
@@ -249,7 +246,6 @@ export class PaymentService {
                 amount_to_pay: data.data.amount
             }
         } catch (error) {
-            console.error(error);
             throw error;
         }
     }
@@ -257,8 +253,13 @@ export class PaymentService {
     static async withdraw(from: TWithdrawalLocation, amount: number, user: IUser, wallet: IWallet, ref: string) {
         try {
             const { bank_details } = user;
-            const { sessionId } = await this.accountNameEnquiry(`${bank_details.account_no}`, `${bank_details.bank_code}`);
             const { access_token } = await this.generateSafehavenAuthToken();
+            const { sessionId } = await this.accountNameEnquiry(
+                bank_details.account_no,
+                bank_details.bank_code,
+                access_token
+            );
+
 
             const url = `${this.SAFE_HAVEN_BASE_URI}/transfers`;
             const options = {
@@ -276,7 +277,8 @@ export class PaymentService {
                     beneficiaryAccountNumber: `${bank_details.account_no}`,
                     amount,
                     paymentReference: ref,
-                    narration: from === "wallet" ? "Oyeah wallet payout" : "Oyeah rewards payout"
+                    narration: from === "wallet" ? "Oyeah wallet payout" : "Oyeah rewards payout",
+		    saveBeneficiary: false
                 })
             };
 
@@ -294,10 +296,12 @@ export class PaymentService {
     static async transfer(from: IWallet, to: IWallet, amount: number, ref: string) {
         try {
 
-            const { sessionId } = await this.accountNameEnquiry(
-                `${from.account.account_no}`, `${this.SAFE_HAVEN_BANK_CODE}`
-            );
             const { access_token } = await this.generateSafehavenAuthToken();
+            const nameEnquiry = await this.accountNameEnquiry(
+                to.account.account_no, // ! => this is a possible reason
+                this.SAFE_HAVEN_BANK_CODE,
+                access_token
+            );
 
             const url = `${this.SAFE_HAVEN_BASE_URI}/transfers`;
             const options = {
@@ -309,20 +313,21 @@ export class PaymentService {
                     Authorization: `Bearer ${access_token}`
                 },
                 body: JSON.stringify({
-                    nameEnquiryReference: sessionId,
-                    debitAccountNumber: from.account.account_no,
+                    nameEnquiryReference: nameEnquiry.sessionId,
+                    debitAccountNumber: cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN,
                     beneficiaryBankCode: `${this.SAFE_HAVEN_BANK_CODE}`,
                     beneficiaryAccountNumber: `${to.account.account_no}`,
                     amount,
                     paymentReference: `${from.id}::${to.id}::${ref}`,
-                    narration: "Oyeah intra-wallet transfer"
+                    narration: "Oyeah intra-wallet transfer",
+		    saveBeneficiary: false
                 })
             };
 
             const res = await fetch(url, options);
             const data = await res.json();
             if (data.statusCode >= 400) return { payout_error: true, message: "Wallet transfer failed!" };
-
+            if(data.isReversed) {/* Add reversal reference */}
             return data.data;
         } catch (error) {
             throw error;

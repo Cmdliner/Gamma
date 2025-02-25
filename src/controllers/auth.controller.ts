@@ -372,6 +372,7 @@ class AuthController {
     }
 
 
+
     // bank account details
     static async validateBankDetails(req: Request, res: Response) {
         const session = await startSession();

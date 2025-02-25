@@ -29,7 +29,7 @@ interface IUser extends Document {
         verification_status: "verified" | "unverified";
     };
     bank_details?: {
-        account_no: String;
+        account_no: string;
         added_at: Date;
         bank_code: string;
     };

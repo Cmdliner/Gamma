@@ -3,9 +3,9 @@ import NotificationController from "../controllers/notification.controller";
 
 const notification = Router();
 
-notification.get("/notifications", NotificationController.allNotifications);
-notification.post("/notifications/:notificationID", NotificationController.read);
-notification.post("/notifications", NotificationController.markAllAsRead);
+notification.get("/", NotificationController.allNotifications);
+notification.post("/:notificationID", NotificationController.read);
+notification.post("/", NotificationController.markAllAsRead);
 
 
 export default notification;

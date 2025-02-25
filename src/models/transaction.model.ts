@@ -51,6 +51,11 @@ const ProductPurchaseTransactionSchema = new Schema({
         enum: ['card', 'bank_transfer'],
         required: true
     },
+    destination: {
+        type: String,
+        enum: ["escrow", "wallet"],
+        required: true
+    },
     product: {
         type: Schema.Types.ObjectId,
         ref: "Product",
