@@ -33,3 +33,58 @@
 {"kind":"ObjectId","message":"Cast to ObjectId failed for value \"2025-02-11T06:46:52.028Z\" (type Date) at path \"deleted_at\" because of \"BSONError\"","name":"CastError","path":"deleted_at","reason":{},"stringValue":"\"2025-02-11T06:46:52.028Z\"","value":"2025-02-11T06:46:52.028Z","valueType":"Date"}
 {"level":"error","message":"A similar product exists","name":"APP_ERROR","status":400,"timestamp":"2025-02-12 09:32:18.381 AM"}
 {"level":"error","message":"A similar product exists","name":"APP_ERROR","status":400,"timestamp":"2025-02-12 09:32:18.417 AM"}
+{"code":"EAUTH","command":"AUTH PLAIN","level":"error","response":"535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 00721157ae682-6fbb72f48f3sm9210447b3.6 - gsmtp","responseCode":535,"timestamp":"2025-02-21 12:58:46.396 PM"}
+{"code":"EAUTH","command":"AUTH PLAIN","level":"error","response":"535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 00721157ae682-6fb361c5f33sm40914597b3.107 - gsmtp","responseCode":535,"timestamp":"2025-02-21 12:59:51.575 PM"}
+{"level":"error","message":"Error creating wallet","name":"APP_ERROR","status":400,"timestamp":"2025-02-21 01:25:29.962 PM"}
+{"level":"error","message":"Error creating wallet","name":"APP_ERROR","status":400,"timestamp":"2025-02-21 01:31:35.218 PM"}
+{"level":"error","message":"Error creating wallet","name":"APP_ERROR","status":400,"timestamp":"2025-02-21 01:33:26.863 PM"}
+{"level":"error","message":"Error creating wallet","name":"APP_ERROR","status":400,"timestamp":"2025-02-21 01:34:39.854 PM"}
+{"level":"error","message":"An error occured","timestamp":"2025-02-21 01:35:33.488 PM"}
+{"level":"error","message":"Expired token - Access Restricted!","name":"APP_ERROR","status":400,"timestamp":"2025-02-21 01:36:05.911 PM"}
+{"level":"error","message":"Error creating wallet","name":"APP_ERROR","status":400,"timestamp":"2025-02-21 01:38:18.691 PM"}
+{"level":"error","message":"Error creating wallet","name":"APP_ERROR","status":400,"timestamp":"2025-02-21 01:39:44.636 PM"}
+{"level":"error","message":"Error creating wallet","name":"APP_ERROR","status":400,"timestamp":"2025-02-21 01:43:37.892 PM"}
+{"code":"ConnectionClosed","errno":0,"level":"error","path":"https://api.sandbox.safehavenmfb.com/oauth2/token","timestamp":"2025-02-21 05:15:26.878 PM"}
+{"level":"error","message":"bank_code required","name":"APP_ERROR","status":422,"timestamp":"2025-02-22 07:35:06.899 AM"}
+{"level":"error","message":"bank_code required","name":"APP_ERROR","status":422,"timestamp":"2025-02-22 07:35:49.349 AM"}
+{"level":"error","message":"\"localty\" is required","name":"APP_ERROR","status":422,"timestamp":"2025-02-22 07:44:50.577 AM"}
+{"level":"error","message":"\"localty\" is required","name":"APP_ERROR","status":422,"timestamp":"2025-02-22 07:44:51.714 AM"}
+{"level":"error","message":"Error generating payment account","name":"APP_ERROR","status":400,"timestamp":"2025-02-22 07:51:00.086 AM"}
+{"level":"error","message":"Error generating payment account","name":"APP_ERROR","status":400,"timestamp":"2025-02-22 07:55:26.642 AM"}
+{"level":"error","message":"Error generating payment account","name":"APP_ERROR","status":400,"timestamp":"2025-02-22 08:01:02.500 AM"}
+{"level":"error","message":"An error occured","timestamp":"2025-02-22 08:05:24.862 AM"}
+{"level":"error","message":"An error occured","timestamp":"2025-02-22 08:09:39.354 AM"}
+{"level":"error","message":"Processing pending payments","name":"APP_ERROR","status":400,"timestamp":"2025-02-22 08:19:37.146 AM"}
+{"level":"error","message":"An error occured","timestamp":"2025-02-22 08:21:24.559 AM"}
+{"level":"error","message":"An error occured","timestamp":"2025-02-22 08:22:34.333 AM"}
+{"level":"error","message":"An error occured","timestamp":"2025-02-22 08:22:43.762 AM"}
+{"level":"error","message":"An error occured","timestamp":"2025-02-22 08:23:25.212 AM"}
+{"level":"error","message":"An error occured","timestamp":"2025-02-22 08:24:32.520 AM"}
+{"level":"error","message":"Error creating wallet","name":"APP_ERROR","status":400,"timestamp":"2025-02-22 12:28:06.377 PM"}
+{"code":11000,"errorResponse":{"code":11000,"errmsg":"E11000 duplicate key error collection: staging.users index: bank_details.account_no_1 dup key: { bank_details.account_no: \"9011974957\" }","index":0,"keyPattern":{"bank_details.account_no":1},"keyValue":{"bank_details.account_no":"9011974957"}},"index":0,"keyPattern":{"bank_details.account_no":1},"keyValue":{"bank_details.account_no":"9011974957"},"level":"error","timestamp":"2025-02-22 12:34:55.723 PM"}
+{"level":"error","message":"Error generating payment account","name":"APP_ERROR","status":500,"timestamp":"2025-02-22 12:49:08.998 PM"}
+{"level":"error","message":"Error generating payment account","name":"APP_ERROR","status":500,"timestamp":"2025-02-22 12:50:47.164 PM"}
+{"level":"error","message":"A similar product exists","name":"APP_ERROR","status":400,"timestamp":"2025-02-22 07:05:11.209 PM"}
+{"level":"error","message":"Transaction not found!","name":"APP_ERROR","status":404,"timestamp":"2025-02-22 07:07:20.609 PM"}
+{"_message":"ProductPurchaseTransaction validation failed","errors":{"destination":{"kind":"required","message":"Path `destination` is required.","name":"ValidatorError","path":"destination","properties":{"message":"Path `destination` is required.","path":"destination","type":"required"}}},"level":"error","message":"ProductPurchaseTransaction validation failed: destination: Path `destination` is required.","name":"ValidationError","timestamp":"2025-02-22 07:08:24.648 PM"}
+{"_message":"ProductPurchaseTransaction validation failed","errors":{"reason":{"kind":"required","message":"Path `reason` is required.","name":"ValidatorError","path":"reason","properties":{"message":"Path `reason` is required.","path":"reason","type":"required"}}},"level":"error","message":"ProductPurchaseTransaction validation failed: reason: Path `reason` is required.","name":"ValidationError","timestamp":"2025-02-22 07:17:24.074 PM"}
+{"level":"error","timestamp":"2025-02-22 07:19:23.093 PM"}
+{"level":"error","timestamp":"2025-02-22 07:20:27.149 PM"}
+{"level":"error","timestamp":"2025-02-22 07:22:08.331 PM"}
+{"level":"error","timestamp":"2025-02-22 07:24:48.167 PM"}
+{"level":"error","timestamp":"2025-02-22 07:40:36.845 PM"}
+{"level":"error","timestamp":"2025-02-22 07:44:12.112 PM"}
+{"$clusterTime":{"clusterTime":{"$timestamp":"7474317463929225221"},"signature":{"hash":"SOiitl+ea1oPQ04gucefYA9DBbo=","keyId":{"high":1730403860,"low":8,"unsigned":false}}},"code":112,"codeName":"WriteConflict","errorResponse":{"$clusterTime":{"clusterTime":{"$timestamp":"7474317463929225221"},"signature":{"hash":"SOiitl+ea1oPQ04gucefYA9DBbo=","keyId":{"high":1730403860,"low":8,"unsigned":false}}},"code":112,"codeName":"WriteConflict","errmsg":"Caused by :: Write conflict during plan execution and yielding is disabled. :: Please retry your operation or multi-document transaction.","errorLabels":["TransientTransactionError"],"ok":0,"operationTime":{"$timestamp":"7474317463929225221"}},"level":"error","ok":0,"operationTime":{"$timestamp":"7474317463929225221"},"timestamp":"2025-02-22 07:49:07.273 PM"}
+{"$clusterTime":{"clusterTime":{"$timestamp":"7474318314332749831"},"signature":{"hash":"tU5+ZFP67ykGBA16z16/PBv8sAo=","keyId":{"high":1730403860,"low":8,"unsigned":false}}},"code":112,"codeName":"WriteConflict","errorResponse":{"$clusterTime":{"clusterTime":{"$timestamp":"7474318314332749831"},"signature":{"hash":"tU5+ZFP67ykGBA16z16/PBv8sAo=","keyId":{"high":1730403860,"low":8,"unsigned":false}}},"code":112,"codeName":"WriteConflict","errmsg":"Caused by :: Write conflict during plan execution and yielding is disabled. :: Please retry your operation or multi-document transaction.","errorLabels":["TransientTransactionError"],"ok":0,"operationTime":{"$timestamp":"7474318314332749831"}},"level":"error","ok":0,"operationTime":{"$timestamp":"7474318314332749831"},"timestamp":"2025-02-22 07:52:24.783 PM"}
+{"level":"error","message":"Invalid OTP!","name":"APP_ERROR","status":400,"timestamp":"2025-02-23 04:39:52.232 PM"}
+{"level":"error","message":"Invalid OTP!","name":"APP_ERROR","status":400,"timestamp":"2025-02-23 04:43:36.324 PM"}
+{"level":"error","message":"Product not available!","name":"APP_ERROR","status":423,"timestamp":"2025-02-23 04:52:07.972 PM"}
+{"level":"error","message":"Product not available!","name":"APP_ERROR","status":423,"timestamp":"2025-02-23 04:52:44.704 PM"}
+{"level":"error","message":"Product not available!","name":"APP_ERROR","status":423,"timestamp":"2025-02-23 04:53:11.166 PM"}
+{"level":"error","message":"Product not available!","name":"APP_ERROR","status":423,"timestamp":"2025-02-23 04:53:20.821 PM"}
+{"level":"error","message":"Transaction not found!","name":"APP_ERROR","status":404,"timestamp":"2025-02-23 04:57:46.379 PM"}
+{"level":"error","message":"Transaction not found!","name":"APP_ERROR","status":404,"timestamp":"2025-02-23 05:05:52.234 PM"}
+{"level":"error","message":"Invalid OTP!","name":"APP_ERROR","status":400,"timestamp":"2025-02-23 06:16:35.491 PM"}
+{"level":"error","message":"Transaction not found!","name":"APP_ERROR","status":404,"timestamp":"2025-02-23 06:16:47.096 PM"}
+{"level":"error","message":"Transaction not found!","name":"APP_ERROR","status":404,"timestamp":"2025-02-23 06:16:56.934 PM"}
+{"level":"error","message":"Invalid OTP!","name":"APP_ERROR","status":400,"timestamp":"2025-02-23 06:17:13.522 PM"}

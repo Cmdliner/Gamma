@@ -34,14 +34,9 @@ bun run dev
 ```
 
 ## BUGS
-- Payment links might never expire (check again with fincra)
-- Pending sponsorships can be retried even when previous payment status hasn't been confirmed
   
 ## TODOS
-- user suspension by admin
-- Consistent user phone mumber containing country code and validation should be done
 - Rm ads on activate to rm from market place
-- Implement under_review for ads
 - Indempotency key on payment; store in redis cache
 - Handle actual refund logic in cron job
 - Seller reject refund enter dispute
@@ -58,7 +53,6 @@ bun run dev
 ```sh
 .
 ├── bun.lockb
-├── client_assertion
 ├── Dockerfile
 ├── logs
 │   └── app-error.log
@@ -70,64 +64,78 @@ bun run dev
 │   └── create_env.sh
 ├── src
 │   ├── app.ts
-│   ├── auth
-│   │   ├── auth.controller.ts
-│   │   ├── auth.routes.ts
-│   │   ├── auth.service.ts
-│   │   └── otp.model.ts
-│   ├── bid
-│   │   ├── bid.controller.ts
-│   │   ├── bid.model.ts
-│   │   └── bid.routes.ts
 │   ├── config
 │   │   ├── app.config.ts
 │   │   ├── db.ts
+│   │   ├── ioredis.config.ts
 │   │   └── logger.config.ts
-│   ├── dispute
+│   ├── controllers
+│   │   ├── admin.controller.ts
+│   │   ├── auth.controller.ts
+│   │   ├── bid.controller.ts
 │   │   ├── dispute.controller.ts
-│   │   ├── dispute.model.ts
-│   │   └── dispute.routes.ts
+│   │   ├── legacy_webhook.controller.ts
+│   │   ├── notification.controller.ts
+│   │   ├── payment.controller.ts
+│   │   ├── product.controller.ts
+│   │   ├── user.controller.ts
+│   │   └── webhook.controller.ts
 │   ├── env.d.ts
 │   ├── express.d.ts
 │   ├── init.ts
-│   ├── jobs
-│   │   ├── cron.scheduler.ts
-│   │   └── jobs.service.ts
 │   ├── lib
-│   │   ├── apperror.ts
 │   │   ├── bank_codes.ts
-│   │   ├── email.service.ts
-│   │   ├── fincra.service.ts
+│   │   ├── error.handler.ts
 │   │   ├── location.data.ts
-│   │   ├── paystack.service.ts
-│   │   ├── safehaven.service.ts
+│   │   ├── product_category.ts
+│   │   ├── safehaven_bankcodes.ts
 │   │   └── utils.ts
 │   ├── middlewares
+│   │   ├── admin.middleware.ts
 │   │   ├── auth.middlewares.ts
 │   │   ├── ratelimit.middleware.ts
 │   │   └── upload.middlewares.ts
-│   ├── notification
-│   │   ├── notification.controller.ts
+│   ├── models
+│   │   ├── abuse.model.ts
+│   │   ├── admin.model.ts
+│   │   ├── bid.model.ts
+│   │   ├── dispute.model.ts
 │   │   ├── notification.model.ts
-│   │   ├── notification.routes.ts
-│   │   └── notification.service.ts
-│   ├── payment
-│   │   ├── deals.routes.ts
-│   │   ├── payment.controller.ts
-│   │   ├── payment.routes.ts
-│   │   ├── transaction.model.ts
-│   │   ├── webhook.controller.ts
-│   │   └── webhook.service.ts
-│   ├── product
-│   │   ├── product.controller.ts
+│   │   ├── otp.model.ts
 │   │   ├── product.model.ts
+│   │   ├── transaction.model.ts
+│   │   ├── user.model.ts
+│   │   └── wallet.model.ts
+│   ├── queues
+│   │   └── product.queue.ts
+│   ├── routes
+│   │   ├── admin.routes.ts
+│   │   ├── auth.routes.ts
+│   │   ├── bid.routes.ts
+│   │   ├── deals.routes.ts
+│   │   ├── dispute.routes.ts
+│   │   ├── notification.routes.ts
+│   │   ├── payment.routes.ts
 │   │   ├── product.routes.ts
-│   │   └── product.service.ts
+│   │   ├── user.routes.ts
+│   │   └── webhook.routes.ts
+│   ├── safehaven_response
 │   ├── server.ts
+│   ├── services
+│   │   ├── auth.service.ts
+│   │   ├── email.service.ts
+│   │   ├── fincra.service.ts
+│   │   ├── jobs.service.ts
+│   │   ├── notification.service.ts
+│   │   ├── payment.service.ts
+│   │   ├── paystack.service.ts
+│   │   ├── product.service.ts
+│   │   └── webhook.service.ts
 │   ├── __tests__
 │   │   ├── auth.test.ts
 │   │   └── payment.test.ts
 │   ├── types
+│   │   ├── abuse.schema.ts
 │   │   ├── ad.enums.ts
 │   │   ├── bid.schema.ts
 │   │   ├── common.ts
@@ -137,6 +145,7 @@ bun run dev
 │   │   ├── generic.schema.ts
 │   │   ├── landed_property.schema.ts
 │   │   ├── multer_file.ts
+│   │   ├── notification.schema.ts
 │   │   ├── otp.schema.ts
 │   │   ├── phone_number.schema.ts
 │   │   ├── product.dto.ts
@@ -147,21 +156,19 @@ bun run dev
 │   │   ├── vehicle.schema.ts
 │   │   ├── wallet.schema.ts
 │   │   └── webhook.schema.ts
-│   ├── user
-│   │   ├── user.controller.ts
-│   │   ├── user.model.ts
-│   │   ├── user.routes.ts
-│   │   └── wallet.model.ts
-│   └── validations
-│       ├── auth.validation.ts
-│       ├── payment.validation.ts
-│       └── product.validation.ts
+│   ├── validations
+│   │   ├── auth.validation.ts
+│   │   ├── payment.validation.ts
+│   │   └── product.validation.ts
+│   └── workers
+│       └── product.worker.ts
 ├── templates
+│   ├── ad_receipt.html
 │   ├── password_reset.html
 │   ├── payment_refund.html
 │   ├── release_funds.html
 │   └── verification_email.html
 └── tsconfig.json
 
-19 directories, 88 files
-``
+17 directories, 101 files
+```
