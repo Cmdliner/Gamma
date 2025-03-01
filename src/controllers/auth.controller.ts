@@ -371,8 +371,6 @@ class AuthController {
         }
     }
 
-
-
     // bank account details
     static async validateBankDetails(req: Request, res: Response) {
         const session = await startSession();
@@ -406,7 +404,7 @@ class AuthController {
 
             const validBankAcc = await PaystackService.validateAccountDetails(account_no, paystack_bank_code);
             
-            if (!validBankAcc) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid bank details");
+            if (!(validBankAcc as any).account_name) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid bank details");
             const accNameMatched = matchAccNameInDb(
                 user.first_name,
                 user.last_name,

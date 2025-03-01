@@ -9,6 +9,7 @@ product.get("/search/:productCategory", ProductController.search);
 product.get("/sponsored",ProductController.getSponsoredProducts);  
 product.get("/categories/:productCategory",ProductController.getAllProductsInCategory);
 product.get("/:productID", ProductController.getProductInfo);
+product.post("/repost/:productID", ProductController.repostAd);
 product.post("/upload-gadget", UploadMiddleware, ValidateAndProcessUpload,ProductController.uploadGadget);
 product.post("/upload-vehicle", UploadMiddleware, ValidateAndProcessUpload, ProductController.uploadVehicle);
 product.post("/upload-landed-property", UploadMiddleware, ValidateAndProcessUpload, ProductController.addLandedProperty);

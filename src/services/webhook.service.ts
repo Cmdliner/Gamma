@@ -13,6 +13,7 @@ import User from "../models/user.model";
 import { cfg } from "../init";
 import FincraService from "./fincra.service";
 import { logger } from "../config/logger.config";
+import { addProductToReviewQueue } from "../queues/product.queue";
 
 class WebhookService {
 
@@ -40,14 +41,16 @@ class WebhookService {
                     status: "processing_payment",
                     _id: product_id
                 }).session(session);
-                console.dir({ product });
+
                 if (!product) throw new Error("Product not found");
+
                 product.status = "sold";
                 await product.save({ session });
 
                 // Transaction
                 const transaction = await ProductPurchaseTransaction.findById(transaction_id).session(session);
                 if (!transaction) throw new Error("Transaction not found");
+                
                 transaction.status = "in_escrow";
                 transaction.payment_ref = payload.paymentReference;
                 await transaction.save({ session });
@@ -86,9 +89,12 @@ class WebhookService {
             const product = await Product.findByIdAndUpdate(product_id, {
                 "sponsorship.sponsored_at": new Date(),
                 "sponsorship.expires": expiry,
-                "sponsorship.status": "active",
+                "sponsorship.status": "under_review",
             }, { new: true, session }).populate("owner");
             if (!product) throw new Error();
+
+            // Add product to review queue
+            await addProductToReviewQueue(product.id);
 
             // Update transaction status
             await AdSponsorshipTransaction.findByIdAndUpdate(transaction_id, {

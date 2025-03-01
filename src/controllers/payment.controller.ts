@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { startSession } from "mongoose";
 import Wallet from "../models/wallet.model";
-import FincraService from "../services/fincra.service";
 import Transaction, {
     AdSponsorshipTransaction,
     ProductPurchaseTransaction,
@@ -137,7 +136,8 @@ class PaymentController {
         try {
             const userId = req.user?._id;
             const { productID, bidID } = req.params;
-            const { payment_method, indempotence_key } = req.body;
+            const { payment_method, indempotency_key } = req.body;
+
             session.startTransaction();
 
             if (!payment_method) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `'payment_method' required!`);
@@ -163,14 +163,6 @@ class PaymentController {
                 const bid = await Bid.findOne({ _id: bidID, status: "accepted" }).session(session);
                 if (!bid) throw new AppError(StatusCodes.NOT_FOUND, "Couldn't find that bid");
 
-                // if bid has expired update status, commit tx to db && return early.
-                if (bid.expires.valueOf() < Date.now()) {
-                    bid.status = "expired";
-                    await bid.save({ session });
-                    await session.commitTransaction();
-                    return res.status(StatusCodes.BAD_REQUEST).json({ error: true, message: "Bid expired!" });
-                }
-
                 const isBidder = compareObjectID(bid.buyer, req.user?._id);
                 if (!isBidder) throw new AppError(StatusCodes.NOT_FOUND, "Bid not found")
 
@@ -186,7 +178,7 @@ class PaymentController {
                 status: "processing_payment",
                 purchase_lock: {
                     is_locked: true,
-                    locked_at: Date.now(),
+                    locked_at: new Date(),
                     locked_by: userId
                 }
             }, { new: true, session });
@@ -199,7 +191,7 @@ class PaymentController {
                 amount: bidPrice ? bidPrice : product.price,
                 seller: updatedProduct.owner,
                 destination: 'escrow',
-                status: "pending",
+                status: "processing_payment",
                 product: productID,
                 reason: `For the purchase of ${product.name}`,
                 payment_method
@@ -213,6 +205,11 @@ class PaymentController {
                 product,
                 txRef
             );
+
+            await ProductPurchaseTransaction.findByIdAndUpdate(txRef, {
+                virtual_account_id: payment_details.virtual_account_id,
+            });
+
             if (payment_error) throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, message);
             await session.commitTransaction();
 
@@ -231,7 +228,7 @@ class PaymentController {
         const session = await startSession();
         try {
             const { productID } = req.params;
-            const { sponsorship_duration, payment_method, indempotence_key } = req.body;
+            const { sponsorship_duration, payment_method, indempotency_key } = req.body;
             const amountToPay = sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly;
 
             if (!sponsorship_duration || !payment_method) {
@@ -289,6 +286,10 @@ class PaymentController {
             );
             if (payment_error) throw new AppError(StatusCodes.BAD_REQUEST, message);
 
+            await AdSponsorshipTransaction.findByIdAndUpdate(transaction.id, {
+                virtual_account_id: payment_details.virtual_account_id
+            });
+
             await session.commitTransaction();
 
             return res.status(StatusCodes.OK).json({
@@ -326,7 +327,7 @@ class PaymentController {
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
             const transactionsInThePast30Days = await Transaction.find({
                 bearer: req.user?._id,
-                kind: { $or: ["ProductPurchaseTransaction", "AdSponsorshipTransaction"] },
+                kind: { $in: ["ProductPurchaseTransaction", "AdSponsorshipTransaction"] },
                 createdAt: { $gte: thirtyDaysAgo }
             }).session(session);
 
@@ -439,6 +440,16 @@ class PaymentController {
             transaction.status = "success";
             await transaction.save({ session });
 
+            // Update product status and it's sposnsorship
+            const product = await Product.findById(transaction.product);
+            if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
+
+            product.status = "sold";
+            if (product.sponsorship?.status === "active") {
+                product.sponsorship.status = "completed";
+            }
+            await product.save({ session });
+
             // Update seller's wallet balance
             const seller = await User.findById(seller_id).session(session);
             if (!seller) throw new AppError(StatusCodes.NOT_FOUND, "Seller not found!");
@@ -472,7 +483,9 @@ class PaymentController {
                 transaction.amount,
                 walletTransferTx.id
             );
-            if(intraTransfer.payout_error) throw new AppError(StatusCodes.BAD_REQUEST, "Couldn't process transfer");
+            if (intraTransfer.payout_error) {
+                throw new AppError(StatusCodes.BAD_REQUEST, "Couldn't process transfer");
+            }
             sellerWallet.main_balance += transaction.amount;
             await sellerWallet.save({ session });
 
@@ -507,7 +520,6 @@ class PaymentController {
             return res.status(StatusCodes.OK).json({ success: true });
         } catch (error) {
             await session.abortTransaction();
-            console.log(error);
             logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error sending funds!");
             return res.status(status).json(errResponse);
@@ -611,15 +623,12 @@ class PaymentController {
 
             await product.save({ session });
 
-            // Send money to user bank using fincra
-            const buyer = refundTransaction.bearer as unknown as IUser;
-            // !todo => Use safehaven api for refunds
-            await FincraService.handleRefund(
-                buyer,
-                refundTransaction.amount,
-                refundTransaction.id
-            );
 
+            const buyer = refundTransaction.bearer as unknown as IUser;
+            const { payout_error, message } = await PaymentService.refund(buyer, refundTransaction);
+            if (payout_error) throw new AppError(StatusCodes.BAD_REQUEST, message);
+
+            // !todo => queue a job to collect the refund_profit from escrow
             // ! todo => Send notification to user
             await EmailService.sendMail(buyer.email, "", "payment_refund", null, refundTransaction.id)
 
@@ -638,7 +647,7 @@ class PaymentController {
     static async getSuccessfulDeals(req: Request, res: Response) {
         try {
             const deals = await ProductPurchaseTransaction.find({
-                $or: [{ seller: req.user?._id, bearer: req.user?._id }],
+                $or: [{ seller: req.user?._id}, {bearer: req.user?._id }],
                 destination: "escrow",
                 status: "success"
             });
@@ -654,7 +663,7 @@ class PaymentController {
     static async getDisputedDeals(req: Request, res: Response) {
         try {
             const deals = await ProductPurchaseTransaction.find({
-                $or: [{ seller: req.user?._id, bearer: req.user?._id }],
+                $or: [{ seller: req.user?._id}, {bearer: req.user?._id }],
                 status: "in_dispute",
                 destination: "escrow"
             });
@@ -670,7 +679,7 @@ class PaymentController {
     static async getFailedDeals(req: Request, res: Response) {
         try {
             const deals = await ProductPurchaseTransaction.find({
-                $or: [{ seller: req.user?._id, bearer: req.user?._id }],
+                $or: [{ seller: req.user?._id}, {bearer: req.user?._id }],
                 status: "failed",
                 destination: "escrow"
             }).populate("bearer").populate({
@@ -693,9 +702,9 @@ class PaymentController {
     static async getOngoingDeals(req: Request, res: Response) {
         try {
             const deals = await ProductPurchaseTransaction.find({
-                $or: [{ bearer: req.user?._id, seller: req.user?._id }],
+                $or: [{ bearer: req.user?._id}, {seller: req.user?._id }],
                 destination: "escrow",
-                status: "in_escrow"
+                status: { $in: ["in_escrow", "processing_payment"] }
             });
             return res.status(StatusCodes.OK).json({ success: true, deals });
 

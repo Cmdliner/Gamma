@@ -6,7 +6,6 @@ import { StatusCodes } from "http-status-codes";
 export class WebhookController {
     static async handleProductPurchase(req: Request, res: Response) {
         try {
-
             const { data }: { data: IVirtualAccountTransferData } = req.body;
             await WebhookService.handleSuccessfulProductPurchase(data);
             return res.status(StatusCodes.NO_CONTENT).json();

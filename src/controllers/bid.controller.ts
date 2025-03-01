@@ -8,49 +8,32 @@ import { logger } from "../config/logger.config";
 import { AppError } from "../lib/error.handler";
 import { StatusCodes } from "http-status-codes";
 import IProduct from "../types/product.schema";
+import { addBidToExpiryQueue } from "../queues/bid.queue";
 
 class BidController {
 
-    static async getAllBidsForProduct(req: Request, res: Response) {
-        try {
-            const { productID } = req.params;
-
-            // CHECK IF USER IS PRODUCT OWNER
-            const isProductOwner = await Product.findOne({
-                _id: productID,
-                owner: req.user?._id,
-                deleted_at: { $exists: false },
-            });
-            if (!isProductOwner) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!")
-
-            const productBids = await Bid.find({ product: productID, deleted_at: { $exists: false } })
-                .populate(["buyer", "product"]);
-            if (!productBids.length) throw new AppError(StatusCodes.NOT_FOUND, "No bids found");
-
-            return res.status(StatusCodes.OK).json({ success: true, message: "Bids found", bids: productBids });
-        } catch (error) {
-            logger.error(error);
-            const [status, errResponse] = AppError.handle(error, "Error fetching bids");
-            return res.status(status).json(errResponse);
-        }
-
-    }
-
+    // Seller sees this -> These are bids that seller receives for their product
     static async getAllReceivedBids(req: Request, res: Response) {
         try {
-            const bids = await Bid.find({ status: "pending", seller: req.user?._id }).populate("buyer");
-            if (!bids) throw new AppError(StatusCodes.NOT_FOUND, "No bids found!");
+            const bids = await Bid.find({
+                status: "pending",
+                seller: req.user?._id,
+            }).populate("buyer");
 
             return res.status(StatusCodes.OK).json({ success: true, bids })
         } catch (error) {
             logger.error(error);
-            const [status, errResponse] = AppError.handle(error, "Error getting bids!")
+            const [status, errResponse] = AppError.handle(error, "Error getting bids!");
+            return res.status(status).json(errResponse);
         }
     }
 
+    // Buyer sees this -> These are bids that has been accepted by sellers
     static async getAllAcceptedBids(req: Request, res: Response) {
         try {
-            const bids = await Bid.find({ seller: req.user?._id, status: "accepted" }).populate("buyer");
+            const bids = await Bid.find({ buyer: req.user?._id, status: "accepted" })
+                .sort({ createdAt: -1 })
+                .populate("buyer");
             if (!bids) throw new AppError(StatusCodes.NOT_FOUND, "Bids not found")
 
             return res.status(StatusCodes.OK).json({ success: true, bids });
@@ -63,7 +46,9 @@ class BidController {
 
     static async getRejectedBids(req: Request, res: Response) {
         try {
-            const bids = await Bid.find({ seller: req.user?._id, status: "rejected" }).populate(["product"]);
+            const bids = await Bid.find({ seller: req.user?._id, status: "rejected" })
+                .sort({ createdAt: -1 })
+                .populate(["product"]);
             if (!bids.length) throw new AppError(StatusCodes.NOT_FOUND, "No bids found");
 
             return res.status(StatusCodes.OK).json({ success: true, bids });
@@ -89,16 +74,18 @@ class BidController {
             if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
             if (!product.is_negotiable) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
-            const bidData: Pick<IBid, "seller" | "buyer" | "negotiating_price" | "product"> = {
+            const bidData = {
                 seller: product.owner,
                 buyer: req.user?._id,
                 negotiating_price,
-                product: new Types.ObjectId(productID)
+                product: new Types.ObjectId(productID),
             };
             await Bid.create(bidData);
-
+	    await addBidToExpiryQueue();
             //!TODO => Send push notifications for bid creation here
-            return res.status(StatusCodes.OK).json({ success: true, message: "Bid for product successful" })
+            return res
+                .status(StatusCodes.OK)
+                .json({ success: true, message: "Bid for product successful" });
         } catch (error) {
             logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error sending bid!")
@@ -118,7 +105,6 @@ class BidController {
                 .session(session);
             if (!bid) throw new AppError(StatusCodes.NOT_FOUND, "Bid not found");
 
-            // Update product active_bid to this bid
             await Product.findOneAndUpdate(
                 { _id: (bid.product as any as IProduct)._id, deleted_at: { $exists: false } },
                 { active_bid: bid._id }
@@ -131,9 +117,11 @@ class BidController {
 
             bid.status = "accepted";
             bid.expires = Next5Mins();
-            await Bid.updateMany({ product: bid.product }, { status: "rejected" }).session(session);
 
+            await Bid.updateMany({ product: bid.product }, { status: "rejected" }).session(session);
             await bid.save({ session });
+
+            await addBidToExpiryQueue(bid.id);
             await session.commitTransaction();
             return res.status(StatusCodes.OK).json({ success: true, message: "Bid accepted successfully", bid });
         } catch (error) {

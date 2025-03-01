@@ -4,7 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import compression from "compression";
 import ExpressMongoSanitize from "express-mongo-sanitize";
-import DB from "./config/db";
+import DB from "./config/db.config";
 import AuthMiddleware from "./middlewares/auth.middlewares";
 import auth from "./routes/auth.routes";
 import bid from "./routes/bid.routes";
@@ -71,7 +71,7 @@ class App {
         this.app.use(`/${API_VERSION}/notifications`, AuthMiddleware.requireAuth, notification);
         this.app.use(`/${API_VERSION}/disputes`, AuthMiddleware.requireAuth, dispute);
         this.app.get("/healthz", (_req: Request, res: Response) => {
-            res.status(200).json({ active: "The hood is up commandliner⚡" });
+            res.status(200).json({ active: "The hood is up commandliner⚡"});
         });
         this.app.get('/', (_req: Request, res: Response) => res.redirect("/healthz"));
     }
@@ -85,7 +85,6 @@ class App {
 
     public async start() {
         try {
-            await DB.connect();
             this.app.listen(this.cfg.PORT, () => console.log(`Server is up and running on PORT ${cfg.PORT}`));
         } catch (error) {
             console.error(error);

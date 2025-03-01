@@ -1,5 +1,7 @@
 import { cfg } from "../init";
+import { TokenManager } from "../lib/token_manager";
 import IProduct from "../types/product.schema";
+import { IRefundTransaction } from "../types/transaction.schema";
 import IUser from "../types/user.schema";
 import IWallet from "../types/wallet.schema";
 
@@ -18,7 +20,7 @@ export class PaymentService {
     private static SAFE_HAVEN_BANK_CODE = cfg.NODE_ENV === "production" ? "999240" : "999240";
     private static SAFE_HAVEN_CALLBACK_URL = `${cfg.OYEAH_SERVER_URL}/webhook`;
 
-    private static async generateSafehavenAuthToken(type: TAuthTokenParams = "access") {
+    static async generateSafehavenAuthToken(type: TAuthTokenParams = "access") {
         try {
             const url = `${this.SAFE_HAVEN_BASE_URI}/oauth2/token`;
             const options = {
@@ -31,8 +33,7 @@ export class PaymentService {
                     grant_type: type === "access" ? "client_credentials" : "refesh_token",
                     client_id: cfg.SAFE_HAVEN_CLIENT_ID,
                     client_assertion: cfg.SAFE_HAVEN_CLIENT_ASSERTION,
-                    client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-                    refresh_token: cfg.SAFE_HAVEN_REFRESH_TOKEN
+                    client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
                 }),
             }
 
@@ -81,7 +82,7 @@ export class PaymentService {
 
     static async getBankList() {
         try {
-            const { access_token } = await this.generateSafehavenAuthToken();
+            const access_token = await TokenManager.getToken();
 
             const url = `${this.SAFE_HAVEN_BASE_URI}/transfers/banks`;
             const options = {
@@ -108,7 +109,7 @@ export class PaymentService {
     static async verifyIdentity(identity_number: string, identity_type: TIdentityType = "BVN") {
         try {
             const url = `${this.SAFE_HAVEN_BASE_URI}/identity/v2`;
-            const { access_token } = await this.generateSafehavenAuthToken();
+            const access_token  = await TokenManager.getToken();
             const options = {
                 method: "POST",
                 headers: {
@@ -139,7 +140,7 @@ export class PaymentService {
 
     static async createUserWallet(user: IUser) {
         try {
-            const { access_token } = await this.generateSafehavenAuthToken();
+            const access_token = await TokenManager.getToken();
             const url = `${this.SAFE_HAVEN_BASE_URI}/accounts/v2/subaccount`;
             const options = {
                 method: "POST",
@@ -160,6 +161,7 @@ export class PaymentService {
 
             const res = await fetch(url, options);
             const data = await res.json();
+console.log({data});
 
             if (data.statusCode >= 400) return { wallet_creation_error: true, err_message: "Error creating wallet" };
             return { wallet_account: data.data.accountNumber };
@@ -170,7 +172,7 @@ export class PaymentService {
 
     static async generateProductPurchaseAccountDetails(amount: number, product: IProduct, transaction_id: string) {
         try {
-            const { access_token } = await this.generateSafehavenAuthToken();
+            const access_token = await TokenManager.getToken();
 
             const url = `${this.SAFE_HAVEN_BASE_URI}/virtual-accounts`;
             const options: RequestInit = {
@@ -202,7 +204,8 @@ export class PaymentService {
             return {
                 account_number: data.data.accountNumber,
                 account_name: data.data.accountName,
-                amount_to_pay: data.data.amount
+                amount_to_pay: data.data.amount,
+                virtual_account_id: data.data._id
             }
         } catch (error) {
             throw error;
@@ -211,7 +214,7 @@ export class PaymentService {
 
     static async generateSponsorshipPaymentAccountDetails(amount: number, product: IProduct, transaction_id: string) {
         try {
-            const { access_token } = await this.generateSafehavenAuthToken();
+            const access_token = await TokenManager.getToken();
 
             const url = `${this.SAFE_HAVEN_BASE_URI}/virtual-accounts`;
             const options: RequestInit = {
@@ -243,7 +246,8 @@ export class PaymentService {
             return {
                 account_number: data.data.accountNumber,
                 account_name: data.data.accountName,
-                amount_to_pay: data.data.amount
+                amount_to_pay: data.data.amount,
+                virtual_account_id: data.data._id
             }
         } catch (error) {
             throw error;
@@ -253,7 +257,7 @@ export class PaymentService {
     static async withdraw(from: TWithdrawalLocation, amount: number, user: IUser, wallet: IWallet, ref: string) {
         try {
             const { bank_details } = user;
-            const { access_token } = await this.generateSafehavenAuthToken();
+            const access_token = await TokenManager.getToken();
             const { sessionId } = await this.accountNameEnquiry(
                 bank_details.account_no,
                 bank_details.bank_code,
@@ -278,7 +282,7 @@ export class PaymentService {
                     amount,
                     paymentReference: ref,
                     narration: from === "wallet" ? "Oyeah wallet payout" : "Oyeah rewards payout",
-		    saveBeneficiary: false
+                    saveBeneficiary: false
                 })
             };
 
@@ -296,7 +300,7 @@ export class PaymentService {
     static async transfer(from: IWallet, to: IWallet, amount: number, ref: string) {
         try {
 
-            const { access_token } = await this.generateSafehavenAuthToken();
+            const access_token = await TokenManager.getToken();
             const nameEnquiry = await this.accountNameEnquiry(
                 to.account.account_no, // ! => this is a possible reason
                 this.SAFE_HAVEN_BANK_CODE,
@@ -320,19 +324,84 @@ export class PaymentService {
                     amount,
                     paymentReference: `${from.id}::${to.id}::${ref}`,
                     narration: "Oyeah intra-wallet transfer",
-		    saveBeneficiary: false
+                    saveBeneficiary: false
                 })
             };
 
             const res = await fetch(url, options);
             const data = await res.json();
             if (data.statusCode >= 400) return { payout_error: true, message: "Wallet transfer failed!" };
-            if(data.isReversed) {/* Add reversal reference */}
+            if (data.isReversed) {/* Add reversal reference */ }
             return data.data;
         } catch (error) {
             throw error;
         }
     }
 
-    static async refund() { }
+    static async refund(to: IUser, tx: IRefundTransaction) {
+        try {
+            const { bank_details } = to;
+            const access_token = await TokenManager.getToken();
+            const { sessionId } = await this.accountNameEnquiry(
+                bank_details.account_no,
+                bank_details.bank_code,
+                access_token
+            );
+
+
+            const url = `${this.SAFE_HAVEN_BASE_URI}/transfers`;
+            const options = {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    ClientID: cfg.SAFE_HAVEN_CLIENT_ID,
+                    Authorization: `Bearer ${access_token}`
+                },
+                body: JSON.stringify({
+                    nameEnquiryReference: sessionId,
+                    debitAccountNumber: cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN,
+                    beneficiaryBankCode: `${bank_details.bank_code}`,
+                    beneficiaryAccountNumber: `${bank_details.account_no}`,
+                    amount: tx.amount,
+                    paymentReference: tx.id,
+                    narration: "Payment refund",
+                    saveBeneficiary: false
+                })
+            };
+
+            const res = await fetch(url, options);
+            const data = await res.json();
+            if (data.statusCode >= 400) {
+                return { payout_error: true, message: "Refund failed!" };
+            }
+            return data.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getVirtualTransactionStatus(v_account_id: string) {
+        try {
+            // ! Also dont froget to check for payment reversal
+            //  and if so add the reversal_ref to trnsaction model
+            // Get the _id from the create payment endpoint and use it to query
+            const url = `${this.SAFE_HAVEN_BASE_URI}/virtual-accounts/virtualAccountId/transaction`;
+            const options = {
+                method: 'GET',
+                headers: {
+                    accept: 'application/json',
+                    ClientID: cfg.SAFE_HAVEN_CLIENT_ID,
+                    Authorization: `Bearer `
+                },
+                body: JSON.stringify({ virtualAccountId: v_account_id })
+            };
+
+            const res = await fetch(url, options)
+            const data = await res.json();
+            console.log(data);
+        } catch (error) {
+            throw error;
+        }
+    }
 }

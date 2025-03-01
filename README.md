@@ -39,14 +39,17 @@ bun run dev
 - Rm ads on activate to rm from market place
 - Indempotency key on payment; store in redis cache
 - Handle actual refund logic in cron job
-- Seller reject refund enter dispute
+- Seller reject refund enter dispute    
 - Send tx receipts with email to seller and buyer for payments and also on ad sponsorship
 - Write tests for auth, product and payment
 
-## REMEMBER
+## KEY POINTS TO REMEMBER
 - Upload can only error due to client-side errors; upload middleware is very stable
-- Notifications -> bid info, payment, updates (Any product / transaction related event)
+- Notifications -> bid info, paym   ent, updates (Any product / transaction related event)
 - On launch mv to safehaven actual endpoint for payments not sandbox
+- Ads run forever till expiry or till the money reaches the seller's wallet 
+(i.e purchase completed) any active ad at that point is set to completed
+
 
 ## Project structure
 
@@ -74,7 +77,6 @@ bun run dev
 │   │   ├── auth.controller.ts
 │   │   ├── bid.controller.ts
 │   │   ├── dispute.controller.ts
-│   │   ├── legacy_webhook.controller.ts
 │   │   ├── notification.controller.ts
 │   │   ├── payment.controller.ts
 │   │   ├── product.controller.ts

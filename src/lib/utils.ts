@@ -21,8 +21,8 @@ export function generateOTP(): string {
     return `${randomInt(9)}${randomInt(6)}${randomInt(9)}${randomInt(8)}`;
 }
 
-export const hashIdentityNumber = (identityNumber: string) => {
-    return crypto.createHash("sha256").update(identityNumber).digest("hex");
+export const hashIdentityNumber = (identity_number: string) => {
+    return crypto.createHash("sha256").update(identity_number).digest("hex");
 }
 
 export function matchAccNameInDb(
@@ -91,3 +91,11 @@ export function querySafeHavenBankCodes(q: RegExp) {
     const matchedBank = SafehavenSupportedBanks.filter(bank => bank.name.match(q))[0];
     return { bank_name: matchedBank?.name, bank_code: matchedBank?.bankCode }
 }
+
+export const DelayDurationsInMs = {
+    one_month: 4 * 7 * 24 * 60 * 60 * 1000,
+    fifteen_mins: 15 * 60 * 1000,
+    twenty_mins: 20 * 60 * 1000,
+    seven_days: 7 * 24 * 60 * 60 * 1000,
+    six_mins: 6 * 60 * 1000
+};

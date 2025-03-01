@@ -26,9 +26,10 @@ interface IProduct extends Document {
     category: ProductCategory;
     status: "available" | "processing_payment" | "pending_bid_approval" | "sold" | "in_dispute";
     sponsorship: {
+        duration: "1Week" | "1Month";
         sponsored_at: Date;
         expires: Date;
-        status: "active" | "processing_payment" | "flagged" | "under_review";
+        status: "active" | "processing_payment" | "flagged" | "completed" | "under_review" | "deactivated" | "expired";
     };
 }
 

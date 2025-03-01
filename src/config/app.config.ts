@@ -1,6 +1,3 @@
-
-
-
 export class AppConfig {
 
     PORT: number;
@@ -26,8 +23,6 @@ export class AppConfig {
     SAFE_HAVEN_CLIENT_ID: string;
     SAFE_HAVEN_IBS_CLIENT_ID: string;
     SAFE_HAVEN_IBS_USER_ID: string;
-    SAFE_HAVEN_AUTH_TOKEN: string;
-    SAFE_HAVEN_REFRESH_TOKEN: string;
     LOG_LEVEL: string;
     OYEAH_MAIN_ACCOUNT_SAFEHAVEN: string;
     OYEAH_ESCROW_ACCOUNT_SAFEHAVEN: string;
@@ -61,8 +56,6 @@ export class AppConfig {
         this.SAFE_HAVEN_CLIENT_ID = cfg.SAFE_HAVEN_CLIENT_ID;
         this.SAFE_HAVEN_IBS_USER_ID = cfg.SAFE_HAVEN_IBS_USER_ID;
         this.SAFE_HAVEN_IBS_CLIENT_ID = cfg.SAFE_HAVEN_IBS_CLIENT_ID;
-        this.SAFE_HAVEN_REFRESH_TOKEN = cfg.SAFE_HAVEN_REFRESH_TOKEN;
-        this.SAFE_HAVEN_AUTH_TOKEN = cfg.SAFE_HAVEN_AUTH_TOKEN;
         this.LOG_LEVEL = cfg.LOG_LEVEL;
         this.OYEAH_MAIN_ACCOUNT_SAFEHAVEN = cfg.OYEAH_MAIN_ACCOUNT_SAFEHAVEN;
         this.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN = cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN;
@@ -86,4 +79,3 @@ export class AppConfig {
         }
     }
 }
-

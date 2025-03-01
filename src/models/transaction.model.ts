@@ -69,7 +69,14 @@ const ProductPurchaseTransactionSchema = new Schema({
         type: String,
         unique: true,
         sparse: true
+    },
+    reversal_ref: {
+        type: String
+    },
+    virtual_account_id: {
+        type: String
     }
+    
 });
 
 const RefundTransactionSchema = new Schema({
@@ -115,6 +122,12 @@ const AdSponsorshipTransactionSchema = new Schema({
         type: String,
         unique: true,
         sparse: true
+    },
+    reversal_ref: {
+        type: String
+    },
+    virtual_account_id: {
+        type: String
     }
 });
 

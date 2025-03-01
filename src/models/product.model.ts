@@ -75,9 +75,16 @@ const ProductSchema = new Schema({
         default: "available"
     },
     sponsorship: {
+        duration: {
+            type: String,
+            enum: ["1Week", "1Month"]
+        },
         sponsored_at: { type: Date },
         expires: { type: Date },
-        status: { type: String, enum: ["active", "processing_payment", "flagged", "under_review"] }
+        status: {
+            type: String,
+            enum: ["active", "processing_payment", "flagged", "under_review", "deactivated", "completed", "expired"]
+        }
     },
     deleted_at: {
         type: Date

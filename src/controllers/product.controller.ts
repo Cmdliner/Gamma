@@ -680,18 +680,49 @@ class ProductController {
             if (!isValidAdStatus) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid status");
 
             const now = new Date();
+            const statusQuery = status === "active"
+                ? "active"
+                : { $in: ["under_review", "deactivated"] };
             const sponsoredProds = await Product.find({
                 deleted_at: { $exists: false },
                 sponsorship: { $exists: true },
                 owner: req.user?._id,
                 "sponsorship.expires": { $gte: now },
-                "sponsorship.status": status
+                "sponsorship.status": statusQuery
             });
 
             return res.status(StatusCodes.OK).json({ success: true, message: "Ads found", products: sponsoredProds });
         } catch (error) {
             logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error getting sponsored products");
+            return res.status(status).json(errResponse);
+        }
+    }
+
+    static async repostAd(req: Request, res: Response) {
+        try {
+            const { productID } = req.params;
+
+            const product = await Product.findById(productID);
+            if(!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found");
+
+            const adDeactivated = product.sponsorship.status === "deactivated";
+            if(!adDeactivated) throw new AppError(StatusCodes.BAD_REQUEST, "Ad unavailable for repost");
+
+            const adExpired = Number(product.sponsorship.expires) < Date.now();
+            if(adExpired) {
+                product.sponsorship.status = "expired";
+                await product.save();
+                throw new AppError(StatusCodes.BAD_REQUEST, "Ad Expired");
+            }
+
+            product.sponsorship.status = "active";
+            await product.save();
+
+            return res.status(StatusCodes.OK).json({ success: true, message: "Ad Reposted"});
+        } catch (error) {
+            logger.error(error);
+            const [status, errResponse] = AppError.handle(error, "Error reposting ad");
             return res.status(status).json(errResponse);
         }
     }

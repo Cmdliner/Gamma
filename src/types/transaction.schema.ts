@@ -28,6 +28,8 @@ export interface IProductPurchaseTransaction extends ITransaction {
     product: Types.ObjectId;
     seller: Types.ObjectId;
     payment_ref: string;
+    reversal_ref: string;
+    virtual_account_id: string;
 }
 
 export interface IRefundTransaction extends ITransaction {
@@ -42,6 +44,8 @@ export interface IAdSponsorshipTransaction extends ITransaction {
     payment_method: "card" | "bank_transfer";
     product: Types.ObjectId;
     payment_ref: string;
+    reversal_ref: string;
+    virtual_account_id: string;
 }
 
 export interface IReferralTransaction extends ITransaction {
