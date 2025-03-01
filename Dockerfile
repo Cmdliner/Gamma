@@ -10,6 +10,8 @@ COPY . .
 
 EXPOSE 4000
 
+RUN bun add -g pm2
+
 RUN bun i typescript
 
-CMD ["bun", "run", "src/server.ts"]
+CMD ["pm2", "runtime", "ecosystem.config.js"]
