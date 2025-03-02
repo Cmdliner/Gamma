@@ -67,7 +67,7 @@ class WebhookService {
 
     static async handleProductSponsorPayment(payload: IVirtualAccountTransferData) {
 
-        // Ads expire one week after payment plan chosen
+        // Ads expire one week after payment plan chosen (i.e 7 days extra)
         const SevenDaysFromNow = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
         const OneMonthFromNow = new Date(Date.now() + 37 * 24 * 60 * 60 * 1000);
 

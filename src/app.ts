@@ -4,7 +4,6 @@ import helmet from "helmet";
 import morgan from "morgan";
 import compression from "compression";
 import ExpressMongoSanitize from "express-mongo-sanitize";
-import DB from "./config/db.config";
 import AuthMiddleware from "./middlewares/auth.middlewares";
 import auth from "./routes/auth.routes";
 import bid from "./routes/bid.routes";
@@ -55,7 +54,7 @@ class App {
         this.app.use(ExpressMongoSanitize());
         this.app.use(morgan(':method :url :status :res[content-length] - :response-time ms', {
             stream: {
-                write: (message) => logger.http(message.trim())
+                write: (message) => logger.info(message.trim())
             }
         }));
     }

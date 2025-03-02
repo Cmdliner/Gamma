@@ -199,16 +199,16 @@ class PaymentController {
             await itemPurchaseTransaction.save({ session });
             const txRef = itemPurchaseTransaction.id;
 
-            const amountToPay = bidPrice ? bidPrice : product.price;
+            const amount = bidPrice ? bidPrice : product.price;
             const { payment_error, message, ...payment_details } = await PaymentService.generateProductPurchaseAccountDetails(
-                amountToPay,
+                PaymentService.calculateAmountToPay(amount),
                 product,
                 txRef
             );
 
             await ProductPurchaseTransaction.findByIdAndUpdate(txRef, {
                 virtual_account_id: payment_details.virtual_account_id,
-            });
+            }, { session });
 
             if (payment_error) throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, message);
             await session.commitTransaction();
@@ -229,7 +229,7 @@ class PaymentController {
         try {
             const { productID } = req.params;
             const { sponsorship_duration, payment_method, indempotency_key } = req.body;
-            const amountToPay = sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly;
+            const amount = sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly;
 
             if (!sponsorship_duration || !payment_method) {
                 throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `"sponsorship_duration" and "payment_method" required!`);
@@ -275,12 +275,12 @@ class PaymentController {
                 status: "pending",
                 payment_method: payment_method,
                 reason: `To run ads for ${product.name} for a duration of ${adsDurationFmt}`,
-                amount: amountToPay
+                amount
             });
             await transaction.save({ session });
 
             const { payment_error, message, ...payment_details } = await PaymentService.generateSponsorshipPaymentAccountDetails(
-                amountToPay,
+                PaymentService.calculateAmountToPay(amount),
                 product,
                 transaction.id
             );
@@ -288,7 +288,7 @@ class PaymentController {
 
             await AdSponsorshipTransaction.findByIdAndUpdate(transaction.id, {
                 virtual_account_id: payment_details.virtual_account_id
-            });
+            }, { session });
 
             await session.commitTransaction();
 
@@ -647,7 +647,7 @@ class PaymentController {
     static async getSuccessfulDeals(req: Request, res: Response) {
         try {
             const deals = await ProductPurchaseTransaction.find({
-                $or: [{ seller: req.user?._id}, {bearer: req.user?._id }],
+                $or: [{ seller: req.user?._id }, { bearer: req.user?._id }],
                 destination: "escrow",
                 status: "success"
             });
@@ -663,7 +663,7 @@ class PaymentController {
     static async getDisputedDeals(req: Request, res: Response) {
         try {
             const deals = await ProductPurchaseTransaction.find({
-                $or: [{ seller: req.user?._id}, {bearer: req.user?._id }],
+                $or: [{ seller: req.user?._id }, { bearer: req.user?._id }],
                 status: "in_dispute",
                 destination: "escrow"
             });
@@ -679,7 +679,7 @@ class PaymentController {
     static async getFailedDeals(req: Request, res: Response) {
         try {
             const deals = await ProductPurchaseTransaction.find({
-                $or: [{ seller: req.user?._id}, {bearer: req.user?._id }],
+                $or: [{ seller: req.user?._id }, { bearer: req.user?._id }],
                 status: "failed",
                 destination: "escrow"
             }).populate("bearer").populate({
@@ -702,7 +702,7 @@ class PaymentController {
     static async getOngoingDeals(req: Request, res: Response) {
         try {
             const deals = await ProductPurchaseTransaction.find({
-                $or: [{ bearer: req.user?._id}, {seller: req.user?._id }],
+                $or: [{ bearer: req.user?._id }, { seller: req.user?._id }],
                 destination: "escrow",
                 status: { $in: ["in_escrow", "processing_payment"] }
             });

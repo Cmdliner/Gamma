@@ -80,6 +80,12 @@ export class PaymentService {
         return { total_fee: TOTAL_FEE, amount_to_withdraw: AMOUNT_TO_WITHDRAW };
     }
 
+    static calculateAmountToPay(actual_price: number) {
+        const bankCharges = 0.5 / 100;
+        const amountToPay = Math.ceil(actual_price / (1 - bankCharges));
+        return amountToPay;
+    }
+
     static async getBankList() {
         try {
             const access_token = await TokenManager.getToken();
@@ -161,7 +167,6 @@ export class PaymentService {
 
             const res = await fetch(url, options);
             const data = await res.json();
-console.log({data});
 
             if (data.statusCode >= 400) return { wallet_creation_error: true, err_message: "Error creating wallet" };
             return { wallet_account: data.data.accountNumber };
@@ -384,7 +389,7 @@ console.log({data});
     static async getVirtualTransactionStatus(v_account_id: string) {
         try {
             // ! Also dont froget to check for payment reversal
-            //  and if so add the reversal_ref to trnsaction model
+            //  and if so add the reversal_ref to transaction model
             // Get the _id from the create payment endpoint and use it to query
             const url = `${this.SAFE_HAVEN_BASE_URI}/virtual-accounts/virtualAccountId/transaction`;
             const options = {
@@ -399,7 +404,6 @@ console.log({data});
 
             const res = await fetch(url, options)
             const data = await res.json();
-            console.log(data);
         } catch (error) {
             throw error;
         }

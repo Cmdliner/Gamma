@@ -6,5 +6,6 @@ const { six_mins } = DelayDurationsInMs;
 export const BidExpiryQueue = new Queue("bidExpiry", { connection: redis });
 
 export async function addBidToExpiryQueue(bid_id: string) {
+    // check if bid_id is in queue previously then rm it and add this new one
     await BidExpiryQueue.add("expire_bid", { bid_id }, { delay: six_mins });
 }

@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import Product from "../models/product.model";
 import Bid from "../models/bid.model";
-import type IBid from "../types/bid.schema";
 import { startSession, Types } from "mongoose";
 import { compareObjectID, Next5Mins } from "../lib/utils";
 import { logger } from "../config/logger.config";
@@ -79,13 +78,17 @@ class BidController {
                 buyer: req.user?._id,
                 negotiating_price,
                 product: new Types.ObjectId(productID),
+                expires: Next5Mins()
             };
-            await Bid.create(bidData);
-	    await addBidToExpiryQueue();
+
+            const bid = await Bid.create(bidData);
+            await addBidToExpiryQueue(bid.id);
+
             //!TODO => Send push notifications for bid creation here
-            return res
-                .status(StatusCodes.OK)
-                .json({ success: true, message: "Bid for product successful" });
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                message: "Bid successful"
+            });
         } catch (error) {
             logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error sending bid!")
@@ -93,7 +96,7 @@ class BidController {
         }
     }
 
-    // N.B => Once a bid is accepted all other bids become rejected
+    // N.B => Once a bid is accepted all other bids become auto rejected
     static async acceptBid(req: Request, res: Response) {
         const session = await startSession();
         try {

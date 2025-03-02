@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm install -g typescript && npm install && tsc",
     "build_local": "rm -rf dist/ && tsc && node --env-file .env dist/server.js",
-    "start": "node dist/server.js",
+    "start": "pm2 start ecosystem.config.js",
     "dev": "bun --watch  src/server.ts"
   },
   "author": "Adeyemi Abiade",
