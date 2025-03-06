@@ -13,7 +13,6 @@ class ProductService {
     ) {
 
         try {
-            //! todo => Populate owner field of product
             const products = await Product.aggregate([
                 {
                     $geoNear: {

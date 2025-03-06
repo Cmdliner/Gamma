@@ -17,6 +17,7 @@ class BidController {
             const bids = await Bid.find({
                 status: "pending",
                 seller: req.user?._id,
+                $sort: { createdAt: -1 }
             }).populate("buyer");
 
             return res.status(StatusCodes.OK).json({ success: true, bids })
@@ -69,7 +70,7 @@ class BidController {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Negotiating price must be a positive integer");
             }
 
-            const product = await Product.findById(productID);
+            const product = await Product.findOne({ _id: productID, deleted_at: { $exists: false } });
             if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
             if (!product.is_negotiable) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 

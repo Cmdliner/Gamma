@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { allowedCategories } from "./product.validation";
 
-const phoneNumberSchema = Joi.string()
+export const phoneNumberSchema = Joi.string()
   .pattern(/^(0\d{10}|\d{10})$/)
   .message('Phone number must be 11 digits starting with 0 or 10 digits without the leading 0');
 

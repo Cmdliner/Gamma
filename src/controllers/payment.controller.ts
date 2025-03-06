@@ -229,7 +229,7 @@ class PaymentController {
         try {
             const { productID } = req.params;
             const { sponsorship_duration, payment_method, indempotency_key } = req.body;
-            const amount = sponsorship_duration === "1Week" ? AdPayments.weekly : AdPayments.monthly;
+            const amount = sponsorship_duration === "1Month" ? AdPayments.monthly : AdPayments.weekly;
 
             if (!sponsorship_duration || !payment_method) {
                 throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `"sponsorship_duration" and "payment_method" required!`);
@@ -261,14 +261,15 @@ class PaymentController {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Processing pending payments");
             }
 
-            if (product.sponsorship?.expires?.valueOf() > Date.now()) {
+            const sponsorshipExpired = product.sponsorship?.expires?.valueOf();
+            if (sponsorshipExpired > Date.now()) {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Previous ad sponsorship is yet to expire");
             }
 
             if (product.status === "sold") throw new AppError(StatusCodes.BAD_REQUEST, "Product sold!");
 
             // Create Transaction for ad sponsorship
-            const adsDurationFmt = sponsorship_duration === "1Week" ? "one week" : "one month";
+            const adsDurationFmt = sponsorship_duration === "1Month" ? "one month" : "one week";
             const transaction = new AdSponsorshipTransaction({
                 bearer: req.user?._id,
                 product: product._id,

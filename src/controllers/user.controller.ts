@@ -13,6 +13,7 @@ import { logger } from "../config/logger.config";
 import { IAbuse } from "../types/abuse.schema";
 import AbuseComplaint from "../models/abuse.model";
 import Wallet from "../models/wallet.model";
+import { UserUpdateValidationSchema } from "../validations/user.validation";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -52,7 +53,7 @@ class UserController {
             if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
             const userWallet = await Wallet.findById(user.wallet);
-            if(!userWallet) throw new AppError(StatusCodes.NOT_FOUND, "Wallet not found!");
+            if (!userWallet) throw new AppError(StatusCodes.NOT_FOUND, "Wallet not found!");
 
             const referral_code = user.referral_code;
             const total_referrals = user.referrals.length;
@@ -140,31 +141,35 @@ class UserController {
     }
 
     static async updateInfo(req: Request, res: Response) {
-        const { phone_no_1, phone_no_2 } = req.body;
-        const verificationDocuments = req.verification_docs;
-        const profilePic = req.profile_pic;
         try {
+            const { phone_no_1, phone_no_2 } = req.body;
+            const verificationDocuments = req.verification_docs;
+            const profilePic = req.profile_pic;
+
+            const location = resolveLocation(req.body.location);
+
+            const phone_nos: any = [];
+            if (phone_no_1) phone_nos.push(phone_no_1);
+            if (phone_no_2) phone_nos.push(phone_no_2);
+
+
+            const { error } = UserUpdateValidationSchema.validate({ location, phone_nos });
+            if (error) throw new AppError(StatusCodes.BAD_REQUEST, error.details[0].message);
+
             const user = await User.findById(req.user?._id);
             if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
-            if (req.body.location) {
-                user.location = resolveLocation(req.body.location);
-            }
+            if (phone_nos[0]) user.phone_numbers[0] = phone_no_1;
+            if (phone_nos[1]) user.phone_numbers[1] = phone_no_2;
 
-            // !todo => Validate phone no schema
-            const inputedPhoneNos: any = [];
-            if (phone_no_1) {
-                inputedPhoneNos.push(phone_no_1);
-                user.phone_numbers[0] = phone_no_1;
-            }
-            if (phone_no_2) {
-                inputedPhoneNos.push(phone_no_2);
-                user.phone_numbers[1] = phone_no_2;
-            }
+            if (req.body.location) user.location = location;
 
             let phoneNumberInUse = false;
             if (phone_no_1 || phone_no_2) {
-                phoneNumberInUse = !!await User.exists({ phone_numbers: { $in: inputedPhoneNos } });
+                phoneNumberInUse = !!await User.exists({
+                    _id: { $not: req.user._id },
+                    phone_numbers: { $in: phone_nos }
+                });
             }
             if (phoneNumberInUse) throw new AppError(StatusCodes.BAD_REQUEST, "Phone number in use!");
 
@@ -187,7 +192,6 @@ class UserController {
             const user = await User.findById(req.user?._id);
             if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
-            // Ensure that the device push token matches expo push token fmt
             if (!Expo.isExpoPushToken(device_push_token)) {
                 throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Invalid push token!");
             }
@@ -223,7 +227,7 @@ class UserController {
             const abuseComplaint = new AbuseComplaint(abuseComplaintData);
             await abuseComplaint.save();
 
-            return res.status(StatusCodes.CREATED).json({success: true, message: "Your report has been sent"});
+            return res.status(StatusCodes.CREATED).json({ success: true, message: "Your report has been sent" });
 
         } catch (error) {
             logger.error(error);

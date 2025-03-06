@@ -17,9 +17,9 @@ import { addProductToReviewQueue } from "../queues/product.queue";
 
 class WebhookService {
 
-    static async validateWebhook(webhookSignature: string, payload: any) {
+    private static async validateWebhook(webhookSignature: string, payload: any) {
         const encryptedData = crypto
-            .createHmac("SHA512", cfg.FINCRA_WEBHOOK_KEY)
+            .createHmac("SHA512", cfg.SAFE_HAVEN_IBS_CLIENT_ID)
             .update(JSON.stringify(payload))
             .digest("hex");
         const signatureFromWebhook = webhookSignature;
@@ -68,8 +68,8 @@ class WebhookService {
     static async handleProductSponsorPayment(payload: IVirtualAccountTransferData) {
 
         // Ads expire one week after payment plan chosen (i.e 7 days extra)
-        const SevenDaysFromNow = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-        const OneMonthFromNow = new Date(Date.now() + 37 * 24 * 60 * 60 * 1000);
+        const SevenDaysFromNowPlusXtra = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+        const OneMonthFromNowPlusXtra = new Date(Date.now() + 37 * 24 * 60 * 60 * 1000);
 
         const session = await startSession();
 
@@ -82,15 +82,15 @@ class WebhookService {
             const [transaction_id, product_id] = payload.externalReference.split("::");
             let expiry = new Date();
 
-            if (amountPaid === AdPayments.weekly) expiry = SevenDaysFromNow;
-            else if (amountPaid === AdPayments.monthly) expiry = OneMonthFromNow;
+            if (amountPaid === AdPayments.weekly) expiry = SevenDaysFromNowPlusXtra;
+            else if (amountPaid === AdPayments.monthly) expiry = OneMonthFromNowPlusXtra;
 
             // Update product expiry and active status
             const product = await Product.findByIdAndUpdate(product_id, {
                 "sponsorship.sponsored_at": new Date(),
                 "sponsorship.expires": expiry,
                 "sponsorship.status": "under_review",
-            }, { new: true, session }).populate("owner");
+            }, { new: true, session });
             if (!product) throw new Error();
 
             // Add product to review queue
@@ -116,7 +116,6 @@ class WebhookService {
 
     static async handlePayout(payload: PayoutSuccessPayload) {
         const session = await startSession();
-        console.dir(payload);
         try {
             session.startTransaction();
             if (payload.data.status === "successful") {

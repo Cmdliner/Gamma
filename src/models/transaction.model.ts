@@ -124,7 +124,9 @@ const AdSponsorshipTransactionSchema = new Schema({
         sparse: true
     },
     reversal_ref: {
-        type: String
+        type: String,
+        unique: true,
+        sparse: true
     },
     virtual_account_id: {
         type: String
