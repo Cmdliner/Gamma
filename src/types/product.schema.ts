@@ -33,4 +33,43 @@ interface IProduct extends Document {
     };
 }
 
+export interface IElectronics extends IProduct {
+    brand: string;
+    item_model: string;
+    condition: "new" | "used";
+}
+
+export interface ILandedProperty extends IProduct {
+    localty: string;
+    dimensions: string;
+    condition: "fairly_used" | "newly_built" | "old" | "renovated" | "under_construction" | "empty_land";
+}
+
+export interface IGadget extends IProduct {
+    brand: string;
+    item_model: string;
+    RAM: string;
+    condition: "new" | "used";
+}
+
+export interface IVehicle extends IProduct {
+    make: string;
+    is_registered: boolean;
+    item_model: string;
+    year: number;
+    condition:  "new" | "used";
+    vin: string;
+    transmission_type: string;
+}
+
+export interface IOtherProduct extends IProduct {
+    condition: string;
+}
+
+export interface IFurniture extends IOtherProduct {}
+
+export interface IMachinery extends IOtherProduct {}
+
+export interface IFashionProduct extends IOtherProduct {}
+
 export default IProduct;

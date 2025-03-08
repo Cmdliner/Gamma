@@ -26,8 +26,8 @@ const TransactionSchema = new Schema({
     status: {
         type: String,
         enum: [
-            "success",
-            "pending",
+            "completed", // Product purchase tx which has entered as funds in seller's wallet
+            "success", // Money successfully moved
             "failed",
             "processing_payment",
             "resolved",
@@ -35,7 +35,6 @@ const TransactionSchema = new Schema({
             "in_escrow",
             "refunded",
         ],
-        index: true,
         required: true,
     },
     reason: {
@@ -76,10 +75,15 @@ const ProductPurchaseTransactionSchema = new Schema({
     virtual_account_id: {
         type: String
     }
-    
+
 });
 
 const RefundTransactionSchema = new Schema({
+    status: {
+        type: String,
+        enum: ["success", "failed", "processing_payment"],
+        required: true,
+    },
     payment_method: {
         type: String,
         enum: ['card', 'bank_transfer'],
@@ -108,6 +112,11 @@ const RefundTransactionSchema = new Schema({
 });
 
 const AdSponsorshipTransactionSchema = new Schema({
+    status: {
+        type: String,
+        enum: ["success", "failed", "processing_payment", "refunded"],
+        required: true,
+    },
     payment_method: {
         type: String,
         enum: ['card', 'bank_transfer'],
@@ -134,6 +143,11 @@ const AdSponsorshipTransactionSchema = new Schema({
 });
 
 const ReferralTransactionSchema = new Schema({
+    status: {
+        type: String,
+        enum: ["success", "failed", "processing_payment"],
+        required: true,
+    },
     referee: {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -142,6 +156,11 @@ const ReferralTransactionSchema = new Schema({
 });
 
 const WithdrawalTransactionSchema = new Schema({
+    status: {
+        type: String,
+        enum: ["success", "failed", "processing_payment", "refunded"],
+        required: true,
+    },
     payment_method: {
         type: String,
         enum: ["card", "bank_transfer"]

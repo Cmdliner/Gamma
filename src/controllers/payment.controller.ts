@@ -22,6 +22,7 @@ import { StatusCodes } from "http-status-codes";
 import { AppError } from "../lib/error.handler";
 import { logger } from "../config/logger.config";
 import { PaymentService } from "../services/payment.service";
+import { notificationService } from "../services/notification.service";
 
 class PaymentController {
 
@@ -53,7 +54,7 @@ class PaymentController {
             const wallet = await Wallet.findById(user.wallet).session(session);
             if (!wallet) throw new AppError(StatusCodes.NOT_FOUND, "Error finding wallet");
 
-            // Make sure user does not try to add to their balance by atempting to withdraw 
+            // Make sure user does not try to add to their balance by attempting to withdraw 
             // negative balance or less than the MIN_WITHDRAW_VALUE
             if (amount_to_withdraw < MIN_WITHDRAWAL_VALUE) {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Amount too small");
@@ -67,7 +68,7 @@ class PaymentController {
             const payoutTransaction = new WithdrawalTransaction({
                 bearer: req.user?._id,
                 amount: amount_to_withdraw,
-                status: "pending",
+                status: "processing_payment",
                 reason: `Payout: From Oyeah wallet to bank account: ${user.bank_details.account_no}`,
                 payment_method: "bank_transfer",
                 from: "wallet"
@@ -122,7 +123,6 @@ class PaymentController {
                 .find({ bearer: user._id })
                 .sort({ createdAt: -1 }).populate("product");
 
-
             return res.status(StatusCodes.OK).json({ success: true, transactions });
         } catch (error) {
             logger.error(error);
@@ -161,15 +161,15 @@ class PaymentController {
             let bidPrice = undefined;
             if (bidID) {
                 const bid = await Bid.findOne({ _id: bidID, status: "accepted" }).session(session);
-                if (!bid) throw new AppError(StatusCodes.NOT_FOUND, "Couldn't find that bid");
+                if (!bid) throw new AppError(StatusCodes.NOT_FOUND, "Bid not found!");
 
                 const isBidder = compareObjectID(bid.buyer, req.user?._id);
-                if (!isBidder) throw new AppError(StatusCodes.NOT_FOUND, "Bid not found")
+                if (!isBidder) throw new AppError(StatusCodes.NOT_FOUND, "Bid not found!");
 
                 bidPrice = bid.negotiating_price as number;
             }
 
-            const updatedProduct = await Product.findOneAndUpdate({
+            await Product.findOneAndUpdate({
                 _id: productID,
                 status: "available",
                 "purchase_lock.is_locked": false,
@@ -182,14 +182,11 @@ class PaymentController {
                     locked_by: userId
                 }
             }, { new: true, session });
-            if (!updatedProduct) {
-                throw new AppError(StatusCodes.LOCKED, "Product is currently unavaliable for purchase");
-            }
 
             const itemPurchaseTransaction = new ProductPurchaseTransaction({
                 bearer: userId,
                 amount: bidPrice ? bidPrice : product.price,
-                seller: updatedProduct.owner,
+                seller: product.owner,
                 destination: 'escrow',
                 status: "processing_payment",
                 product: productID,
@@ -205,12 +202,12 @@ class PaymentController {
                 product,
                 txRef
             );
+            if (payment_error) throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, message);
 
             await ProductPurchaseTransaction.findByIdAndUpdate(txRef, {
                 virtual_account_id: payment_details.virtual_account_id,
             }, { session });
 
-            if (payment_error) throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, message);
             await session.commitTransaction();
 
             return res.status(StatusCodes.OK).json({ success: true, transaction_id: txRef, payment_details });
@@ -231,10 +228,6 @@ class PaymentController {
             const { sponsorship_duration, payment_method, indempotency_key } = req.body;
             const amount = sponsorship_duration === "1Month" ? AdPayments.monthly : AdPayments.weekly;
 
-            if (!sponsorship_duration || !payment_method) {
-                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `"sponsorship_duration" and "payment_method" required!`);
-            }
-
             const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
             if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
@@ -253,7 +246,7 @@ class PaymentController {
             const pendingSponsorshipTx = await AdSponsorshipTransaction.findOne({
                 bearer: req.user?._id,
                 product: product._id,
-                status: "pending"
+                status: "processing_payment"
                 // !todo => check for when it was created
             }).session(session);
 
@@ -273,7 +266,7 @@ class PaymentController {
             const transaction = new AdSponsorshipTransaction({
                 bearer: req.user?._id,
                 product: product._id,
-                status: "pending",
+                status: "processing_payment",
                 payment_method: payment_method,
                 reason: `To run ads for ${product.name} for a duration of ${adsDurationFmt}`,
                 amount
@@ -336,7 +329,7 @@ class PaymentController {
             if (!canWithdrawRewards) {
                 throw new AppError(
                     StatusCodes.BAD_REQUEST,
-                    "Cannot claim rewards. No 'transactions' in the past 30 days"
+                    "Cannot claim rewards!! No 'transactions' in the past 30 days"
                 );
             }
 
@@ -344,7 +337,7 @@ class PaymentController {
             const payoutTransaction = new WithdrawalTransaction({
                 bearer: req.user?._id,
                 amount: wallet.rewards_balance,
-                status: "pending",
+                status: "processing_payment",
                 reason: `Withdrawing rewards earned`,
                 payment_method: "bank_transfer",
                 from: "rewards"
@@ -419,9 +412,8 @@ class PaymentController {
         const session = await startSession();
         try {
             session.startTransaction();
-            const { seller_id, transaction_id, otp, _indempotency_key } = req.body;
+            const { seller_id, transaction_id, otp, indempotency_key } = req.body;
 
-            // Validate and verify  otp entered
             const now = new Date();
             const otpMatch = await OTP.findOneAndDelete({
                 kind: "funds_approval",
@@ -431,24 +423,21 @@ class PaymentController {
             }).session(session);
             if (!otpMatch) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid OTP!");
 
-            // Find transaction and update its status
             const transaction = await ProductPurchaseTransaction.findOne({
                 _id: transaction_id,
                 status: "in_escrow"
             }).session(session);
             if (!transaction) throw new AppError(StatusCodes.NOT_FOUND, "Transaction not found!");
 
-            transaction.status = "success";
+            transaction.status = "completed";
             await transaction.save({ session });
 
-            // Update product status and it's sposnsorship
             const product = await Product.findById(transaction.product);
             if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
             product.status = "sold";
-            if (product.sponsorship?.status === "active") {
-                product.sponsorship.status = "completed";
-            }
+            if (product.sponsorship?.status === "active") product.sponsorship.status = "completed";
+
             await product.save({ session });
 
             // Update seller's wallet balance
@@ -468,7 +457,7 @@ class PaymentController {
             const walletTransferTx = new ProductPurchaseTransaction({
                 bearer: customer._id,
                 amount: transaction.amount,
-                status: 'processing_payment',
+                status: 'success',
                 payment_method: 'bank_transfer',
                 destination: 'wallet',
                 product: transaction.product,
@@ -484,9 +473,8 @@ class PaymentController {
                 transaction.amount,
                 walletTransferTx.id
             );
-            if (intraTransfer.payout_error) {
-                throw new AppError(StatusCodes.BAD_REQUEST, "Couldn't process transfer");
-            }
+            if (intraTransfer.payout_error) throw new AppError(StatusCodes.BAD_REQUEST, "Couldn't process transfer");
+
             sellerWallet.main_balance += transaction.amount;
             await sellerWallet.save({ session });
 
@@ -538,13 +526,15 @@ class PaymentController {
 
             // Get the previous payment transaction
             const prevTransaction = await ProductPurchaseTransaction.findOne({
-                bearer: req.user?._id,
                 _id: transactionID,
+                bearer: req.user?._id,
                 status: 'in_escrow'
-            }).session(session);
+            }).populate("product").session(session);
             if (!prevTransaction) throw new AppError(StatusCodes.NOT_FOUND, "Transaction not found!");
 
-            // ! DO NOT TAMPER OR ALTER
+            // const product = prevTransaction.product as unknown as IProduct;
+
+            // !!! DO NOT TAMPER OR ALTER
             const OYEAH_REFUND_CUT = ((0.55 / 100 * prevTransaction.amount) * 10 / 10);
             const AMOUNT_TO_REFUND = prevTransaction.amount - OYEAH_REFUND_CUT;
 
@@ -555,14 +545,17 @@ class PaymentController {
                 product: prevTransaction.product,
                 bearer: req.user?._id,
                 amount: AMOUNT_TO_REFUND,
-                status: 'pending',
+                status: 'processing_payment',
                 reason: `Refund of payment made in transaction ${prevTransaction.id}`
             });
             await refundTransaction.save({ session });
 
-            // !TODO => SEND NOTIFICATION TO SELLER
+            // await notificationService.sendPushNotifications(product.seller, "Notification of refund",  "", { })
             await session.commitTransaction();
-            return res.status(StatusCodes.OK).json({ success: true, message: "Seller has been notified of request to refund" });
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                message: "Seller has been notified of request to refund"
+            });
         } catch (error) {
             await session.abortTransaction();
             logger.error(error);
@@ -582,7 +575,7 @@ class PaymentController {
             session.startTransaction();
 
             const refundTransaction = await RefundTransaction.findOne({
-                status: 'pending',
+                status: 'processing_payment',
                 _id: refundTransactionID,
             }).populate(["product", "bearer"]).session(session);
             if (!refundTransaction) throw new AppError(StatusCodes.NOT_FOUND, "Refund transaction not found");
@@ -649,7 +642,7 @@ class PaymentController {
         try {
             const deals = await ProductPurchaseTransaction.find({
                 $or: [{ seller: req.user?._id }, { bearer: req.user?._id }],
-                destination: "escrow",
+                destination: "wallet",
                 status: "success"
             });
 
@@ -705,7 +698,7 @@ class PaymentController {
             const deals = await ProductPurchaseTransaction.find({
                 $or: [{ bearer: req.user?._id }, { seller: req.user?._id }],
                 destination: "escrow",
-                status: { $in: ["in_escrow", "processing_payment"] }
+                status: { $in: ["in_escrow", "processing_payment", "success"] }
             });
             return res.status(StatusCodes.OK).json({ success: true, deals });
 

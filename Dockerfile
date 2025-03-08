@@ -12,6 +12,5 @@ EXPOSE 4000
 
 RUN bun add -g pm2
 
-RUN bun i typescript
 
 CMD ["pm2", "runtime", "ecosystem.config.js"]

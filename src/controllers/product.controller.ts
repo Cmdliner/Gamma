@@ -1,5 +1,11 @@
 import type { Request, Response } from "express";
-import type IElectronics from "../types/electronics.schema";
+import type {
+    IElectronics,
+    ILandedProperty,
+    IGadget,
+    IVehicle,
+    IFurniture,
+} from "../types/product.schema";
 import {
     allowedCategories,
     electronicsValidationSchema,
@@ -18,10 +24,6 @@ import Product, {
     OtherProduct,
     Vehicle,
 } from "../models/product.model";
-import type ILandedProperty from "../types/landed_property.schema";
-import type IGadget from "../types/gadget.schema";
-import type IVehicle from "../types/vehicle.schema";
-import type { IFurniture } from "../types/generic.schema";
 import { compareObjectID, resolveLocation } from "../lib/utils";
 import ProductService from "../services/product.service";
 import User from "../models/user.model";
@@ -704,13 +706,13 @@ class ProductController {
             const { productID } = req.params;
 
             const product = await Product.findById(productID);
-            if(!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found");
+            if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found");
 
             const adDeactivated = product.sponsorship.status === "deactivated";
-            if(!adDeactivated) throw new AppError(StatusCodes.BAD_REQUEST, "Ad unavailable for repost");
+            if (!adDeactivated) throw new AppError(StatusCodes.BAD_REQUEST, "Ad unavailable for repost");
 
             const adExpired = Number(product.sponsorship.expires) < Date.now();
-            if(adExpired) {
+            if (adExpired) {
                 product.sponsorship.status = "expired";
                 await product.save();
                 throw new AppError(StatusCodes.BAD_REQUEST, "Ad Expired");
@@ -719,7 +721,7 @@ class ProductController {
             product.sponsorship.status = "active";
             await product.save();
 
-            return res.status(StatusCodes.OK).json({ success: true, message: "Ad Reposted"});
+            return res.status(StatusCodes.OK).json({ success: true, message: "Ad Reposted" });
         } catch (error) {
             logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error reposting ad");

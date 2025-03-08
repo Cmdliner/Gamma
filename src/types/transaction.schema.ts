@@ -10,9 +10,9 @@ interface ITransaction extends Document {
     bearer: Types.ObjectId;
     amount: number;
     status:
+    | "completed"
     | "success"
     | "failed"
-    | "pending"
     | "processing_payment"
     | "in_dispute"
     | "in_escrow"
@@ -20,7 +20,6 @@ interface ITransaction extends Document {
     | "refunded";
     reason: string;
 }
-
 
 export interface IProductPurchaseTransaction extends ITransaction {
     payment_method: "card" | "bank_transfer";
@@ -33,6 +32,10 @@ export interface IProductPurchaseTransaction extends ITransaction {
 }
 
 export interface IRefundTransaction extends ITransaction {
+    status:
+    | "success"
+    | "failed"
+    | "processing_payment";
     payment_method: string;
     product: Types.ObjectId;
     seller: Types.ObjectId;
@@ -41,6 +44,11 @@ export interface IRefundTransaction extends ITransaction {
 }
 
 export interface IAdSponsorshipTransaction extends ITransaction {
+    status:
+    | "success"
+    | "failed"
+    | "processing_payment"
+    | "refunded";
     payment_method: "card" | "bank_transfer";
     product: Types.ObjectId;
     payment_ref: string;
@@ -49,10 +57,19 @@ export interface IAdSponsorshipTransaction extends ITransaction {
 }
 
 export interface IReferralTransaction extends ITransaction {
+    status:
+    | "success"
+    | "failed"
+    | "processing_payment";
     referee: Types.ObjectId;
 }
 
 export interface IWithdrawalTransaction extends ITransaction {
+    status:
+    | "success"
+    | "failed"
+    | "processing_payment"
+    | "refunded";
     payment_method: "card" | "bank_transfer";
     payment_ref: string;
     from: "rewards" | "wallet"

@@ -4,7 +4,6 @@ dist/
 uploads
 *.key
 server.cert
-*.js
 .*.sh
 privatekey.pem
 publickey.cer

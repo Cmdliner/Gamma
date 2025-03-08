@@ -119,24 +119,23 @@ class UserController {
             const displayPic = req.file;
             const userId = req.user?._id;
             if (!displayPic || !displayPic.mimetype.startsWith("image/")) {
-                return res.status(422).json({ error: true, message: "Image file required!" });
+                throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Image file required!");
             }
 
             // Upload to cloudinary
             const uploadPath = await ProcessCloudinaryImage(displayPic);
 
             const user = await User.findById(userId);
-            if (!user) {
-                return res.status(404).json({ error: true, message: "User not found!" });
-            }
+            if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
             user.display_pic = uploadPath;
             await user.save();
 
-            return res.status(200).json({ success: true, message: "Display picture upload successful" });
+            return res.status(StatusCodes.OK).json({ success: true, message: "Upload successful" });
         } catch (error) {
             logger.error(error);
-            return res.status(500).json({ error: true, message: "Error updating display picture" })
+            const [status, errResponse] = AppError.handle(error, "Error updating profile picture!");
+            return res.status(status).json(errResponse);
         }
     }
 
