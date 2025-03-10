@@ -2,7 +2,6 @@ declare namespace NodeJS {
     interface ProcessEnv {
         PORT: number;
         NODE_ENV: "staging" | "development" | "production";
-        OYEAH_SERVER_URL: string;
         MONGO_URI: string;
         CORS_ORIGIN: string;
         EMAIL_ADDRESS: `${string}@${string}.com`;
@@ -33,6 +32,5 @@ declare namespace NodeJS {
         SAFE_HAVEN_AUTH_TOKEN: string;
         SAFE_HAVEN_REFRESH_TOKEN: string;
         REDIS_URL: string;
-        OYEAH_SERVER_URL: string;
     }
 }

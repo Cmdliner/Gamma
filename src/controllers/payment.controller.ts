@@ -137,6 +137,7 @@ class PaymentController {
             const userId = req.user?._id;
             const { productID, bidID } = req.params;
             const { payment_method, indempotency_key } = req.body;
+            const webhookCallbackUrl = `${req.protocol}://${req.hostname}/webhook/product-purchase`;
 
             session.startTransaction();
 
@@ -200,7 +201,8 @@ class PaymentController {
             const { payment_error, message, ...payment_details } = await PaymentService.generateProductPurchaseAccountDetails(
                 PaymentService.calculateAmountToPay(amount),
                 product,
-                txRef
+                txRef,
+                webhookCallbackUrl
             );
             if (payment_error) throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, message);
 
@@ -227,6 +229,7 @@ class PaymentController {
             const { productID } = req.params;
             const { sponsorship_duration, payment_method, indempotency_key } = req.body;
             const amount = sponsorship_duration === "1Month" ? AdPayments.monthly : AdPayments.weekly;
+            const webhookCallbackUrl = `${req.protocol}://${req.hostname}/webhook/ad-payment`;
 
             const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
             if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
@@ -276,7 +279,8 @@ class PaymentController {
             const { payment_error, message, ...payment_details } = await PaymentService.generateSponsorshipPaymentAccountDetails(
                 PaymentService.calculateAmountToPay(amount),
                 product,
-                transaction.id
+                transaction.id,
+                webhookCallbackUrl
             );
             if (payment_error) throw new AppError(StatusCodes.BAD_REQUEST, message);
 

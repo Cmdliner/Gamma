@@ -4,7 +4,7 @@ src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Frame%202085661018-
 alt="Oyeah! Escrow"
 style="display: block; width: 100%; height: auto"
 />
-The REST API server for the `OYeah! Escrow` platform
+The REST API server for the `Oyeah! Escrow` platform
 
 ## How To Setup
 

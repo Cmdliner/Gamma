@@ -27,13 +27,11 @@ export class AppConfig {
     OYEAH_MAIN_ACCOUNT_SAFEHAVEN: string;
     OYEAH_ESCROW_ACCOUNT_SAFEHAVEN: string;
     OYEAH_ADS_REVENUE_ACCOUNT_SAFEHAVEN: string;
-    OYEAH_SERVER_URL: string;
 
 
     constructor(cfg: AppConfig) {
 
         this.PORT = cfg.PORT;
-        this.OYEAH_SERVER_URL = cfg.OYEAH_SERVER_URL;
         this.DB_URI = cfg.DB_URI;
         this.NODE_ENV = cfg.NODE_ENV;
         this.APP_EMAIL_ADDRESS = cfg.APP_EMAIL_ADDRESS
@@ -60,7 +58,6 @@ export class AppConfig {
         this.OYEAH_MAIN_ACCOUNT_SAFEHAVEN = cfg.OYEAH_MAIN_ACCOUNT_SAFEHAVEN;
         this.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN = cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN;
         this.OYEAH_ADS_REVENUE_ACCOUNT_SAFEHAVEN = cfg.OYEAH_ADS_REVENUE_ACCOUNT_SAFEHAVEN;
-        this.OYEAH_SERVER_URL = cfg.OYEAH_SERVER_URL;
 
         const missingKeys = [];
         Object.keys(cfg).forEach((key: keyof typeof cfg) => {

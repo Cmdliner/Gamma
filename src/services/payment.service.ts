@@ -18,7 +18,6 @@ export class PaymentService {
      */
     private static SAFE_HAVEN_BASE_URI = cfg.NODE_ENV === "production" ? "https://api.sandbox.safehavenmfb.com" : "";
     private static SAFE_HAVEN_BANK_CODE = cfg.NODE_ENV === "production" ? "999240" : "999240";
-    private static SAFE_HAVEN_CALLBACK_URL = `${cfg.OYEAH_SERVER_URL}/webhook`;
 
     static async generateSafehavenAuthToken(type: TAuthTokenParams = "access") {
         try {
@@ -175,7 +174,7 @@ export class PaymentService {
         }
     }
 
-    static async generateProductPurchaseAccountDetails(amount: number, product: IProduct, transaction_id: string) {
+    static async generateProductPurchaseAccountDetails(amount: number, product: IProduct, transaction_id: string, callback_url: string) {
         try {
             const access_token = await TokenManager.getToken();
 
@@ -194,7 +193,7 @@ export class PaymentService {
                         accountNumber: cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN,
                         bankCode: this.SAFE_HAVEN_BANK_CODE
                     },
-                    callbackUrl: `${this.SAFE_HAVEN_CALLBACK_URL}/product-purchase`,
+                    callbackUrl: callback_url,
                     validFor: 900,
                     amount,
                     externalReference: `${transaction_id}::${product.id}`
@@ -217,7 +216,7 @@ export class PaymentService {
         }
     }
 
-    static async generateSponsorshipPaymentAccountDetails(amount: number, product: IProduct, transaction_id: string) {
+    static async generateSponsorshipPaymentAccountDetails(amount: number, product: IProduct, transaction_id: string, callback_url: string) {
         try {
             const access_token = await TokenManager.getToken();
 
@@ -236,7 +235,7 @@ export class PaymentService {
                         accountNumber: cfg.OYEAH_ADS_REVENUE_ACCOUNT_SAFEHAVEN,
                         bankCode: this.SAFE_HAVEN_BANK_CODE
                     },
-                    callbackUrl: `${this.SAFE_HAVEN_CALLBACK_URL}/ad-payment`,
+                    callbackUrl: callback_url,
                     validFor: 900,
                     amount,
                     externalReference: `${transaction_id}::${product.id}`
