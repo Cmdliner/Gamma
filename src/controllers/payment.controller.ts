@@ -44,12 +44,11 @@ class PaymentController {
         const session = await startSession();
 
         try {
+            session.startTransaction();
             const user = req.user as IUser;
             const { amount_to_withdraw } = req.body;
 
             if (!amount_to_withdraw) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, "Amount required!");
-
-            session.startTransaction();
 
             const wallet = await Wallet.findById(user.wallet).session(session);
             if (!wallet) throw new AppError(StatusCodes.NOT_FOUND, "Error finding wallet");
@@ -134,12 +133,11 @@ class PaymentController {
     static async purchaseItem(req: Request, res: Response) {
         const session = await startSession();
         try {
+            session.startTransaction();
             const userId = req.user?._id;
             const { productID, bidID } = req.params;
             const { payment_method, indempotency_key } = req.body;
             const webhookCallbackUrl = `${req.protocol}://${req.hostname}/webhook/product-purchase`;
-
-            session.startTransaction();
 
             if (!payment_method) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `'payment_method' required!`);
 
@@ -226,6 +224,7 @@ class PaymentController {
     static async sponsorAd(req: Request, res: Response) {
         const session = await startSession();
         try {
+            session.startTransaction();
             const { productID } = req.params;
             const { sponsorship_duration, payment_method, indempotency_key } = req.body;
             const amount = sponsorship_duration === "1Month" ? AdPayments.monthly : AdPayments.weekly;
@@ -234,7 +233,7 @@ class PaymentController {
             const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
             if (error) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, error.details[0].message);
 
-            session.startTransaction();
+            
 
             const product = await Product.findOne({
                 _id: productID,
@@ -245,21 +244,12 @@ class PaymentController {
             const isProductOwner = compareObjectID(product.owner, req.user?._id);
             if (!isProductOwner) throw new AppError(StatusCodes.NOT_FOUND, `Product not found!`);
 
-            // Check if product has pending sponsorship transactions
-            const pendingSponsorshipTx = await AdSponsorshipTransaction.findOne({
-                bearer: req.user?._id,
-                product: product._id,
-                status: "processing_payment"
-                // !todo => check for when it was created
-            }).session(session);
 
-            if (pendingSponsorshipTx || product.sponsorship.status === "processing_payment") {
-                throw new AppError(StatusCodes.BAD_REQUEST, "Processing pending payments");
-            }
-
-            const sponsorshipExpired = product.sponsorship?.expires?.valueOf();
-            if (sponsorshipExpired > Date.now()) {
-                throw new AppError(StatusCodes.BAD_REQUEST, "Previous ad sponsorship is yet to expire");
+            
+            const prevSponsorshipExpired = product.sponsorship?.expires?.valueOf() > Date.now();
+            //  To sponsor => No previous ad or ad expired
+            if(!(!product.sponsorship || prevSponsorshipExpired)) {
+                throw new AppError(StatusCodes.BAD_REQUEST, "Cannot sponsor this ad at the moment");
             }
 
             if (product.status === "sold") throw new AppError(StatusCodes.BAD_REQUEST, "Product sold!");
@@ -573,10 +563,10 @@ class PaymentController {
     // Seller approves refund
     static async approveRefund(req: Request, res: Response) {
         const session = await startSession();
+        
         try {
-            const { refundTransactionID } = req.params;
-
             session.startTransaction();
+            const { refundTransactionID } = req.params;
 
             const refundTransaction = await RefundTransaction.findOne({
                 status: 'processing_payment',

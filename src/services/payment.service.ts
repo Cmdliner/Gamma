@@ -85,6 +85,17 @@ export class PaymentService {
         return amountToPay;
     }
 
+    static calculateOriginalPrice(amount_paid: number) {
+        const bankCharges = 0.5 / 100;
+        const originalAmount = Math.round(amount_paid * (1 - bankCharges));
+        return originalAmount;
+    }
+
+    static isValidOriginalPrice(amount_paid: number, expected_original_price: number) {
+        const errorOffset = 2
+        return Math.abs(this.calculateOriginalPrice(amount_paid) - expected_original_price) <= errorOffset;
+    }
+
     static async getBankList() {
         try {
             const access_token = await TokenManager.getToken();

@@ -34,8 +34,10 @@ bun run dev
 ```
 
 ## BUGS
-  
+
 ## TODOS
+- Retry mechanisms in queue
+- Check sponsorproduct and return meaningful error response if sponsorhip exists (maybe under_review, not expired e.t.c)
 - Rm ads on activate to rm from market place
 - Indempotency key on payment; store in redis cache
 - Handle actual refund logic in cron job

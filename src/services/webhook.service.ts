@@ -14,6 +14,7 @@ import { cfg } from "../init";
 import FincraService from "./fincra.service";
 import { logger } from "../config/logger.config";
 import { addProductToReviewQueue } from "../queues/product.queue";
+import { PaymentService } from "./payment.service";
 
 class WebhookService {
 
@@ -50,7 +51,7 @@ class WebhookService {
                 // Transaction
                 const transaction = await ProductPurchaseTransaction.findById(transaction_id).session(session);
                 if (!transaction) throw new Error("Transaction not found");
-                
+
                 transaction.status = "in_escrow";
                 transaction.payment_ref = payload.paymentReference;
                 await transaction.save({ session });
@@ -82,8 +83,8 @@ class WebhookService {
             const [transaction_id, product_id] = payload.externalReference.split("::");
             let expiry = new Date();
 
-            if (amountPaid === AdPayments.weekly) expiry = SevenDaysFromNowPlusXtra;
-            else if (amountPaid === AdPayments.monthly) expiry = OneMonthFromNowPlusXtra;
+            if (PaymentService.isValidOriginalPrice(amountPaid, AdPayments.weekly)) expiry = SevenDaysFromNowPlusXtra;
+            else if (PaymentService.isValidOriginalPrice(amountPaid, AdPayments.monthly)) expiry = OneMonthFromNowPlusXtra;
 
             // Update product expiry and active status
             const product = await Product.findByIdAndUpdate(product_id, {
@@ -143,28 +144,30 @@ class WebhookService {
     }
 
     static async handleRefunds(payload: ChargeSuccessPayload) {
+        const session = await startSession();
         try {
+            session.startTransaction();
             if (payload.data.status === "success") {
 
                 const { product_id } = payload.data.metadata;
-                const product = await Product.findById(product_id);
+                const product = await Product.findById(product_id).session(session);
                 product.status = "available";
                 product.purchase_lock = undefined;
-                await product.save();
+                await product.save({ session });
 
                 if (!product) throw new Error("Product not found");
 
                 // Payment transaction
-                const transaction = await ProductPurchaseTransaction.findById(payload.data.reference);
+                const transaction = await ProductPurchaseTransaction.findById(payload.data.reference).session(session);
                 if (!transaction) throw new Error("Transaction not found");
                 if (payload.data.amountToSettle > 0 && payload.data.metadata.amount_expected > product.price) {
                     transaction.status = "failed";
                     transaction.payment_ref = payload.data.chargeReference
-                    await transaction.save();
+                    await transaction.save({ session });
                 }
 
                 // User
-                const user = await User.findById(transaction.bearer);
+                const user = await User.findById(transaction.bearer).session(session);
                 if (!user) throw new Error("User not found");
 
 
@@ -181,14 +184,22 @@ class WebhookService {
                     reason: `Refund for ${product.name} purchase due to underpayment`,
                     payment_method: "bank_transfer",
                     product: product._id
-                });
+                }, { session });
 
-                const result = await FincraService.handleRefund(user, AMOUNT_TO_REFUND, refundTransaction.id);
-                return result
+                const result = await FincraService.handleRefund(
+                    user,
+                    AMOUNT_TO_REFUND,
+                    (refundTransaction as any)._id
+                );
+                session.commitTransaction();
+                return result;
             }
         } catch (error) {
+            await session.abortTransaction();
             logger.error(error);
             throw error;
+        } finally {
+            await session.endSession();
         }
     }
 

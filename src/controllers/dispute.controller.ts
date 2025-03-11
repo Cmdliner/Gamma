@@ -9,16 +9,18 @@ import { logger } from "../config/logger.config";
 
 class DisputeController {
     static async raiseDispute(req: Request, res: Response) {
-        const { transactionID } = req.params;
-        const { issues, comments } = req.body;
 
-        // VALIDATE REQUEST BODY
-        if (!comments?.trim()) {
-            return res.status(422).json({ error: true, message: 'comments required' });
-        }
         const session = await startSession();
         try {
             session.startTransaction();
+
+            const { transactionID } = req.params;
+            const { issues, comments } = req.body;
+    
+            // VALIDATE REQUEST BODY
+            if (!comments?.trim()) {
+                return res.status(422).json({ error: true, message: 'comments required' });
+            }
 
             const transaction = await ProductPurchaseTransaction.findById(transactionID).session(session);
             if (!transaction) {
