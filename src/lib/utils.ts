@@ -67,7 +67,7 @@ export function rateLimitMiddlewareHandler(_req: Request, res: Response, _next: 
 type LocationType = { type: "Point", human_readable: string, coordinates: [number, number] };
 
 export function resolveLocation(location: string): LocationType {
-
+    const isValidState = (state: string) => GeospatialDataNigeria[state] ? true : false;
     const humanReadableLocation = location;
 
     if (!isValidState(humanReadableLocation)) {
@@ -84,7 +84,6 @@ export function resolveLocation(location: string): LocationType {
     };
 }
 
-export const isValidState = (state: string) => GeospatialDataNigeria[state] ? true : false;
 
 
 export function querySafeHavenBankCodes(q: RegExp) {
@@ -99,3 +98,11 @@ export const DelayDurationsInMs = {
     seven_days: 7 * 24 * 60 * 60 * 1000,
     six_mins: 6 * 60 * 1000
 };
+
+export async function sendMail(to: string, template: string) {
+    try {
+
+    } catch (error) {
+        throw error;
+    }
+}

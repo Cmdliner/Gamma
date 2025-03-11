@@ -9,7 +9,7 @@ import OTP from "../models/otp.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "../services/auth.service";
 import Wallet from "../models/wallet.model";
-import { generateOTP, hashIdentityNumber, matchAccNameInDb, querySafeHavenBankCodes } from "../lib/utils";
+import { generateOTP, hashIdentityNumber, matchAccNameInDb, querySafeHavenBankCodes, resolveLocation } from "../lib/utils";
 import PaystackService from "../services/paystack.service";
 import { BankCodes, IBankInfo } from "../lib/bank_codes";
 import FincraService from "../services/fincra.service";
@@ -55,7 +55,8 @@ class AuthController {
             if (middle_name) registerInfo.middle_name = middle_name;
 
             // Verify and add location if valid
-            const location = await AuthService.resolveLocation(req.body.location)
+            const DEFAULT_LOCATION = "lagos";
+            const location = resolveLocation(req.body.location || DEFAULT_LOCATION);
             registerInfo.location = location;
 
             const phone_numbers = [phone_no_1];
