@@ -144,7 +144,6 @@ class AuthController {
 
     // Resend verification email
     static async resendVerificationMail(req: Request, res: Response) {
-
         const session = await startSession();
 
         try {
