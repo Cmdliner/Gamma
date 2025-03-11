@@ -8,3 +8,5 @@ server.cert
 privatekey.pem
 publickey.cer
 client_assertion
+logs/
+
