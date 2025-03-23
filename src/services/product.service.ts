@@ -51,7 +51,7 @@ class ProductService {
     private static escapeStringRegexp(string: string): string {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escapes special characters
     }
-    
+
     private static createSearchRegex(word: string) {
         const escapedWord = this.escapeStringRegexp(word);
         return { $regex: new RegExp(`\\b${escapedWord}\\b`, 'i') };
@@ -69,6 +69,19 @@ class ProductService {
             })),
         };
     }
+
+    static newBuildSearchQuery(q: string) {
+        return {
+            $or: [
+                { $text: q },
+                { title: this.createSearchRegex(q) },
+                { description: this.createSearchRegex(q) },
+                { category: this.createSearchRegex(q) },
+            ]
+        }
+    }
+
+    static newBuildSearchQueryForCategories
 
     static buildSearchQueryForCategories(words: string[], category: string) {
         return {

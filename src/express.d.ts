@@ -13,6 +13,7 @@ declare global {
             verification_docs: string[];
             profile_pic: string;
             user?: IUser;
+            admin?: IAdmin;
         }
     }
 }

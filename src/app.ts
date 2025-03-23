@@ -18,8 +18,9 @@ import rateLimit from "express-rate-limit";
 import { AppConfig } from "./config/app.config";
 import { logger } from "./config/logger.config";
 import webhook from "./routes/webhook.routes";
+import { StatusCodes } from "http-status-codes";
 
-const API_VERSION = "api/v1";
+export const API_VERSION = "api/v1";
 
 class App {
 
@@ -70,7 +71,7 @@ class App {
         this.app.use(`/${API_VERSION}/notifications`, AuthMiddleware.requireAuth, notification);
         this.app.use(`/${API_VERSION}/disputes`, AuthMiddleware.requireAuth, dispute);
         this.app.get("/healthz", (_req: Request, res: Response) => {
-            res.status(200).json({ active: "The hood is up commandliner⚡"});
+            res.status(StatusCodes.OK).json({ active: "The hood is up commandliner⚡"});
         });
         this.app.get('/', (_req: Request, res: Response) => res.redirect("/healthz"));
     }
@@ -78,7 +79,7 @@ class App {
     private initializeErrorHandlers() {
         this.app.use((_: Request, res: Response, _next: NextFunction) => {
             logger.error("An error occured");
-            return res.status(500).json({ error: true, message: "An  error occured" });
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: true, message: "An  error occured" });
         });
     }
 
@@ -89,6 +90,10 @@ class App {
             console.error(error);
             process.exit(1);
         }
+    } 
+
+    public expose() {
+        return this.app
     }
 
 }

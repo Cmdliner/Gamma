@@ -50,7 +50,7 @@ class ProductController {
 
             // Build query
             let searchQuery = ProductService.buildSearchQuery(searchWords);
-            const offset = (Number(page) - 1) * Number(limit);
+            // const offset = (Number(page) - 1) * Number(limit);
 
             // Check if its product category based search
             if (productCategory) {
@@ -62,8 +62,9 @@ class ProductController {
 
             // Fetch products
             const products = await Product.find({ deleted_at: { $exists: false }, ...searchQuery })
+                .sort({ score: { $meta: "textScore" } })
                 .limit(Number(limit))
-                .skip(offset);
+            // .skip(offset);
 
             // Sort products by relevance
             const sortedProducts = products
@@ -705,7 +706,10 @@ class ProductController {
         try {
             const { productID } = req.params;
 
-            const product = await Product.findById(productID);
+            const product = await Product.findOne({
+                _id: productID,
+                deleted_at: { $exists: false }
+            });
             if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found");
 
             const adDeactivated = product.sponsorship.status === "deactivated";
