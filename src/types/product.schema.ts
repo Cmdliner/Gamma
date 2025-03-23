@@ -24,7 +24,7 @@ interface IProduct extends Document {
     };
     ownership_documents: string[];
     category: ProductCategory;
-    status: "available" | "processing_payment" | "pending_bid_approval" | "sold" | "in_dispute";
+    status: "available" | "unavailable" | "sold" | "in_dispute";
     sponsorship: {
         duration: "1Week" | "1Month";
         sponsored_at: Date;

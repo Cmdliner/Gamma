@@ -39,7 +39,7 @@ class WebhookService {
 
                 const product = await Product.findOne({
                     deleted_at: { $exists: false },
-                    status: "processing_payment",
+                    status: "unavailable",
                     _id: product_id
                 }).session(session);
 
