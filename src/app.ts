@@ -77,7 +77,7 @@ class App {
     }
 
     private initializeErrorHandlers() {
-        this.app.use((_: Request, res: Response, _next: NextFunction) => {
+        this.app.use((_req: Request, res: Response, _next: NextFunction) => {
             logger.error("An error occured");
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: true, message: "An  error occured" });
         });

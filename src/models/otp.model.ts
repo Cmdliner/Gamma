@@ -23,7 +23,7 @@ const OTPSchema = new Schema({
     },
     expires: {
         type: Date,
-        default: nextHour()
+        default: nextHour
     }
 })
 

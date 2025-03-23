@@ -174,7 +174,7 @@ class PaymentController {
                 "purchase_lock.is_locked": false,
                 deleted_at: { $exists: false }
             }, {
-                status: "processing_payment",
+                status: "unavailable",
                 purchase_lock: {
                     is_locked: true,
                     locked_at: new Date(),

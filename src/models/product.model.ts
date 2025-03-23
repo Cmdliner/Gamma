@@ -76,7 +76,7 @@ const ProductSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["available", "processing_payment", "sold", "pending_bid_approval", "in_dispute"],
+        enum: ["available",  "sold", "in_dispute", "unavailable"],
         default: "available"
     },
     sponsorship: {

@@ -21,7 +21,6 @@ async function setupPaymentWorkers() {
         if (paymentTx.status === "processing_payment") {
     
             const result = await PaymentService.getVirtualTransactionStatus(paymentTx.virtual_account_id);
-            // ! todo => RESULT 
     
             paymentTx.status = "failed";
             await paymentTx.save();
