@@ -1,6 +1,7 @@
 declare namespace NodeJS {
     interface ProcessEnv {
         PORT: number;
+        SERVER_URL: string;
         NODE_ENV: "staging" | "development" | "production";
         MONGO_URI: string;
         CORS_ORIGIN: string;

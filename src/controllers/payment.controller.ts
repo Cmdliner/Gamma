@@ -138,7 +138,7 @@ class PaymentController {
             const userId = req.user?._id;
             const { productID, bidID } = req.params;
             const { payment_method, indempotency_key } = req.body;
-            const webhookCallbackUrl = `${req.protocol}://${req.hostname}/webhook/product-purchase`;
+            const webhookCallbackUrl = `${process.env.SERVER_URL}/webhook/product-purchase`;
 
             if (!payment_method) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `'payment_method' required!`);
 
