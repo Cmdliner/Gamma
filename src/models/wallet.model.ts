@@ -2,11 +2,6 @@ import { model, Schema } from "mongoose";
 import IWallet from "../types/wallet.schema";
 
 const WalletSchema = new Schema({
-    main_balance: {
-        type: Number,
-        default: 0,
-        min: 0
-    },
     rewards_balance: {
         type: Number,
         default: 0,
@@ -24,6 +19,13 @@ const WalletSchema = new Schema({
         },
         account_no: {
             type: String,
+            sparse: true,
+            unique: true
+        },
+        _id: {
+            type: String,
+            sparse: true,
+            unique: true
         }
     }
 });

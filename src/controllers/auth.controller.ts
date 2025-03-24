@@ -422,7 +422,7 @@ class AuthController {
             };
             await user.save({ session });
 
-            const { wallet_creation_error, err_message, wallet_account } = await PaymentService.createUserWallet(user);
+            const { wallet_creation_error, err_message, wallet_account, account_id } = await PaymentService.createUserWallet(user);
             if (wallet_creation_error) throw new AppError(StatusCodes.BAD_REQUEST, err_message);
 
             const wallet = await Wallet.findById(user.wallet);
@@ -430,7 +430,8 @@ class AuthController {
 
             wallet.account = {
                 provider: 'safe_haven',
-                account_no: wallet_account
+                account_no: wallet_account,
+                _id: account_id
             };
             await wallet.save({ session });
 

@@ -59,7 +59,9 @@ class PaymentController {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Amount too small");
             }
             // Check amount to withdraw
-            if (amount_to_withdraw > wallet.main_balance) {
+            const walletBalance = await PaymentService.getWalletBalance(wallet);
+            const availableBalance = walletBalance - wallet.rewards_balance;
+            if (amount_to_withdraw > availableBalance) {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Insufficient funds!");
             }
 
@@ -86,7 +88,6 @@ class PaymentController {
 
             // Update balance and transaction once payout is not failed
             if (withdrawalRes.status === "success") {
-                wallet.main_balance -= amount_to_withdraw;
                 wallet.disbursement_fees += feeAndDisbursement.total_fee;
                 await wallet.save({ session });
                 // !todo => QUEUE a job to collect all oyeah_fees from everybody's wallet
@@ -307,8 +308,9 @@ class PaymentController {
             const wallet = await Wallet.findById(user.wallet).session(session);
             if (!wallet) throw new AppError(StatusCodes.NOT_FOUND, "Wallet not found!");
 
-            if (amount > wallet.rewards_balance || wallet.main_balance < 100) {
-                throw new AppError(StatusCodes.BAD_REQUEST, "Insuffecient funds!");
+            const walletBalance = await PaymentService.getWalletBalance(wallet);
+            if (amount > wallet.rewards_balance || walletBalance < 100) {
+                throw new AppError(StatusCodes.BAD_REQUEST, "Insuffocient funds!");
             }
 
             // Ensure user has made a transaction in the last 30 days
@@ -469,7 +471,6 @@ class PaymentController {
             );
             if (intraTransfer.payout_error) throw new AppError(StatusCodes.BAD_REQUEST, "Couldn't process transfer");
 
-            sellerWallet.main_balance += transaction.amount;
             await sellerWallet.save({ session });
 
             // Activate customer's account if dormant

@@ -1,5 +1,6 @@
 import { cfg } from "../init";
 import { TokenManager } from "../lib/token_manager";
+import Wallet from "../models/wallet.model";
 import IProduct from "../types/product.schema";
 import { IRefundTransaction } from "../types/transaction.schema";
 import IUser from "../types/user.schema";
@@ -125,7 +126,7 @@ export class PaymentService {
     static async verifyIdentity(identity_number: string, identity_type: TIdentityType = "BVN") {
         try {
             const url = `${this.SAFE_HAVEN_BASE_URI}/identity/v2`;
-            const access_token  = await TokenManager.getToken();
+            const access_token = await TokenManager.getToken();
             const options = {
                 method: "POST",
                 headers: {
@@ -179,10 +180,31 @@ export class PaymentService {
             const data = await res.json();
 
             if (data.statusCode >= 400) return { wallet_creation_error: true, err_message: "Error creating wallet" };
-            return { wallet_account: data.data.accountNumber };
+            return { wallet_account: data.data.accountNumber, account_id: data.data._id };
         } catch (error) {
             throw error;
         }
+    }
+
+    static async getWalletBalance(wallet: IWallet) {
+        const url = `${this.SAFE_HAVEN_BASE_URI}/accounts/${wallet.account._id}`;
+        const accessToken = TokenManager.getToken();
+        const options = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'applicaton/json',
+                Authorization: `Bearer ${accessToken}`
+            }
+        }
+
+        const res = await fetch(url, options);
+        const data = await res.json();
+
+        if (data.status >= 400) {
+            return { wallet_error: true, wallet_err_mssg: 'Unable to fetch wallet details' };
+        }
+        return data.data;
     }
 
     static async generateProductPurchaseAccountDetails(amount: number, product: IProduct, transaction_id: string, callback_url: string) {

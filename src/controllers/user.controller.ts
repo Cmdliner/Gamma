@@ -14,6 +14,7 @@ import { IAbuse } from "../types/abuse.schema";
 import AbuseComplaint from "../models/abuse.model";
 import Wallet from "../models/wallet.model";
 import { UserUpdateValidationSchema } from "../validations/user.validation";
+import { PaymentService } from "../services/payment.service";
 
 class UserController {
     static async getUserInfo(req: Request, res: Response) {
@@ -38,8 +39,11 @@ class UserController {
             const user = await User.findById(req.user?._id).populate("wallet");
             if (!user) throw new AppError(StatusCodes.NOT_FOUND, "Could not get wallet balance");
 
-            const balance = (user.wallet as unknown as IWallet).main_balance;
-            return res.status(StatusCodes.OK).json({ success: true, balance });
+            const userWalletObj = (user.wallet as unknown as IWallet);
+            const totalWalletBalance = await PaymentService.getWalletBalance(userWalletObj);
+            const availableBalance = totalWalletBalance - userWalletObj.rewards_balance;
+            
+            return res.status(StatusCodes.OK).json({ success: true, balance: availableBalance });
         } catch (error) {
             logger.error(error);
             const [status, errResponse] = AppError.handle(error, "Error getting wallet balance")
