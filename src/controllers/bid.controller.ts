@@ -17,8 +17,7 @@ class BidController {
             const bids = await Bid.find({
                 status: "pending",
                 seller: req.user?._id,
-                $sort: { createdAt: -1 }
-            }).populate("buyer");
+            }).sort({ createdAt: -1 }).populate("buyer");
 
             return res.status(StatusCodes.OK).json({ success: true, bids })
         } catch (error) {
