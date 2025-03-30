@@ -106,3 +106,6 @@ export async function sendMail(to: string, template: string) {
         throw error;
     }
 }
+
+export const RmOnCompleteOpts = { age: 36, count: 1000 };
+export const  RmOnFailOpts = { age: 24 * 3600 };

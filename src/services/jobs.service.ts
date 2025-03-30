@@ -91,12 +91,12 @@ export class JobsService {
                 $expr: {
                     $add: ["$createdAt", 7 * 24 * 60 * 60 * 1000]
                 },
-                $or: [{
-                    email_verified: false,
-                    password: { $exists: false },
-                    bank_details: { $exists: false },
-                    identity: { $exists: false }
-                }]
+                $or: [
+                    { email_verified: false },
+                    { password: { $exists: false } },
+                    { bank_details: { $exists: false } },
+                    { identity: { $exists: false } }
+                ]
             });
         } catch (error) {
             console.error("Error while trying to deactivate partially onboarded users");

@@ -23,6 +23,7 @@ import { AppError } from "../lib/error.handler";
 import { logger } from "../config/logger.config";
 import { PaymentService } from "../services/payment.service";
 import { notificationService } from "../services/notification.service";
+import { makeProductAvailableForPurchase } from "../queues/payment.queue";
 
 class PaymentController {
 
@@ -208,6 +209,8 @@ class PaymentController {
             await ProductPurchaseTransaction.findByIdAndUpdate(txRef, {
                 virtual_account_id: payment_details.virtual_account_id,
             }, { session });
+
+            await makeProductAvailableForPurchase(txRef);
 
             await session.commitTransaction();
 
