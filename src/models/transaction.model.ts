@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
-import ITransaction, { IAdSponsorshipTransaction, IProductPurchaseTransaction, IReferralTransaction, IRefundTransaction, IWithdrawalTransaction } from "../types/transaction.schema";
+import type ITransaction from "../types/transaction.schema";
+import type { IAdSponsorshipTransaction, IProductPurchaseTransaction, IReferralTransaction, IRefundTransaction, IWithdrawalTransaction } from "../types/transaction.schema";
 
 const TransactionSchema = new Schema({
     bearer: {

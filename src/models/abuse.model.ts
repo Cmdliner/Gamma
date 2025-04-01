@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { IAbuse } from "../types/abuse.schema";
+import { type IAbuse } from "../types/abuse.schema";
 
 const AbuseComplaintSchema = new Schema({
     user: {

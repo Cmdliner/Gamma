@@ -6,7 +6,7 @@ import { compareObjectID, Next5Mins } from "../lib/utils";
 import { logger } from "../config/logger.config";
 import { AppError } from "../lib/error.handler";
 import { StatusCodes } from "http-status-codes";
-import IProduct from "../types/product.schema";
+import type IProduct from "../types/product.schema";
 import { addBidToExpiryQueue } from "../queues/bid.queue";
 
 class BidController {

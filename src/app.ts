@@ -93,7 +93,7 @@ class App {
     } 
 
     public expose() {
-        return this.app
+        return this.app;
     }
 
 }

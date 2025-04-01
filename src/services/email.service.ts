@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import Mail from "nodemailer/lib/mailer";
 import path from "path";
 import { cfg } from "../init";
-import ITransaction from "../types/transaction.schema";
+import type ITransaction from "../types/transaction.schema";
 
 type EmailKind = "verification" | "pwd_reset" | "funds_release" | "payment_refund" | "ads_receipt";
 

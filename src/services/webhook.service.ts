@@ -1,6 +1,6 @@
 import Product from "../models/product.model";
 import { startSession } from "mongoose";
-import { ChargeSuccessPayload, IVirtualAccountTransferData, PayoutSuccessPayload } from "../types/webhook.schema";
+import { type ChargeSuccessPayload, type IVirtualAccountTransferData, type PayoutSuccessPayload } from "../types/webhook.schema";
 import crypto from "crypto";
 import { AdPayments } from "../types/ad.enums";
 import {

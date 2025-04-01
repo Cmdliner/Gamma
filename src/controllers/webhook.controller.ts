@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { IVirtualAccountTransferData } from "../types/webhook.schema";
+import type { Request, Response } from "express";
+import type { IVirtualAccountTransferData } from "../types/webhook.schema";
 import WebhookService from "../services/webhook.service";
 import { StatusCodes } from "http-status-codes";
 

@@ -1,10 +1,9 @@
 import { cfg } from "../init";
 import { TokenManager } from "../lib/token_manager";
-import Wallet from "../models/wallet.model";
-import IProduct from "../types/product.schema";
-import { IRefundTransaction } from "../types/transaction.schema";
-import IUser from "../types/user.schema";
-import IWallet from "../types/wallet.schema";
+import type IProduct from "../types/product.schema";
+import { type IRefundTransaction } from "../types/transaction.schema";
+import type IUser from "../types/user.schema";
+import type IWallet from "../types/wallet.schema";
 
 type TAuthTokenParams = "access" | "refresh";
 type TWithdrawalLocation = "wallet" | "rewards";

@@ -1,5 +1,5 @@
 import { rateLimit } from 'express-rate-limit';
-import { Request, Response } from 'express';
+import { type Request, type Response } from 'express';
 import { rateLimitMiddlewareHandler } from '../lib/utils';
 
 const verifyIdentityLimiter = rateLimit({

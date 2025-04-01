@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import IWallet from "../types/wallet.schema";
+import type IWallet from "../types/wallet.schema";
 
 const WalletSchema = new Schema({
     rewards_balance: {

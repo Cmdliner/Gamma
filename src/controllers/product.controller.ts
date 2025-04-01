@@ -27,12 +27,12 @@ import Product, {
 import { compareObjectID, resolveLocation } from "../lib/utils";
 import ProductService from "../services/product.service";
 import User from "../models/user.model";
-import IProduct from "../types/product.schema";
+import type IProduct from "../types/product.schema";
 import { AppError } from "../lib/error.handler";
 import { StatusCodes } from "http-status-codes";
 import { logger } from "../config/logger.config";
 import { PRODUCT_CATEGORY } from "../lib/product_category";
-import { ProductCategory } from "../types/common";
+import type { ProductCategory } from "../types/common";
 
 class ProductController {
 

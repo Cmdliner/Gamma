@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { AppError } from "../lib/error.handler";
 import { logger } from "../config/logger.config";
 import Notification from "../models/notification.model";
@@ -53,8 +53,6 @@ class NotificationController {
             return res.status(status).json(errResponse);
         }
     }
-
-
 }
 
 export default NotificationController;

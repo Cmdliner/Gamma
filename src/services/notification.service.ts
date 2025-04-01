@@ -1,4 +1,4 @@
-import Expo, { ExpoPushMessage, ExpoPushTicket } from "expo-server-sdk";
+import Expo, { type ExpoPushMessage, type ExpoPushTicket } from "expo-server-sdk";
 import { Types } from "mongoose";
 import User from "../models/user.model";
 import { logger } from "../config/logger.config";

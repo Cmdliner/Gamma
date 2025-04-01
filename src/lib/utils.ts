@@ -1,8 +1,8 @@
 import { Types } from "mongoose"
 import crypto, { randomInt } from "crypto";
 import { GeospatialDataNigeria } from "./location.data";
-import { type Request, type Response, type NextFunction } from "express";
-import { Options } from "express-rate-limit";
+import type { Request, Response, NextFunction } from "express";
+import type { Options } from "express-rate-limit";
 import { AppError } from "./error.handler";
 import { StatusCodes } from "http-status-codes";
 import { SafehavenSupportedBanks } from "./safehaven_bankcodes";

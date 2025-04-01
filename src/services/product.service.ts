@@ -1,4 +1,4 @@
-import IProduct from "../types/product.schema";
+import type IProduct from "../types/product.schema";
 import Product from "../models/product.model"
 
 type ProductCoords = [number, number];

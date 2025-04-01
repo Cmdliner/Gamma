@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { startSession } from "mongoose";
 import Wallet from "../models/wallet.model";
 import Transaction, {
@@ -7,7 +7,7 @@ import Transaction, {
     ReferralTransaction,
     RefundTransaction,
 } from "../models/transaction.model";
-import IUser from "../types/user.schema";
+import type IUser from "../types/user.schema";
 import Product from "../models/product.model";
 import { compareObjectID, generateOTP, querySafeHavenBankCodes } from "../lib/utils";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
@@ -17,7 +17,7 @@ import User from "../models/user.model";
 import { WithdrawalTransaction } from "../models/transaction.model";
 import EmailService from "../services/email.service";
 import OTP from "../models/otp.model";
-import IProduct from "../types/product.schema";
+import type IProduct from "../types/product.schema";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../lib/error.handler";
 import { logger } from "../config/logger.config";

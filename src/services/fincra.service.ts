@@ -1,6 +1,6 @@
 import type IUser from "../types/user.schema";
 import type IProduct from "../types/product.schema";
-import type { SponsorshipDuration } from "../types/product.schema";
+import { type SponsorshipDuration } from "../types/product.schema";
 import { AdPayments } from "../types/ad.enums";
 import { cfg } from "../init";
 

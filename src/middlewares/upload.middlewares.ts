@@ -1,11 +1,11 @@
-import { NextFunction, Request, Response } from "express";
-import { ReqFiles } from "../types/multer_file";
+import type { NextFunction, Request, Response } from "express";
+import type { ReqFiles } from "../types/multer_file";
 import multer from "multer";
 import path from "path";
 import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 import { v2 as cloudinary } from "cloudinary";
-import { UploadApiResponse } from "cloudinary";
+import { type UploadApiResponse } from "cloudinary";
 import { cfg } from "../init";
 import { StatusCodes } from "http-status-codes";
 

@@ -1,6 +1,6 @@
 import { v4 as uuidV4 } from "uuid";
 import User from "../models/user.model";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 import { Types } from "mongoose";
 import { cfg } from "../init";
 
