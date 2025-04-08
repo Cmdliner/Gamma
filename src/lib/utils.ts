@@ -99,12 +99,9 @@ export const DelayDurationsInMs = {
     six_mins: 6 * 60 * 1000
 };
 
-export async function sendMail(to: string, template: string) {
-    try {
-
-    } catch (error) {
-        throw error;
-    }
+export const AdPaymentsMap = {
+    weekly: 7_000,
+    monthly: 22_000
 }
 
 export const RmOnCompleteOpts = { age: 36, count: 1000 };

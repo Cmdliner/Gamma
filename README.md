@@ -1,10 +1,10 @@
-# Oyeah! Escrow
+# Gamma Escrow
 <img
 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Frame%202085661018-gkNvrDBvplnTNvHPiyZXOl3oTizjE4.png"
-alt="Oyeah! Escrow"
+alt="Gamma Escrow"
 style="display: block; width: 100%; height: auto"
 />
-The REST API server for the `Oyeah! Escrow` platform
+The REST API server for the `Gamma Escrow` platform
 
 ## How To Setup
 

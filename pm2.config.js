@@ -1,6 +1,6 @@
 module.exports = [
   {
-    name: 'oyeah_server', // Express server
+    name: 'gamma_server', // Express server
     interpreter: 'bun',
     script: 'src/server.ts',
     args: '--env-file .env',

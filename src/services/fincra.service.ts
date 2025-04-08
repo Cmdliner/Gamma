@@ -79,9 +79,9 @@ class FincraService {
 
 
     static async withdrawFunds(user: IUser, ref: string, amount: number) {
-        const OYEAH_CUT = (5 / 100) * amount;
+        const Gamma_CUT = (5 / 100) * amount;
         const PROCESSING_FEE = 200
-        const AMOUNT_TO_WITHDRAW = amount - OYEAH_CUT - PROCESSING_FEE;
+        const AMOUNT_TO_WITHDRAW = amount - Gamma_CUT - PROCESSING_FEE;
         try {
             const payoutUrl = `${this.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
@@ -153,8 +153,8 @@ class FincraService {
                         bankCode: user.bank_details.bank_code.toString(),
                     },
                     sender: {
-                        name: "Oyeah Escrow",
-                        email: "payments@oyeahescrow.com",
+                        name: "Gamma Escrow",
+                        email: "payments@Gammaescrow.com",
                     },
                     paymentDestination: "bank_account",
                 })
@@ -240,8 +240,8 @@ class FincraService {
                     bankCode: `${user.bank_details.bank_code}`,
                 },
                 sender: {
-                    name: "Oyeah Escrow",
-                    email: "refunds@oyeahescrow.com.ng",
+                    name: "Gamma Escrow",
+                    email: "refunds@Gammaescrow.com.ng",
                 },
                 paymentDestination: "bank_account",
             };

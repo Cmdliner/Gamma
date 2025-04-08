@@ -2,7 +2,7 @@ import Product from "../models/product.model";
 import { startSession } from "mongoose";
 import { type ChargeSuccessPayload, type IVirtualAccountTransferData, type PayoutSuccessPayload } from "../types/webhook.schema";
 import crypto from "crypto";
-import { AdPayments } from "../types/ad.enums";
+import { AdPaymentsMap } from "../lib/utils";
 import {
     AdSponsorshipTransaction,
     ProductPurchaseTransaction,
@@ -83,8 +83,8 @@ class WebhookService {
             const [transaction_id, product_id] = payload.externalReference.split("::");
             let expiry = new Date();
 
-            if (PaymentService.isValidOriginalPrice(amountPaid, AdPayments.weekly)) expiry = SevenDaysFromNowPlusXtra;
-            else if (PaymentService.isValidOriginalPrice(amountPaid, AdPayments.monthly)) expiry = OneMonthFromNowPlusXtra;
+            if (PaymentService.isValidOriginalPrice(amountPaid, AdPaymentsMap.weekly)) expiry = SevenDaysFromNowPlusXtra;
+            else if (PaymentService.isValidOriginalPrice(amountPaid, AdPaymentsMap.monthly)) expiry = OneMonthFromNowPlusXtra;
 
             // Update product expiry and active status
             const product = await Product.findByIdAndUpdate(product_id, {
@@ -171,8 +171,8 @@ class WebhookService {
                 if (!user) throw new Error("User not found");
 
 
-                const OYEAH_REFUND_CUT = (0.55 / 100) * payload.data.amountReceived;
-                const AMOUNT_TO_REFUND = payload.data.amountReceived - OYEAH_REFUND_CUT;
+                const APP_REFUND_CUT = (0.55 / 100) * payload.data.amountReceived;
+                const AMOUNT_TO_REFUND = payload.data.amountReceived - APP_REFUND_CUT;
 
                 // Create a new refund transaction
                 const refundTransaction = await RefundTransaction.create({

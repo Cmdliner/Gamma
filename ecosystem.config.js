@@ -1,5 +1,5 @@
 const serverProcess = [{
-  name: "oyeah_server", // Express server
+  name: "app_server", // Express server
   interpreter: "bun",
   script: "src/server.ts",
   watch: false,

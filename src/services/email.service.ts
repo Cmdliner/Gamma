@@ -60,7 +60,7 @@ class EmailService {
         otp: string | null,
         tx?: ITransaction) {
         const mailOptions: Mail.Options = {
-            from: ' "Oyeah" <escrow@oyeah.com.ng>',
+            from: ' "Gamma" <escrow@gamma.com.ng>',
             to,
             subject: this.emailTemplate[kind].subject,
             html: this.parseMailFile(

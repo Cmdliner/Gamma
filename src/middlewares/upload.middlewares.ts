@@ -70,7 +70,7 @@ export const ProcessCloudinaryImage = async (file: Express.Multer.File): Promise
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
             {
-                folder: 'oyeah/tests',
+                folder: 'gamma/tests',
                 resource_type: 'auto',
                 format: 'webp'
             },

@@ -9,5 +9,3 @@ privatekey.pem
 publickey.cer
 client_assertion
 logs/
-.dockerignore
-Dockerfile

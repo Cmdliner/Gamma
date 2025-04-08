@@ -12,7 +12,7 @@ import Product from "../models/product.model";
 import { compareObjectID, generateOTP, querySafeHavenBankCodes } from "../lib/utils";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../models/bid.model";
-import { AdPayments } from "../types/ad.enums";
+import { AdPaymentsMap } from "../lib/utils";
 import User from "../models/user.model";
 import { WithdrawalTransaction } from "../models/transaction.model";
 import EmailService from "../services/email.service";
@@ -22,7 +22,6 @@ import { StatusCodes } from "http-status-codes";
 import { AppError } from "../lib/error.handler";
 import { logger } from "../config/logger.config";
 import { PaymentService } from "../services/payment.service";
-import { notificationService } from "../services/notification.service";
 import { makeProductAvailableForPurchase } from "../queues/payment.queue";
 
 class PaymentController {
@@ -71,7 +70,7 @@ class PaymentController {
                 bearer: req.user?._id,
                 amount: amount_to_withdraw,
                 status: "processing_payment",
-                reason: `Payout: From Oyeah wallet to bank account: ${user.bank_details.account_no}`,
+                reason: `Payout: From APP wallet to bank account: ${user.bank_details.account_no}`,
                 payment_method: "bank_transfer",
                 from: "wallet"
             });
@@ -91,7 +90,7 @@ class PaymentController {
             if (withdrawalRes.status === "success") {
                 wallet.disbursement_fees += feeAndDisbursement.total_fee;
                 await wallet.save({ session });
-                // !todo => QUEUE a job to collect all oyeah_fees from everybody's wallet
+                // !todo => QUEUE a job to collect all APP_fees from everybody's wallet
 
                 // Update transaction
                 await WithdrawalTransaction.findByIdAndUpdate(
@@ -231,7 +230,7 @@ class PaymentController {
             session.startTransaction();
             const { productID } = req.params;
             const { sponsorship_duration, payment_method, indempotency_key } = req.body;
-            const amount = sponsorship_duration === "1Month" ? AdPayments.monthly : AdPayments.weekly;
+            const amount = sponsorship_duration === "1Month" ? AdPaymentsMap.monthly : AdPaymentsMap.weekly;
             const webhookCallbackUrl = `${req.protocol}://${req.hostname}/webhook/ad-payment`;
 
             const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
@@ -358,7 +357,7 @@ class PaymentController {
                 wallet.rewards_balance -= amount;
                 wallet.disbursement_fees += feeAndDisbursement.total_fee;
                 await wallet.save({ session });
-                // !todo => QUEUE a job to collect all oyeah_fees from everybody's wallet
+                // !todo => QUEUE a job to collect all APP_fees from everybody's wallet
             }
 
             await WithdrawalTransaction.findByIdAndUpdate(payoutTransaction._id, {
@@ -397,7 +396,7 @@ class PaymentController {
             await otp.save();
 
             // Send email
-            await EmailService.sendMail(req.user?.email!, fullName, 'funds_release', otp.token, transaction);
+            await EmailService.sendMail(req.user?.email, fullName, 'funds_release', otp.token, transaction);
 
             return res.status(StatusCodes.OK).json({ success: true, seller_id: (transaction.product as unknown as IProduct).owner });
         } catch (error) {
@@ -407,7 +406,7 @@ class PaymentController {
         }
     }
 
-    static async transferfunds(req: Request, res: Response) {
+    static async transferFunds(req: Request, res: Response) {
         const session = await startSession();
         try {
             session.startTransaction();
@@ -533,8 +532,8 @@ class PaymentController {
             // const product = prevTransaction.product as unknown as IProduct;
 
             // !!! DO NOT TAMPER OR ALTER
-            const OYEAH_REFUND_CUT = ((0.55 / 100 * prevTransaction.amount) * 10 / 10);
-            const AMOUNT_TO_REFUND = prevTransaction.amount - OYEAH_REFUND_CUT;
+            const APP_REFUND_CUT = ((0.55 / 100 * prevTransaction.amount) * 10 / 10);
+            const AMOUNT_TO_REFUND = prevTransaction.amount - APP_REFUND_CUT;
 
             // Create a new refund transaction with amount to refund & reason
             const refundTransaction = new RefundTransaction({

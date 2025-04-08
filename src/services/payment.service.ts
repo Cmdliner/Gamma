@@ -71,9 +71,9 @@ export class PaymentService {
     }
 
     static calculateCutAndAmountToDisburse(amount: number): CalculateCutReturnType {
-        const OYEAH_CUT = (5 / 100) * amount;
+        const APP_CUT = (5 / 100) * amount;
         const PROCESSING_FEE = 200;
-        const TOTAL_FEE = OYEAH_CUT + PROCESSING_FEE;
+        const TOTAL_FEE = APP_CUT + PROCESSING_FEE;
         const AMOUNT_TO_WITHDRAW = amount - TOTAL_FEE;
 
         return { total_fee: TOTAL_FEE, amount_to_withdraw: AMOUNT_TO_WITHDRAW };
@@ -137,7 +137,7 @@ export class PaymentService {
                 body: JSON.stringify({
                     type: identity_type,
                     number: identity_number,
-                    debitAccountNumber: cfg.OYEAH_MAIN_ACCOUNT_SAFEHAVEN,
+                    debitAccountNumber: cfg.APP_MAIN_ACCOUNT_SAFEHAVEN,
                 }),
             };
 
@@ -171,7 +171,7 @@ export class PaymentService {
                     emailAddress: user.email,
                     identityType: "vID",
                     identityId: user.identity.v_id,
-                    externalReference: `oyeah-user-wallet-${user.id}-${(new Date()).toISOString()}`
+                    externalReference: `APP-user-wallet-${user.id}-${(new Date()).toISOString()}`
                 })
             };
 
@@ -222,7 +222,7 @@ export class PaymentService {
                 body: JSON.stringify({
                     amountControl: "Fixed",
                     settlementAccount: {
-                        accountNumber: cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN,
+                        accountNumber: cfg.APP_ESCROW_ACCOUNT_SAFEHAVEN,
                         bankCode: this.SAFE_HAVEN_BANK_CODE
                     },
                     callbackUrl: callback_url,
@@ -264,7 +264,7 @@ export class PaymentService {
                 body: JSON.stringify({
                     amountControl: "Fixed",
                     settlementAccount: {
-                        accountNumber: cfg.OYEAH_ADS_REVENUE_ACCOUNT_SAFEHAVEN,
+                        accountNumber: cfg.APP_ADS_REVENUE_ACCOUNT_SAFEHAVEN,
                         bankCode: this.SAFE_HAVEN_BANK_CODE
                     },
                     callbackUrl: callback_url,
@@ -317,7 +317,7 @@ export class PaymentService {
                     beneficiaryAccountNumber: `${bank_details.account_no}`,
                     amount,
                     paymentReference: ref,
-                    narration: from === "wallet" ? "Oyeah wallet payout" : "Oyeah rewards payout",
+                    narration: from === "wallet" ? "APP wallet payout" : "APP rewards payout",
                     saveBeneficiary: false
                 })
             };
@@ -354,12 +354,12 @@ export class PaymentService {
                 },
                 body: JSON.stringify({
                     nameEnquiryReference: nameEnquiry.sessionId,
-                    debitAccountNumber: cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN,
+                    debitAccountNumber: cfg.APP_ESCROW_ACCOUNT_SAFEHAVEN,
                     beneficiaryBankCode: `${this.SAFE_HAVEN_BANK_CODE}`,
                     beneficiaryAccountNumber: `${to.account.account_no}`,
                     amount,
                     paymentReference: `${from.id}::${to.id}::${ref}`,
-                    narration: "Oyeah intra-wallet transfer",
+                    narration: "APP intra-wallet transfer",
                     saveBeneficiary: false
                 })
             };
@@ -396,7 +396,7 @@ export class PaymentService {
                 },
                 body: JSON.stringify({
                     nameEnquiryReference: sessionId,
-                    debitAccountNumber: cfg.OYEAH_ESCROW_ACCOUNT_SAFEHAVEN,
+                    debitAccountNumber: cfg.APP_ESCROW_ACCOUNT_SAFEHAVEN,
                     beneficiaryBankCode: `${bank_details.bank_code}`,
                     beneficiaryAccountNumber: `${bank_details.account_no}`,
                     amount: tx.amount,

@@ -1,7 +1,6 @@
-# Using the official Node.js image as base
+
 FROM node:latest
 
-# Install Bun (it's better to use their official installation method)
 RUN npm install -g bun
 
 # Create and set working directory

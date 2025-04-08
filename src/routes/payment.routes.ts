@@ -4,7 +4,7 @@ import PaymentController from "../controllers/payment.controller";
 const payment = Router();
 
 payment.get("/history", PaymentController.getTransactionHistory);
-payment.post("/transfer-funds", PaymentController.transferfunds);
+payment.post("/transfer-funds", PaymentController.transferFunds);
 payment.post("/withdraw", PaymentController.withdrawFromWallet);
 payment.post("/rewards", PaymentController.withdrawRewards);
 payment.post("/:productID/purchase", PaymentController.purchaseItem);
