@@ -17,7 +17,7 @@ export interface IBankInfo {
 
 }
 
-export const BankCodes: IBankInfo[] =  [
+export const BankInfo: IBankInfo[] =  [
   {
     "id": 302,
     "name": "9mobile 9Payment Service Bank",

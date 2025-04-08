@@ -9,9 +9,9 @@ import OTP from "../models/otp.model";
 import * as bcrypt from "bcryptjs";
 import AuthService from "../services/auth.service";
 import Wallet from "../models/wallet.model";
-import { generateOTP, hashIdentityNumber, matchAccNameInDb, querySafeHavenBankCodes, resolveLocation } from "../lib/utils";
+import { AppUtils } from "../lib/utils";
 import PaystackService from "../services/paystack.service";
-import { BankCodes, IBankInfo } from "../lib/bank_codes";
+import { BankInfo, type IBankInfo } from "../lib/bank_codes";
 import FincraService from "../services/fincra.service";
 import { cfg } from "../init";
 import { StatusCodes } from "http-status-codes";
@@ -56,7 +56,7 @@ class AuthController {
 
             // Verify and add location if valid
             const DEFAULT_LOCATION = "lagos";
-            const location = resolveLocation(req.body.location || DEFAULT_LOCATION);
+            const location = AppUtils.resolveLocation(req.body.location || DEFAULT_LOCATION);
             registerInfo.location = location;
 
             const phone_numbers = [phone_no_1];
@@ -111,7 +111,7 @@ class AuthController {
             const emailVToken = new OTP({
                 kind: "verification",
                 owner: user._id,
-                token: generateOTP(),
+                token: AppUtils.generateOTP(),
                 expires: new Date(Date.now() + 10 * 60 * 1000), // Expires in the next 10 mins
             });
             if (!emailVToken) throw new AppError(StatusCodes.BAD_REQUEST, "Error sending verification mail");
@@ -160,7 +160,7 @@ class AuthController {
             const emailVToken = new OTP({
                 kind: "verification",
                 owner: user._id,
-                token: generateOTP(),
+                token: AppUtils.generateOTP(),
                 expires: new Date(Date.now() + 10 * 60 * 1000) // Expires in the next 10 mins
             });
             if (!emailVToken) {
@@ -314,7 +314,7 @@ class AuthController {
             const user = await User.findById(id);
             const bvnInUse = await User.findOne({
                 "identity.identity_type": "bvn",
-                "identity.hash": hashIdentityNumber(bvn),
+                "identity.hash": AppUtils.hashIdentityNumber(bvn),
             });
 
             // Check that bvn records do not exist in db
@@ -335,7 +335,7 @@ class AuthController {
             const { identity_validation_error, error_message, vId } = await PaymentService.verifyIdentity(bvn, "BVN");
             if (identity_validation_error) throw new AppError(StatusCodes.BAD_REQUEST, error_message);
 
-            const identityHash = hashIdentityNumber(bvn);
+            const identityHash = AppUtils.hashIdentityNumber(bvn);
 
             user.identity = {
                 identity_type: "bvn",
@@ -360,11 +360,11 @@ class AuthController {
             const { q } = req.query;
             const searchPattern = new RegExp(`${q}`, "i");
 
-            const matchedBanks = BankCodes.filter((bankCode: IBankInfo) => bankCode.name.match(searchPattern));
+            const matchedBanks = BankInfo.filter((bankInfo: IBankInfo) => bankInfo.name.match(searchPattern));
             if (matchedBanks) {
                 return res.status(StatusCodes.OK).json({ success: true, banks: matchedBanks });
             }
-            return res.status(StatusCodes.OK).json({ success: true, banks: BankCodes });
+            return res.status(StatusCodes.OK).json({ success: true, banks: BankInfo });
         } catch (error) {
             logger.error(error);
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: true, message: "Error retrieving bank codes" });
@@ -378,10 +378,10 @@ class AuthController {
             session.startTransaction();
             const { account_no, bank_name, paystack_bank_code } = req.body;
 
-            if(!bank_name) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `"bank_name" required`);
+            if (!bank_name) throw new AppError(StatusCodes.UNPROCESSABLE_ENTITY, `"bank_name" required`);
             if (!account_no || !paystack_bank_code) {
                 throw new AppError(
-                    StatusCodes.UNPROCESSABLE_ENTITY, 
+                    StatusCodes.UNPROCESSABLE_ENTITY,
                     `${account_no ? "paystack_bank_code" : "account_no"} required`
                 );
             }
@@ -396,16 +396,16 @@ class AuthController {
 
             const bankCodeSearchQuery = new RegExp(bank_name, "i");
 
-            const safehavenBankDetails = querySafeHavenBankCodes(bankCodeSearchQuery);
-            if(!safehavenBankDetails) throw new AppError(StatusCodes.BAD_REQUEST, "Bank unrecognized");
+            const safehavenBankDetails = AppUtils.querySafeHavenBankCodes(bankCodeSearchQuery);
+            if (!safehavenBankDetails) throw new AppError(StatusCodes.BAD_REQUEST, "Bank unrecognized");
 
             const user = await User.findById(id).session(session);
             if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
 
             const validBankAcc = await PaystackService.validateAccountDetails(account_no, paystack_bank_code);
-            
+
             if (!(validBankAcc as any).account_name) throw new AppError(StatusCodes.BAD_REQUEST, "Invalid bank details");
-            const accNameMatched = matchAccNameInDb(
+            const accNameMatched = AppUtils.matchAccNameInDb(
                 user.first_name,
                 user.last_name,
                 user.middle_name ?? null,
@@ -414,11 +414,11 @@ class AuthController {
             if (!accNameMatched) {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Bank account and db user details mismatch!");
             }
-  
-            user.bank_details = { 
-                account_no: account_no.toString(), 
-                bank_code: safehavenBankDetails.bank_code, 
-                added_at: new Date() 
+
+            user.bank_details = {
+                account_no: account_no.toString(),
+                bank_code: safehavenBankDetails.bank_code,
+                added_at: new Date()
             };
             await user.save({ session });
 
@@ -475,7 +475,7 @@ class AuthController {
 
             // Delete any previous reset tokens
             await OTP.findOneAndDelete({ kind: "password_reset", owner: user._id }, { session });
-            const resetPasswordOTP = new OTP({ kind: "password_reset", owner: user._id, token: generateOTP() });
+            const resetPasswordOTP = new OTP({ kind: "password_reset", owner: user._id, token: AppUtils.generateOTP() });
 
             const full_name = `${user.first_name} ${user.last_name}`
             await EmailService.sendMail(email, full_name, 'pwd_reset', resetPasswordOTP.token);

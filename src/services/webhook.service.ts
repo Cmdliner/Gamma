@@ -1,8 +1,7 @@
 import Product from "../models/product.model";
 import { startSession } from "mongoose";
 import { type ChargeSuccessPayload, type IVirtualAccountTransferData, type PayoutSuccessPayload } from "../types/webhook.schema";
-import crypto from "crypto";
-import { AdPaymentsMap } from "../lib/utils";
+import { AppUtils } from "../lib/utils";
 import {
     AdSponsorshipTransaction,
     ProductPurchaseTransaction,
@@ -10,24 +9,12 @@ import {
     WithdrawalTransaction,
 } from "../models/transaction.model";
 import User from "../models/user.model";
-import { cfg } from "../init";
-import FincraService from "./fincra.service";
 import { logger } from "../config/logger.config";
 import { addProductToReviewQueue } from "../queues/product.queue";
 import { PaymentService } from "./payment.service";
+import { IRefundTransaction } from "../types/transaction.schema";
 
 class WebhookService {
-
-    private static async validateWebhook(webhookSignature: string, payload: any) {
-        const encryptedData = crypto
-            .createHmac("SHA512", cfg.SAFE_HAVEN_IBS_CLIENT_ID)
-            .update(JSON.stringify(payload))
-            .digest("hex");
-        const signatureFromWebhook = webhookSignature;
-
-        return encryptedData === signatureFromWebhook;
-
-    }
 
     static async handleSuccessfulProductPurchase(payload: IVirtualAccountTransferData) {
         const session = await startSession();
@@ -83,8 +70,8 @@ class WebhookService {
             const [transaction_id, product_id] = payload.externalReference.split("::");
             let expiry = new Date();
 
-            if (PaymentService.isValidOriginalPrice(amountPaid, AdPaymentsMap.weekly)) expiry = SevenDaysFromNowPlusXtra;
-            else if (PaymentService.isValidOriginalPrice(amountPaid, AdPaymentsMap.monthly)) expiry = OneMonthFromNowPlusXtra;
+            if (PaymentService.isValidOriginalPrice(amountPaid, AppUtils.AdPaymentsMap.weekly)) expiry = SevenDaysFromNowPlusXtra;
+            else if (PaymentService.isValidOriginalPrice(amountPaid, AppUtils.AdPaymentsMap.monthly)) expiry = OneMonthFromNowPlusXtra;
 
             // Update product expiry and active status
             const product = await Product.findByIdAndUpdate(product_id, {
@@ -186,10 +173,9 @@ class WebhookService {
                     product: product._id
                 }, { session });
 
-                const result = await FincraService.handleRefund(
+                const result = await PaymentService.refund(
                     user,
-                    AMOUNT_TO_REFUND,
-                    (refundTransaction as any)._id
+                    refundTransaction as unknown as  IRefundTransaction
                 );
                 session.commitTransaction();
                 return result;

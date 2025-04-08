@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import Product from "../models/product.model";
 import User from "../models/user.model";
-import { compareObjectID } from "../lib/utils";
+import { AppUtils } from "../lib/utils";
 import Dispute from "../models/dispute.model";
 import { ProductPurchaseTransaction } from "../models/transaction.model";
 import { startSession } from "mongoose";
 import { logger } from "../config/logger.config";
 
 class DisputeController {
+
     static async raiseDispute(req: Request, res: Response) {
 
         const session = await startSession();
@@ -16,7 +17,7 @@ class DisputeController {
 
             const { transactionID } = req.params;
             const { issues, comments } = req.body;
-    
+
             // VALIDATE REQUEST BODY
             if (!comments?.trim()) {
                 return res.status(422).json({ error: true, message: 'comments required' });
@@ -44,7 +45,7 @@ class DisputeController {
 
             // Check if current user is the buyer or seller
             const seller = transaction.seller;
-            const isBuyerOrSeller = compareObjectID(buyer._id, req.user?._id) || compareObjectID(seller, req.user?._id);
+            const isBuyerOrSeller = AppUtils.compareObjectID(buyer._id, req.user?._id) || AppUtils.compareObjectID(seller, req.user?._id);
             if (!isBuyerOrSeller) {
                 await session.abortTransaction();
                 return res.status(403).json({ error: true, message: "Forbidden!" });
@@ -61,7 +62,7 @@ class DisputeController {
                 transaction: transactionID,
                 comments
             }
-            if(issues?.trim()) disputeData.issues = issues;
+            if (issues?.trim()) disputeData.issues = issues;
             const dispute = new Dispute(disputeData);
             await dispute.save({ session });
             await session.commitTransaction();
@@ -80,7 +81,7 @@ class DisputeController {
             const { disputeID } = req.params;
 
             const dispute = await Dispute.findById(disputeID).populate("transaction");
-            const isDisputeRaiser = compareObjectID(req.user?._id, dispute.raised_by);
+            const isDisputeRaiser = AppUtils.compareObjectID(req.user?._id, dispute.raised_by);
             if (!dispute || !isDisputeRaiser) {
                 return res.status(404).json({ error: true, message: "Dispute not found for current user" });
             }

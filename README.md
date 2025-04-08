@@ -1,6 +1,6 @@
 # Gamma Escrow
 <img
-src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Frame%202085661018-gkNvrDBvplnTNvHPiyZXOl3oTizjE4.png"
+src="https://hebbkx1anhila5df.public.blob.vercel-storage.com/Frame%202085661018-gkNvrDBvplnTNvHPiyZXOl3oTizjE4.png"
 alt="Gamma Escrow"
 style="display: block; width: 100%; height: auto"
 />

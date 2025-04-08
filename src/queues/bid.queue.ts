@@ -1,8 +1,8 @@
 import { Queue } from "bullmq";
 import { redis } from "../config/redis.config";
-import { DelayDurationsInMs, RmOnCompleteOpts, RmOnFailOpts } from "../lib/utils";
+import { AppUtils } from "../lib/utils";
 
-const { six_mins } = DelayDurationsInMs;
+const { six_mins } = AppUtils.DelayDurationsInMs;
 export const BidExpiryQueue = new Queue("bidExpiry", { connection: redis });
 
 export async function addBidToExpiryQueue(bid_id: string) {
@@ -13,8 +13,8 @@ export async function addBidToExpiryQueue(bid_id: string) {
             attempts: 3,
             backoff: { type: 'exponential', delay: 10_000 },
             delay: six_mins, 
-            removeOnComplete: RmOnCompleteOpts, 
-            removeOnFail: RmOnFailOpts 
+            removeOnComplete: AppUtils.RmOnCompleteOpts, 
+            removeOnFail: AppUtils.RmOnFailOpts 
         }
     );
 }

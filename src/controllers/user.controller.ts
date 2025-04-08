@@ -4,7 +4,7 @@ import IWallet from "../types/wallet.schema";
 import PaystackService from "../services/paystack.service";
 import { ProcessCloudinaryImage } from "../middlewares/upload.middlewares";
 import { ReferralTransaction, WithdrawalTransaction } from "../models/transaction.model";
-import { resolveLocation } from "../lib/utils";
+import { AppUtils } from "../lib/utils";
 import type IUser from "../types/user.schema";
 import Expo from "expo-server-sdk";
 import { AppError } from "../lib/error.handler";
@@ -149,7 +149,7 @@ class UserController {
             const verificationDocuments = req.verification_docs;
             const profilePic = req.profile_pic;
 
-            const location = resolveLocation(req.body.location);
+            const location = AppUtils.resolveLocation(req.body.location);
 
             const phone_nos: any = [];
             if (phone_no_1) phone_nos.push(phone_no_1);

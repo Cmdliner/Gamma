@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import Product from "../models/product.model";
 import Bid from "../models/bid.model";
 import { startSession, Types } from "mongoose";
-import { compareObjectID, Next5Mins } from "../lib/utils";
+import { AppUtils } from "../lib/utils";
 import { logger } from "../config/logger.config";
 import { AppError } from "../lib/error.handler";
 import { StatusCodes } from "http-status-codes";
@@ -78,7 +78,7 @@ class BidController {
                 buyer: req.user?._id,
                 negotiating_price,
                 product: new Types.ObjectId(productID),
-                expires: Next5Mins()
+                expires: AppUtils.Next5Mins()
             };
 
             const bid = await Bid.create(bidData);
@@ -115,11 +115,11 @@ class BidController {
 
             // Ensure current user is product owner
             const userId = req.user?._id;
-            const isProductOwner = compareObjectID(userId, bid.seller);
+            const isProductOwner = AppUtils.compareObjectID(userId, bid.seller);
             if (!isProductOwner) throw new AppError(StatusCodes.NOT_FOUND, "bid not found!");
 
             bid.status = "accepted";
-            bid.expires = Next5Mins();
+            bid.expires = AppUtils.Next5Mins();
 
             await Bid.updateMany({ product: bid.product }, { status: "rejected" }).session(session);
             await bid.save({ session });
@@ -146,7 +146,7 @@ class BidController {
 
             // ENSURE CURRENT USER IS PRODUCT OWNER
             const currentUser = req.user?._id;
-            const isProductOwner = compareObjectID(currentUser, bid.seller);
+            const isProductOwner = AppUtils.compareObjectID(currentUser, bid.seller);
             if (!isProductOwner) throw new AppError(StatusCodes.NOT_FOUND, "Bid not found!");
 
             bid.status = "rejected";

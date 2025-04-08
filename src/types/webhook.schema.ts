@@ -48,7 +48,6 @@ export interface ChargeSuccessPayload {
     }
 }
 
-
 export interface PayoutSuccessPayload {
     data: {
         id: number;
@@ -77,11 +76,8 @@ export interface PayoutSuccessPayload {
     }
 }
 
-
-
 type ProductId = string;
 type TransactionId = string;
-
 export interface IVirtualAccountTransferData {
     _id: string,
     client: string,

@@ -24,7 +24,7 @@ import Product, {
     OtherProduct,
     Vehicle,
 } from "../models/product.model";
-import { compareObjectID, resolveLocation } from "../lib/utils";
+import { AppUtils } from "../lib/utils";
 import ProductService from "../services/product.service";
 import User from "../models/user.model";
 import type IProduct from "../types/product.schema";
@@ -88,7 +88,7 @@ class ProductController {
         try {
             const { ownership_documents, product_images } = req.processed_images;
 
-            const location = resolveLocation(req.body.location);
+            const location = AppUtils.resolveLocation(req.body.location);
             const productData: Partial<IElectronics> = {
                 name: req.body.name,
                 description: req.body.description,
@@ -135,7 +135,7 @@ class ProductController {
     static async addLandedProperty(req: Request, res: Response) {
         try {
             const { ownership_documents, product_images } = req.processed_images;
-            const location = resolveLocation(req.body.location);
+            const location = AppUtils.resolveLocation(req.body.location);
 
             const landedPropertyData: Partial<ILandedProperty> = {
                 name: req.body.name,
@@ -181,7 +181,7 @@ class ProductController {
     static async uploadGadget(req: Request, res: Response) {
         try {
             const { product_images, ownership_documents } = req.processed_images;
-            const location = resolveLocation(req.body.location);
+            const location = AppUtils.resolveLocation(req.body.location);
 
             const gadgetData: Partial<IGadget> = {
                 product_images: product_images,
@@ -230,7 +230,7 @@ class ProductController {
     static async uploadVehicle(req: Request, res: Response) {
         try {
             const { product_images, ownership_documents } = req.processed_images;
-            const location = resolveLocation(req.body.location);
+            const location = AppUtils.resolveLocation(req.body.location);
 
             const vehicleData: Partial<IVehicle> = {
                 product_images: product_images,
@@ -284,7 +284,7 @@ class ProductController {
     static async uploadGenericProduct(req: Request, res: Response) {
         try {
             const { ownership_documents, product_images } = req.processed_images;
-            const location = resolveLocation(req.body.location);
+            const location = AppUtils.resolveLocation(req.body.location);
 
             const genericProductData: Partial<IFurniture> = {
                 name: req.body.name,
@@ -439,7 +439,7 @@ class ProductController {
             const electronic = await Electronics.findOne({ _id: productID, deleted_at: { $exists: false } });
             if (!electronic) throw new AppError(StatusCodes.NOT_FOUND, "Electronic upload not found!");
 
-            const canEdit = compareObjectID(req.user?._id, electronic.owner);
+            const canEdit = AppUtils.compareObjectID(req.user?._id, electronic.owner);
             if (!canEdit) throw new AppError(StatusCodes.NOT_FOUND, "Electronic upload not found!");
 
             const isProdAvailable = electronic.status === "available";
@@ -448,7 +448,7 @@ class ProductController {
             const productData: Partial<IElectronics> = {};
             if (req.body.name) productData.name = req.body.name;
             if (req.body.description) productData.description = req.body.description;
-            if (req.body.location) productData.location = resolveLocation(req.body.location);
+            if (req.body.location) productData.location = AppUtils.resolveLocation(req.body.location);
             if (req.body.localty) productData.localty = req.body.localty;
             if (req.body.brand) productData.brand = req.body.brand;
             if (req.body.price) productData.price = req.body.price;
@@ -478,7 +478,7 @@ class ProductController {
             const gadget = await Gadget.findOne({ _id: productID, deleted_at: { $exists: false } });;
             if (!gadget) throw new AppError(StatusCodes.NOT_FOUND, "Gadget upload not found!");
 
-            const canEdit = compareObjectID(req.user?._id, gadget.owner);
+            const canEdit = AppUtils.compareObjectID(req.user?._id, gadget.owner);
             if (!canEdit) throw new AppError(StatusCodes.NOT_FOUND, "Gadget upload not found!");
 
             const isProdAvailable = gadget.status === "available";
@@ -487,7 +487,7 @@ class ProductController {
             const gadgetData: Partial<IGadget> = {};
             if (req.body.name) gadgetData.name = req.body.name;
             if (req.body.description) gadgetData.description = req.body.description;
-            if (req.body.location) gadgetData.location = resolveLocation(req.body.location);
+            if (req.body.location) gadgetData.location = AppUtils.resolveLocation(req.body.location);
             if (req.body.localty) gadgetData.localty = req.body.localty;
             if (req.body.price) gadgetData.price = req.body.price;
             if (req.body.is_negotiable) gadgetData.is_negotiable = req.body.is_negotiable;
@@ -520,7 +520,7 @@ class ProductController {
             const vehicle = await Vehicle.findOne({ _id: productID, deleted_at: { $exists: false } });
             if (!vehicle) throw new AppError(StatusCodes.NOT_FOUND, "Vehicle upload not found!");
 
-            const canEdit = compareObjectID(req.user?._id, vehicle.owner);
+            const canEdit = AppUtils.compareObjectID(req.user?._id, vehicle.owner);
             if (!canEdit) throw new AppError(StatusCodes.NOT_FOUND, "Vehicle upload not found!");
 
             const isProdAvailable = vehicle.status === "available";
@@ -530,7 +530,7 @@ class ProductController {
 
             if (req.body.name) vehicleUpdateData.name = req.body.name;
             if (req.body.description) vehicleUpdateData.description = req.body.description;
-            if (req.body.location) vehicleUpdateData.location = resolveLocation(req.body.location);
+            if (req.body.location) vehicleUpdateData.location = AppUtils.resolveLocation(req.body.location);
             if (req.body.localty) vehicleUpdateData.localty = req.body.location;
             if (req.body.price) vehicleUpdateData.price = req.body.price;
             if (req.body.is_negotiable) vehicleUpdateData.is_negotiable = req.body.is_negotiable;
@@ -564,7 +564,7 @@ class ProductController {
             const landedProperty = await LandedProperty.findOne({ _id: productID, deleted_at: { $exists: false } });
             if (!landedProperty) throw new AppError(StatusCodes.NOT_FOUND, "Landed property upload not found!");
 
-            const canEdit = compareObjectID(req.user?._id, landedProperty.owner);
+            const canEdit = AppUtils.compareObjectID(req.user?._id, landedProperty.owner);
             if (!canEdit) throw new AppError(StatusCodes.NOT_FOUND, "Landed property upload not found!");
 
             const isProdAvailable = landedProperty.status === "available";
@@ -573,7 +573,7 @@ class ProductController {
             const landUpdateData: Partial<ILandedProperty> = {};
             if (req.body.name) landUpdateData.name = req.body.name;
             if (req.body.description) landUpdateData.description = req.body.description;
-            if (req.body.location) landUpdateData.location = resolveLocation(req.body.location);
+            if (req.body.location) landUpdateData.location = AppUtils.resolveLocation(req.body.location);
             if (req.body.price) landUpdateData.price = req.body.price;
             if (req.body.is_negotiable) landUpdateData.is_negotiable = req.body.is_negotiable;
             if (req.body.localty) landUpdateData.localty = req.body.localty;
@@ -607,7 +607,7 @@ class ProductController {
             const genericProduct = await Product.findOne({ _id: productID, deleted_at: { $exists: false } });
             if (!genericProduct) throw new AppError(StatusCodes.NOT_FOUND, "Product upload not found!");
 
-            const canEdit = compareObjectID(req.user?._id, genericProduct.owner);
+            const canEdit = AppUtils.compareObjectID(req.user?._id, genericProduct.owner);
             if (!canEdit) throw new AppError(StatusCodes.NOT_FOUND, "Product upload not found!");
 
             const isProdAvailable = genericProduct.status === "available";
@@ -616,7 +616,7 @@ class ProductController {
             const genericProdUpdateData: Partial<IFurniture> = {};
             if (req.body.name) genericProdUpdateData.name = req.body.name;
             if (req.body.description) genericProdUpdateData.description = req.body.description;
-            if (req.body.location) genericProdUpdateData.location = resolveLocation(req.body.location);
+            if (req.body.location) genericProdUpdateData.location = AppUtils.resolveLocation(req.body.location);
             if (req.body.localty) genericProdUpdateData.localty = req.body.localty;
             if (req.body.price) genericProdUpdateData.price = req.body.price;
             if (req.body.is_negotiable) genericProdUpdateData.is_negotiable = req.body.is_negotiable;
@@ -656,7 +656,7 @@ class ProductController {
             console.log({ productListing });
             if (!productListing) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
-            const isAuthorizedToDelete = compareObjectID(currentUser, productListing.owner);
+            const isAuthorizedToDelete = AppUtils.compareObjectID(currentUser, productListing.owner);
             if (!isAuthorizedToDelete) throw new AppError(StatusCodes.NOT_FOUND, "Product not found!");
 
             // check if there are no pending operations (transactions, bids) on this item

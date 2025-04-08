@@ -10,12 +10,12 @@ type TWithdrawalLocation = "wallet" | "rewards";
 type TIdentityType = "BVN" | "NIN";
 type CalculateCutReturnType = { total_fee: number, amount_to_withdraw: number }
 
+/**
+ * @name PaymentService
+ * The payment service uses Safehaven API internally for all payment (monetary) bank transactions
+ * 
+ */
 export class PaymentService {
-
-    /**
-     * The payment service uses Safehaven API internally for all payment or bank transactions
-     * 
-     */
     private static SAFE_HAVEN_BASE_URI = cfg.NODE_ENV === "production" ? "https://api.sandbox.safehavenmfb.com" : "";
     private static SAFE_HAVEN_BANK_CODE = cfg.NODE_ENV === "production" ? "999240" : "999240";
 
@@ -422,19 +422,21 @@ export class PaymentService {
             // ! Also dont froget to check for payment reversal
             //  and if so add the reversal_ref to transaction model
             // Get the _id from the create payment endpoint and use it to query
+            const access_token = await TokenManager.getToken();
             const url = `${this.SAFE_HAVEN_BASE_URI}/virtual-accounts/virtualAccountId/transaction`;
             const options = {
                 method: 'GET',
                 headers: {
                     accept: 'application/json',
                     ClientID: cfg.SAFE_HAVEN_CLIENT_ID,
-                    Authorization: `Bearer `
+                    Authorization: `Bearer ${access_token}`
                 },
                 body: JSON.stringify({ virtualAccountId: v_account_id })
             };
 
             const res = await fetch(url, options)
             const data = await res.json();
+            return data.data;
         } catch (error) {
             throw error;
         }

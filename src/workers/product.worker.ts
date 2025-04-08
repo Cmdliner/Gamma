@@ -3,7 +3,7 @@ import { redis } from "../config/redis.config";
 import Product from "../models/product.model";
 import DB from "../config/db.config";
 import { addAdsToExpiryQueue, addAdsToPreventStaleAdsQueue } from "../queues/product.queue";
-import { DelayDurationsInMs } from "../lib/utils";
+import { AppUtils } from "../lib/utils";
 
 async function setupProductWorkers() {
     await DB.connect();
@@ -20,8 +20,8 @@ async function setupProductWorkers() {
         await addAdsToPreventStaleAdsQueue(product_id);
     
         const delay = product.sponsorship.duration === "1Month"
-            ? DelayDurationsInMs.one_month
-            : DelayDurationsInMs.seven_days;
+            ? AppUtils.DelayDurationsInMs.one_month
+            : AppUtils.DelayDurationsInMs.seven_days;
         await addAdsToExpiryQueue(product_id, delay);
     }, { connection: redis });
     

@@ -9,10 +9,9 @@ import Transaction, {
 } from "../models/transaction.model";
 import type IUser from "../types/user.schema";
 import Product from "../models/product.model";
-import { compareObjectID, generateOTP, querySafeHavenBankCodes } from "../lib/utils";
+import { AppUtils } from "../lib/utils";
 import { AdSponsorshipValidation, ItemPurchaseValidation } from "../validations/payment.validation";
 import Bid from "../models/bid.model";
-import { AdPaymentsMap } from "../lib/utils";
 import User from "../models/user.model";
 import { WithdrawalTransaction } from "../models/transaction.model";
 import EmailService from "../services/email.service";
@@ -31,7 +30,7 @@ class PaymentController {
             const { q } = req.query;
             const searchPattern = new RegExp(`${q}`, "i");
 
-            const { bank_name, bank_code } = querySafeHavenBankCodes(searchPattern);
+            const { bank_name, bank_code } = AppUtils.querySafeHavenBankCodes(searchPattern);
             return res.status(StatusCodes.OK).json({ bank_name, bank_code });
         } catch (error) {
             logger.error(error);
@@ -163,7 +162,7 @@ class PaymentController {
                 const bid = await Bid.findOne({ _id: bidID, status: "accepted" }).session(session);
                 if (!bid) throw new AppError(StatusCodes.NOT_FOUND, "Bid not found!");
 
-                const isBidder = compareObjectID(bid.buyer, req.user?._id);
+                const isBidder = AppUtils.compareObjectID(bid.buyer, req.user?._id);
                 if (!isBidder) throw new AppError(StatusCodes.NOT_FOUND, "Bid not found!");
 
                 bidPrice = bid.negotiating_price as number;
@@ -230,7 +229,7 @@ class PaymentController {
             session.startTransaction();
             const { productID } = req.params;
             const { sponsorship_duration, payment_method, indempotency_key } = req.body;
-            const amount = sponsorship_duration === "1Month" ? AdPaymentsMap.monthly : AdPaymentsMap.weekly;
+            const amount = sponsorship_duration === "1Month" ? AppUtils.AdPaymentsMap.monthly : AppUtils.AdPaymentsMap.weekly;
             const webhookCallbackUrl = `${req.protocol}://${req.hostname}/webhook/ad-payment`;
 
             const { error } = AdSponsorshipValidation.validate({ sponsorship_duration, payment_method });
@@ -244,7 +243,7 @@ class PaymentController {
             }).session(session);
             if (!product) throw new AppError(StatusCodes.NOT_FOUND, `Product not found!`);
 
-            const isProductOwner = compareObjectID(product.owner, req.user?._id);
+            const isProductOwner = AppUtils.compareObjectID(product.owner, req.user?._id);
             if (!isProductOwner) throw new AppError(StatusCodes.NOT_FOUND, `Product not found!`);
 
 
@@ -392,7 +391,7 @@ class PaymentController {
             if (!transaction) throw new AppError(StatusCodes.NOT_FOUND, "Transaction not found!");
 
             const fullName = `${req.user?.first_name} ${req.user?.last_name}`;
-            const otp = new OTP({ kind: "funds_approval", owner: req.user?._id, token: generateOTP() });
+            const otp = new OTP({ kind: "funds_approval", owner: req.user?._id, token: AppUtils.generateOTP() });
             await otp.save();
 
             // Send email
@@ -577,7 +576,7 @@ class PaymentController {
             }).populate(["product", "bearer"]).session(session);
             if (!refundTransaction) throw new AppError(StatusCodes.NOT_FOUND, "Refund transaction not found");
 
-            const isSeller = compareObjectID(req.user?._id, refundTransaction.seller);
+            const isSeller = AppUtils.compareObjectID(req.user?._id, refundTransaction.seller);
             if (!isSeller) throw new AppError(StatusCodes.NOT_FOUND, "Transaction not found");
 
             refundTransaction.status = "success";

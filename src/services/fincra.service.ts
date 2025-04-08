@@ -4,6 +4,10 @@ import { type SponsorshipDuration } from "../types/product.schema";
 import { AdPayments } from "../types/ad.enums";
 import { cfg } from "../init";
 
+/**
+ * @deprecated This was used formally to handle monetary payments
+ * @see PaymentService
+ */
 class FincraService {
 
     private static FINCRA_BASE_URL = "https://sandboxapi.fincra.com";
