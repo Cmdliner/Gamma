@@ -18,7 +18,7 @@ class FincraService {
             const headers = {
                 "Content-Type": "application/json",
                 "Accepts": "application/json",
-                "api-key": cfg.FINCRA_SECRET_KEY
+                "api-key": process.env.FINCRA_SECRET_KEY
             }
             const res = await fetch(url, {
                 method: "POST",
@@ -43,8 +43,8 @@ class FincraService {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
-                    "api-key": cfg.FINCRA_SECRET_KEY,
-                    "x-pub-key": cfg.FINCRA_PUBLIC_KEY,
+                    "api-key": process.env.FINCRA_SECRET_KEY,
+                    "x-pub-key": process.env.FINCRA_PUBLIC_KEY,
                 },
                 data: {
                     amount: bidPrice ? bidPrice : product.price,
@@ -83,13 +83,13 @@ class FincraService {
 
 
     static async withdrawFunds(user: IUser, ref: string, amount: number) {
-        const Gamma_CUT = (5 / 100) * amount;
+        const GAMMA_CUT = (5 / 100) * amount;
         const PROCESSING_FEE = 200
-        const AMOUNT_TO_WITHDRAW = amount - Gamma_CUT - PROCESSING_FEE;
+        const AMOUNT_TO_WITHDRAW = amount - GAMMA_CUT - PROCESSING_FEE;
         try {
             const payoutUrl = `${this.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
-                "api-key": cfg.FINCRA_SECRET_KEY,
+                "api-key": process.env.FINCRA_SECRET_KEY,
                 "Content-Type": "application/json",
                 "Accepts": "application/json"
             }
@@ -97,7 +97,7 @@ class FincraService {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
-                    business: cfg.FINCRA_BUSINESS_ID,
+                    business: process.env.FINCRA_BUSINESS_ID,
                     sourceCurrency: "NGN",
                     destinationCurrency: "NGN",
                     amount: `${AMOUNT_TO_WITHDRAW}`,
@@ -132,7 +132,7 @@ class FincraService {
         try {
             const payoutUrl = `${this.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
-                "api-key": cfg.FINCRA_SECRET_KEY,
+                "api-key": process.env.FINCRA_SECRET_KEY,
                 "Content-Type": "application/json",
                 "Accepts": "application/json"
             }
@@ -140,7 +140,7 @@ class FincraService {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
-                    business: cfg.FINCRA_BUSINESS_ID,
+                    business: process.env.FINCRA_BUSINESS_ID,
                     sourceCurrency: "NGN",
                     destinationCurrency: "NGN",
                     amount: `${amount}`,
@@ -180,8 +180,8 @@ class FincraService {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
-                    "api-key": cfg.FINCRA_SECRET_KEY,
-                    "x-pub-key": cfg.FINCRA_PUBLIC_KEY,
+                    "api-key": process.env.FINCRA_SECRET_KEY,
+                    "x-pub-key": process.env.FINCRA_PUBLIC_KEY,
                 },
                 data: {
                     "amount": sponsorshipDuration == "1Week" ? AdPayments.weekly : AdPayments.monthly,
@@ -221,13 +221,13 @@ class FincraService {
         try {
             const payoutUrl = `${this.FINCRA_BASE_URL}/disbursements/payouts`;
             const headers = {
-                "api-key": cfg.FINCRA_SECRET_KEY,
+                "api-key": process.env.FINCRA_SECRET_KEY,
                 "Content-Type": "application/json",
                 "Accepts": "application/json"
             };
 
             const refundData = {
-                business: cfg.FINCRA_BUSINESS_ID,
+                business: process.env.FINCRA_BUSINESS_ID,
                 sourceCurrency: "NGN",
                 destinationCurrency: "NGN",
                 amount: `${amount}`,
@@ -245,7 +245,7 @@ class FincraService {
                 },
                 sender: {
                     name: "Gamma Escrow",
-                    email: "refunds@Gammaescrow.com.ng",
+                    email: "refunds@gammaescrow.com.ng",
                 },
                 paymentDestination: "bank_account",
             };

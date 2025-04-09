@@ -14,7 +14,7 @@ const AdminSchema = new Schema({
         enum: ["super_admin", "regular_admin"],
         default: "regular_admin"
     },
-}, {timestamps: true});
+}, { timestamps: true });
 
 const Admin = model("Admin", AdminSchema);
 

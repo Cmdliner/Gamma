@@ -99,7 +99,7 @@ class UserController {
             const threeMonthsFromDateAdded = dateAdded + (30 * 24 * 60 * 60 * 1000);
 
             // Check if 3 months has passed
-            if (threeMonthsFromDateAdded > Date.now()) {
+            if (Date.now() < threeMonthsFromDateAdded) {
                 throw new AppError(StatusCodes.BAD_REQUEST, "Cannot update bank account details at this moment");
             }
 
